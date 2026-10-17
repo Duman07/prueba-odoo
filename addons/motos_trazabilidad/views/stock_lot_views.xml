@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_production_lot_form_moto_trazabilidad" model="ir.ui.view">
+        <field name="name">stock.lot.form.moto.trazabilidad</field>
+        <field name="model">stock.lot</field>
+        <field name="inherit_id" ref="stock.view_production_lot_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='main_group']" position="before">
+              <group>
+              <group name="group_left">
+                <field name="is_motorcycle"/>
+                <separator/>
+                <field name="bin_code" class="w-25" placeholder="EJ: BIN-000012021"/>
+              </group>
+              <group name="group_rigth">
+                <field name="chassis_code" class="w-25" />
+              </group>
+              </group>
+            </xpath>
+            <xpath expr="//sheet" position="inside">
+                <notebook>
+                    <page string="Componentes e historial" name="moto_component_history" invisible="not is_motorcycle">
+                        <field name="component_assignment_ids" context="{'default_motorcycle_lot_id': id}">
+                            <list create="1" edit="1" delete="0">
+                                <field name="component_lot_id"/>
+                                <field name="installed_date"/>
+                                <field name="removed_date"/>
+                                <field name="active"/>
+                                <field name="notes" optional="hide"/>
+                            </list>
+                        </field>
+                    </page>
+                </notebook>
+            </xpath>
+        </field>
+    </record>
+</odoo>

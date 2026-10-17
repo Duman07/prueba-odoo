@@ -1,0 +1,170 @@
+// Estilos limitados a la ficha de producto (.o_moto_showcase): no afectan otras páginas.
+// El rojo coincide con o-color-1 del sitio en producción (#ff0000); los botones usan
+// un tono un poco más profundo para mantener contraste AA con texto blanco.
+
+.o_moto_showcase {
+    --moto-accent: #ff0000;
+    --moto-accent-strong: #e00000;
+    --moto-accent-hover: #b80000;
+    --moto-ink: #01001a;
+    --moto-muted: #5c5f6a;
+    --moto-surface: #f6f6f8;
+    --moto-line: #d9d9e0;
+
+    background-color: #ffffff;
+    color: var(--moto-ink);
+
+    .btn-primary {
+        background-color: var(--moto-accent-strong);
+        border-color: var(--moto-accent-strong);
+        color: #ffffff;
+
+        &:hover,
+        &:focus-visible,
+        &:active {
+            background-color: var(--moto-accent-hover);
+            border-color: var(--moto-accent-hover);
+            color: #ffffff;
+        }
+    }
+}
+
+.o_moto_section {
+    padding-block: 3rem;
+
+    @media (min-width: 992px) {
+        padding-block: 5rem;
+    }
+}
+
+.o_moto_section_alt {
+    background-color: var(--moto-surface);
+}
+
+.o_moto_hero {
+    padding-top: 1.5rem;
+}
+
+.o_moto_breadcrumb {
+    margin-bottom: 1.5rem;
+    background: transparent;
+    padding: 0;
+    font-size: 0.875rem;
+
+    a {
+        color: var(--moto-muted);
+    }
+}
+
+.o_moto_eyebrow {
+    margin-bottom: 0.5rem;
+    color: var(--moto-accent-strong);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.o_moto_title {
+    margin-bottom: 1.5rem;
+    font-size: clamp(2.75rem, calc(5vw + 1rem), 5.5rem);
+    font-weight: 800;
+    line-height: 0.95;
+    text-transform: uppercase;
+}
+
+.o_moto_heading {
+    margin-bottom: 2rem;
+    font-size: clamp(1.75rem, calc(2vw + 1rem), 2.75rem);
+    font-weight: 700;
+}
+
+.o_moto_cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+// Contenedores reservados para contenido futuro
+.o_moto_placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    min-height: 12rem;
+    padding: 1.5rem;
+    border: 1px dashed var(--moto-line);
+    border-radius: 1rem;
+    background-color: var(--moto-surface);
+    color: var(--moto-muted);
+    text-align: center;
+    min-width: 0;
+
+    > * {
+        max-width: 100%;
+    }
+
+    .o_moto_section_alt & {
+        background-color: #ffffff;
+    }
+}
+
+.o_moto_placeholder_sm {
+    min-height: 7rem;
+}
+
+.o_moto_placeholder_title {
+    font-weight: 600;
+}
+
+.o_moto_placeholder_hint {
+    font-size: 0.875rem;
+}
+
+// Cuando una etapa futura monte contenido en un slot, añade esta clase
+.o_moto_slot_filled {
+    border-style: solid;
+    border-color: transparent;
+    background-color: transparent;
+}
+
+.o_moto_stage {
+    aspect-ratio: 16 / 10;
+    min-height: 0;
+}
+
+.o_moto_viewer {
+    aspect-ratio: 16 / 9;
+    min-height: 0;
+}
+
+.o_moto_skeleton {
+    height: 6rem;
+    border-radius: 0.75rem;
+    background-color: #ffffff;
+    border: 1px solid var(--moto-line);
+}
+
+.o_moto_contact {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.5rem;
+    border: 1px solid var(--moto-line);
+    border-top: 3px solid var(--moto-accent);
+    border-radius: 1rem;
+}
+
+.o_moto_contact_title {
+    margin-bottom: 0.25rem;
+    font-size: 1.125rem;
+    font-weight: 700;
+}
+
+.o_moto_contact_text {
+    margin-bottom: 0;
+    color: var(--moto-muted);
+}

@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Bloque «Moto 3D»: nombre y botones junto al modelo GLB/glTF con animación de entrada -->
+    <template id="s_moto_3d" name="Moto 3D">
+        <section class="s_moto_3d o_cc o_cc1 pt48 pb48" data-model-src="" data-model-alt="Motocicleta" data-model-yaw="90" data-moto-intro="true">
+            <div class="container">
+                <div class="row align-items-center s_moto_3d_row">
+                    <div class="col-lg-5 pt16 pb16">
+                        <p><span class="o_small-fs"><strong><font style="color: rgb(224, 0, 0);">HERO · HUNK</font></strong></span></p>
+                        <h1><span class="display-1-fs"><strong>Nombre del modelo</strong></span></h1>
+                        <p>
+                            <a class="btn btn-primary btn-lg" href="/contactus">Contáctanos</a>
+                            <a class="btn btn-outline-secondary btn-lg" href="#">Ver en 360°</a>
+                        </p>
+                    </div>
+                    <div class="col-lg-7 pt16 pb16">
+                        <div class="s_moto_3d_stage o_not_editable">
+                            <div class="s_moto_empty">
+                                <span class="s_moto_empty_title">Moto 3D</span>
+                                <span class="s_moto_empty_hint">Sube un modelo .glb o una imagen desde las opciones del bloque.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </template>
+
+    <!-- Bloque «Visor 360°»: visor con controles + panel de colores y puntos destacados -->
+    <template id="s_moto_360" name="Visor 360°">
+        <section class="s_moto_360 o_cc o_cc1 pt48 pb48" data-model-src="" data-model-alt="Motocicleta" data-model-yaw="90" data-auto-rotate="true">
+            <div class="container">
+                <p><span class="o_small-fs"><strong><font style="color: rgb(224, 0, 0);">VISTA INTERACTIVA</font></strong></span></p>
+                <h2><strong>Explórala en 360°</strong></h2>
+                <div class="row g-4 s_moto_360_row">
+                    <div class="col-lg-8">
+                        <div class="s_moto_360_viewer o_not_editable">
+                            <div class="s_moto_empty">
+                                <span class="s_moto_empty_title">Visor 360°</span>
+                                <span class="s_moto_empty_hint">Sube un modelo .glb, las fotos del giro 360° o una imagen desde las opciones del bloque.</span>
+                            </div>
+                        </div>
+                        <div class="s_moto_360_controls o_not_editable" role="toolbar" aria-label="Controles de la vista 360°">
+                            <button type="button" class="btn btn-outline-secondary s_moto_360_autorotate" aria-pressed="true">
+                                <i class="fa fa-refresh me-1" role="presentation"/>Giro automático
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary s_moto_360_zoom_in" aria-label="Acercar" title="Acercar">
+                                <i class="fa fa-search-plus" role="presentation"/>
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary s_moto_360_zoom_out" aria-label="Alejar" title="Alejar">
+                                <i class="fa fa-search-minus" role="presentation"/>
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary s_moto_360_reset" aria-label="Restablecer vista" title="Restablecer vista">
+                                <i class="fa fa-undo" role="presentation"/>
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary s_moto_360_fullscreen" aria-label="Pantalla completa" title="Pantalla completa">
+                                <i class="fa fa-expand" role="presentation"/>
+                            </button>
+                        </div>
+                        <p class="s_moto_360_hint">Arrastra para girar la moto. Usa la rueda, pellizca o los botones para acercar.</p>
+                    </div>
+                    <div class="col-lg-4 d-flex flex-column gap-4">
+                        <div class="s_moto_360_panel">
+                            <h3 class="h6 mb-3">Colores</h3>
+                            <div class="s_moto_360_swatches">
+                                <div class="s_moto_360_swatch" style="background-color: rgb(224, 0, 0);" data-color-name="Color 1"/>
+                                <div class="s_moto_360_swatch" style="background-color: rgb(26, 27, 30);" data-color-name="Color 2"/>
+                                <div class="s_moto_360_swatch" style="background-color: rgb(138, 144, 151);" data-color-name="Color 3"/>
+                            </div>
+                            <p class="s_moto_360_color_name mb-0">Color 1</p>
+                        </div>
+                        <div class="s_moto_360_panel flex-grow-1">
+                            <h3 class="h6 mb-3">Puntos destacados</h3>
+                            <div class="s_moto_360_hotspots">
+                                <div class="s_moto_360_hotspot">
+                                    <p class="mb-0"><strong>Punto destacado 1</strong></p>
+                                    <p class="mb-0">Describe aquí este detalle de la moto.</p>
+                                </div>
+                                <div class="s_moto_360_hotspot">
+                                    <p class="mb-0"><strong>Punto destacado 2</strong></p>
+                                    <p class="mb-0">Describe aquí este detalle de la moto.</p>
+                                </div>
+                                <div class="s_moto_360_hotspot">
+                                    <p class="mb-0"><strong>Punto destacado 3</strong></p>
+                                    <p class="mb-0">Describe aquí este detalle de la moto.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </template>
+
+    <!-- Registro en el panel de bloques: grupo «Motos Alfa» -->
+    <template id="snippets" inherit_id="website.snippets" name="Motos Alfa snippets">
+        <xpath expr="//t[@id='installed_snippets_hook']" position="after">
+            <t snippet-group="motos_alfa" t-snippet="website.s_snippet_group" string="Motos Alfa"
+                t-thumbnail="/website_motos_alfa_showcase/static/src/img/snippets_thumbs/s_moto_group.svg"/>
+        </xpath>
+        <xpath expr="//snippets[@id='snippet_structure']" position="inside">
+            <t t-snippet="website_motos_alfa_showcase.s_moto_3d" string="Moto 3D" group="motos_alfa"
+                t-thumbnail="/website_motos_alfa_showcase/static/src/img/snippets_thumbs/s_moto_3d.svg">
+                <keywords>moto, motocicleta, 3d, glb, gltf, modelo, imagen, foto, animación, entrada</keywords>
+            </t>
+            <t t-snippet="website_motos_alfa_showcase.s_moto_360" string="Visor 360°" group="motos_alfa"
+                t-thumbnail="/website_motos_alfa_showcase/static/src/img/snippets_thumbs/s_moto_360.svg">
+                <keywords>moto, motocicleta, 360, 3d, glb, gltf, imagen, foto, fotos, secuencia, visor, girar, zoom</keywords>
+            </t>
+        </xpath>
+    </template>
+
+    <!-- Opciones de los bloques (panel «Personalizar») -->
+    <template id="s_moto_snippet_options" inherit_id="website.snippet_options" name="Motos Alfa snippet options">
+        <xpath expr="." position="inside">
+            <div data-js="MotoModelUpload" data-selector=".s_moto_3d, .s_moto_360">
+                <we-button class="o_we_bg_brand_primary" data-upload-model="true" data-no-preview="true">Subir modelo o imagen</we-button>
+                <we-input class="o_we_large" string="Archivo (modelo o imagen)" data-select-data-attribute="" data-attribute-name="modelSrc" data-no-preview="true" placeholder="/web/content/123"/>
+                <we-input class="o_we_large" string="Texto alternativo" data-select-data-attribute="" data-attribute-name="modelAlt" data-no-preview="true"/>
+                <we-select string="Orientación del modelo" data-attribute-name="modelYaw" data-no-preview="true">
+                    <we-button data-select-data-attribute="0">0°</we-button>
+                    <we-button data-select-data-attribute="90">90°</we-button>
+                    <we-button data-select-data-attribute="180">180°</we-button>
+                    <we-button data-select-data-attribute="270">270°</we-button>
+                </we-select>
+            </div>
+            <div data-selector=".s_moto_3d">
+                <we-select string="Posición del modelo" data-no-preview="true">
+                    <we-button data-select-class="">Derecha</we-button>
+                    <we-button data-select-class="s_moto_3d_media_left">Izquierda</we-button>
+                </we-select>
+                <we-checkbox string="Animación de entrada" data-select-data-attribute="false|true" data-attribute-name="motoIntro" data-no-preview="true"/>
+            </div>
+            <div data-js="MotoModelUpload" data-selector=".s_moto_360">
+                <we-button class="o_we_bg_brand_primary" data-upload-frames="true" data-no-preview="true">Subir fotos 360°</we-button>
+                <we-checkbox string="Giro automático" data-select-data-attribute="false|true" data-attribute-name="autoRotate" data-no-preview="true"/>
+                <we-checkbox string="Invertir sentido (fotos)" data-select-data-attribute="false|true" data-attribute-name="sequenceReverse" data-no-preview="true"/>
+            </div>
+            <!-- Cada color: se puede mover, duplicar y borrar -->
+            <div data-js="MotoModelUpload" data-selector=".s_moto_360_swatch" data-drop-near=".s_moto_360_swatch">
+                <we-colorpicker string="Color" data-select-style="true" data-css-property="background-color" data-color-prefix="bg-"/>
+                <we-input class="o_we_large" string="Nombre del color" data-select-data-attribute="" data-attribute-name="colorName" data-no-preview="true"/>
+                <we-button class="o_we_bg_brand_primary" data-upload-model="true" data-no-preview="true">Subir modelo o imagen de este color</we-button>
+                <we-button class="o_we_bg_brand_primary" data-upload-frames="true" data-no-preview="true">Subir fotos 360° de este color</we-button>
+                <we-input class="o_we_large" string="Archivo de este color" data-select-data-attribute="" data-attribute-name="modelSrc" data-no-preview="true" placeholder="Opcional"/>
+                <we-input class="o_we_large" string="Variante del modelo" data-select-data-attribute="" data-attribute-name="variant" data-no-preview="true" placeholder="Opcional"/>
+            </div>
+            <!-- Cada punto destacado: se puede mover, duplicar, borrar y ubicar sobre el modelo -->
+            <div data-js="MotoHotspotPosition" data-selector=".s_moto_360_hotspot" data-drop-near=".s_moto_360_hotspot">
+                <we-row string="Ubicación en el modelo">
+                    <we-button data-pick-position="true" data-no-preview="true">Ubicar</we-button>
+                    <we-button data-clear-position="true" data-no-preview="true">Quitar</we-button>
+                </we-row>
+            </div>
+        </xpath>
+    </template>
+
+</odoo>

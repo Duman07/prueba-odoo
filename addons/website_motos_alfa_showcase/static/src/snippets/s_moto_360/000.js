@@ -1,0 +1,334 @@
+/** @odoo-module **/
+
+import publicWidget from "@web/legacy/js/public/public_widget";
+import {
+    createMediaImage,
+    createModelViewer,
+    isImageSrc,
+    loadModelViewer,
+    prefersReducedMotion,
+} from "@website_motos_alfa_showcase/js/model_viewer_loader";
+import { FrameSequence, parseFrames } from "@website_motos_alfa_showcase/js/frame_sequence";
+
+const INITIAL_ORBIT = "-30deg 75deg 105%";
+const ZOOM_STEP = 3;
+// Distancia de cámara al enfocar un punto destacado (% de la distancia ideal).
+const HOTSPOT_RADIUS = "55%";
+
+/**
+ * Bloque «Visor 360°»: rotación con arrastre, acercamiento, giro automático,
+ * pantalla completa, selector de colores y puntos destacados sobre el modelo.
+ * Cada color (o el bloque) puede usar un modelo .glb/.gltf, una secuencia de fotos
+ * tomadas alrededor de la moto (giro 360° con arrastre, sin puntos sobre el modelo)
+ * o una imagen (solo la vista estática y la pantalla completa).
+ * En el editor se muestra sin interacción, pero con los puntos ya ubicados.
+ */
+publicWidget.registry.MotoViewer360 = publicWidget.Widget.extend({
+    selector: ".s_moto_360",
+    disabledInEditableMode: false,
+    read_events: {
+        "click .s_moto_360_autorotate": "_onAutoRotateClick",
+        "click .s_moto_360_zoom_in": "_onZoomInClick",
+        "click .s_moto_360_zoom_out": "_onZoomOutClick",
+        "click .s_moto_360_reset": "_onResetClick",
+        "click .s_moto_360_fullscreen": "_onFullscreenClick",
+        "click .s_moto_360_swatch": "_onSwatchClick",
+        "keydown .s_moto_360_swatch": "_onItemKeydown",
+        "click .s_moto_360_hotspot": "_onHotspotClick",
+        "keydown .s_moto_360_hotspot": "_onItemKeydown",
+        "click .s_moto_360_marker": "_onMarkerClick",
+    },
+
+    async start() {
+        await this._super(...arguments);
+        this.viewerWrap = this.el.querySelector(".s_moto_360_viewer");
+        this.autoRotateButton = this.el.querySelector(".s_moto_360_autorotate");
+        this.initialPressed = this.autoRotateButton?.getAttribute("aria-pressed");
+        this.swatches = [...this.el.querySelectorAll(".s_moto_360_swatch")];
+        this.hotspots = [...this.el.querySelectorAll(".s_moto_360_hotspot")];
+        this.colorNameEl = this.el.querySelector(".s_moto_360_color_name");
+        this.initialColorName = this.colorNameEl?.textContent;
+        this.markers = [];
+        this.autoRotate = this.el.dataset.autoRotate !== "false";
+
+        const mainSrc = (this.el.dataset.modelSrc || "").trim();
+        if (!this.editableMode) {
+            this._makeItemsInteractive();
+            if (this.swatches.length) {
+                const initial = this.swatches.findIndex((swatch) => mainSrc && swatch.dataset.modelSrc === mainSrc);
+                this._selectSwatch(Math.max(initial, 0), false);
+            }
+        }
+        if (!this.viewerWrap || !mainSrc) {
+            return;
+        }
+        await this._showSrc(mainSrc);
+    },
+
+    destroy() {
+        this.viewer?.remove();
+        this.image?.remove();
+        this.sequence?.destroy();
+        this.el.classList.remove("s_moto_has_model", "s_moto_error", "s_moto_360_image_mode", "s_moto_360_sequence_mode");
+        if (this.autoRotateButton && this.initialPressed !== null) {
+            this.autoRotateButton.setAttribute("aria-pressed", this.initialPressed);
+            this.autoRotateButton.classList.remove("active");
+        }
+        // Deja el HTML como estaba para que el editor no guarde estados de visualización.
+        for (const el of [...(this.swatches || []), ...(this.hotspots || [])]) {
+            el.classList.remove("active");
+            el.removeAttribute("role");
+            el.removeAttribute("tabindex");
+            el.removeAttribute("aria-pressed");
+            el.removeAttribute("aria-label");
+        }
+        if (this.colorNameEl && this.initialColorName !== undefined) {
+            this.colorNameEl.textContent = this.initialColorName;
+        }
+        this._super(...arguments);
+    },
+
+    /**
+     * Muestra el archivo indicado: una secuencia de fotos, una imagen estática o el modelo 3D
+     * (el <model-viewer> se crea la primera vez que hace falta).
+     */
+    async _showSrc(src) {
+        const request = (this.showRequest = (this.showRequest || 0) + 1);
+        const frames = parseFrames(src);
+        if (frames.length) {
+            this._showSequence(frames);
+            return;
+        }
+        this._hideSequence();
+        if (isImageSrc(src)) {
+            if (!this.image) {
+                this.image = createMediaImage(this.el, src);
+                this.viewerWrap.appendChild(this.image);
+            } else if (this.image.getAttribute("src") !== src) {
+                this.image.src = src;
+            }
+            this.image.classList.remove("d-none");
+            this.viewer?.classList.add("d-none");
+            this.el.classList.add("s_moto_has_model", "s_moto_360_image_mode");
+            return;
+        }
+        if (!this.viewer) {
+            try {
+                await loadModelViewer();
+            } catch {
+                this.el.classList.add("s_moto_error");
+                return;
+            }
+            if (this.isDestroyed() || request !== this.showRequest) {
+                return;
+            }
+            this._createViewer(src);
+        } else if (src !== this.viewer.getAttribute("src")) {
+            this.viewer.setAttribute("src", src);
+        }
+        this.viewer.classList.remove("d-none");
+        this.image?.classList.add("d-none");
+        this.el.classList.remove("s_moto_360_image_mode");
+        this.el.classList.add("s_moto_has_model");
+        this._updateAutoRotateButton(Boolean(this.viewer.autoRotate));
+    },
+
+    _showSequence(frames) {
+        if (this.sequence?.frames.join(" ") !== frames.join(" ")) {
+            this.sequence?.destroy();
+            this.sequence = new FrameSequence(this.el, frames, {
+                interactive: !this.editableMode,
+                reverse: this.el.dataset.sequenceReverse === "true",
+                onAutoRotateChange: (active) => this._updateAutoRotateButton(active),
+            });
+            this.viewerWrap.appendChild(this.sequence.el);
+        }
+        this.viewer?.classList.add("d-none");
+        this.image?.classList.add("d-none");
+        this.el.classList.remove("s_moto_360_image_mode");
+        this.el.classList.add("s_moto_has_model", "s_moto_360_sequence_mode");
+        const autoRotate = !this.editableMode && this.autoRotate && !prefersReducedMotion();
+        if (this.sequence.autoRotate !== autoRotate) {
+            this.sequence.setAutoRotate(autoRotate);
+        } else {
+            this._updateAutoRotateButton(autoRotate);
+        }
+    },
+
+    _hideSequence() {
+        this.sequence?.destroy();
+        this.sequence = null;
+        this.el.classList.remove("s_moto_360_sequence_mode");
+    },
+
+    _createViewer(src) {
+        const autoRotate = this.autoRotate;
+        const attributes = {
+            "camera-orbit": INITIAL_ORBIT,
+            "min-camera-orbit": "auto 20deg auto",
+            "max-camera-orbit": "auto 100deg auto",
+            "interaction-prompt": "auto",
+            "touch-action": "pan-y",
+            "rotation-per-second": "20deg",
+            "auto-rotate-delay": "2000",
+        };
+        if (!this.editableMode) {
+            attributes["camera-controls"] = "";
+            if (autoRotate) {
+                attributes["auto-rotate"] = "";
+            }
+        }
+        attributes.src = src;
+        this.viewer = createModelViewer(this.el, attributes);
+        this._renderMarkers();
+        this.viewerWrap.appendChild(this.viewer);
+        this._updateAutoRotateButton(!this.editableMode && autoRotate);
+    },
+
+    _makeItemsInteractive() {
+        this.swatches.forEach((swatch, index) => {
+            swatch.setAttribute("role", "button");
+            swatch.setAttribute("tabindex", "0");
+            swatch.setAttribute("aria-label", swatch.dataset.colorName || `Color ${index + 1}`);
+        });
+        for (const item of this.hotspots) {
+            item.setAttribute("role", "button");
+            item.setAttribute("tabindex", "0");
+        }
+    },
+
+    _renderMarkers() {
+        this.hotspots.forEach((item, index) => {
+            const position = (item.dataset.position || "").trim();
+            if (!position) {
+                return;
+            }
+            const marker = document.createElement("button");
+            marker.type = "button";
+            marker.className = "s_moto_360_marker";
+            marker.slot = `hotspot-${index}`;
+            marker.dataset.position = position;
+            marker.dataset.normal = item.dataset.normal || "0m 1m 0m";
+            marker.dataset.index = String(index);
+            marker.textContent = String(index + 1);
+            marker.setAttribute("aria-label", item.querySelector("strong")?.textContent.trim() || `Punto ${index + 1}`);
+            this.viewer.appendChild(marker);
+            this.markers[index] = marker;
+        });
+    },
+
+    _updateAutoRotateButton(active) {
+        this.autoRotateButton?.setAttribute("aria-pressed", active ? "true" : "false");
+        this.autoRotateButton?.classList.toggle("active", active);
+    },
+
+    async _selectSwatch(index, applyToModel = true) {
+        const swatch = this.swatches[index];
+        this.swatches.forEach((el, i) => {
+            el.classList.toggle("active", i === index);
+            el.setAttribute("aria-pressed", i === index ? "true" : "false");
+        });
+        if (this.colorNameEl && swatch.dataset.colorName) {
+            this.colorNameEl.textContent = swatch.dataset.colorName;
+        }
+        if (!applyToModel || !this.el.classList.contains("s_moto_has_model")) {
+            return;
+        }
+        // Un color puede tener su propio archivo (modelo o imagen) o usar una variante de material del modelo.
+        const src = (swatch.dataset.modelSrc || this.el.dataset.modelSrc || "").trim();
+        if (src) {
+            await this._showSrc(src);
+        }
+        const variant = (swatch.dataset.variant || "").trim();
+        if (variant && this.viewer && !isImageSrc(src) && this.viewer.availableVariants?.includes(variant)) {
+            this.viewer.variantName = variant;
+        }
+    },
+
+    _focusHotspot(index) {
+        this.hotspots.forEach((el, i) => el.classList.toggle("active", i === index));
+        this.markers.forEach((el, i) => el?.classList.toggle("active", i === index));
+        const marker = this.markers[index];
+        if (!marker || !this.viewer || this.sequence) {
+            return;
+        }
+        this.viewer.autoRotate = false;
+        this._updateAutoRotateButton(false);
+        const orbit = this.viewer.getCameraOrbit();
+        this.viewer.cameraTarget = marker.dataset.position;
+        this.viewer.cameraOrbit = `${orbit.theta}rad ${orbit.phi}rad ${HOTSPOT_RADIUS}`;
+    },
+
+    _onAutoRotateClick() {
+        if (this.sequence) {
+            this.sequence.setAutoRotate(!this.sequence.autoRotate);
+            return;
+        }
+        if (!this.viewer) {
+            return;
+        }
+        this.viewer.autoRotate = !this.viewer.autoRotate;
+        this._updateAutoRotateButton(this.viewer.autoRotate);
+    },
+
+    _onZoomInClick() {
+        if (this.sequence) {
+            this.sequence.zoomBy(1);
+        } else {
+            this.viewer?.zoom(ZOOM_STEP);
+        }
+    },
+
+    _onZoomOutClick() {
+        if (this.sequence) {
+            this.sequence.zoomBy(-1);
+        } else {
+            this.viewer?.zoom(-ZOOM_STEP);
+        }
+    },
+
+    _onResetClick() {
+        if (this.sequence) {
+            this.sequence.reset();
+            return;
+        }
+        if (!this.viewer) {
+            return;
+        }
+        this.viewer.cameraOrbit = INITIAL_ORBIT;
+        this.viewer.cameraTarget = "auto auto auto";
+        this.viewer.fieldOfView = "auto";
+        this.viewer.resetTurntableRotation?.();
+        this.hotspots.forEach((el) => el.classList.remove("active"));
+        this.markers.forEach((el) => el?.classList.remove("active"));
+    },
+
+    _onFullscreenClick() {
+        if (document.fullscreenElement) {
+            document.exitFullscreen();
+        } else {
+            this.viewerWrap.requestFullscreen?.();
+        }
+    },
+
+    _onSwatchClick(ev) {
+        this._selectSwatch(this.swatches.indexOf(ev.currentTarget));
+    },
+
+    _onHotspotClick(ev) {
+        this._focusHotspot(this.hotspots.indexOf(ev.currentTarget));
+    },
+
+    _onMarkerClick(ev) {
+        this._focusHotspot(parseInt(ev.currentTarget.dataset.index, 10));
+    },
+
+    _onItemKeydown(ev) {
+        if (ev.key === "Enter" || ev.key === " ") {
+            ev.preventDefault();
+            ev.currentTarget.click();
+        }
+    },
+});
+
+export default publicWidget.registry.MotoViewer360;

@@ -1,0 +1,294 @@
+// Bloques «Moto 3D» y «Visor 360°».
+
+.s_moto_3d_stage,
+.s_moto_360_viewer {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 16 / 9;
+    border-radius: 1rem;
+
+    @media (max-width: 767.98px) {
+        aspect-ratio: 4 / 3;
+    }
+
+    model-viewer {
+        display: block;
+        width: 100%;
+        height: 100%;
+        background-color: transparent;
+        --poster-color: transparent;
+    }
+
+    // Imagen subida en lugar de un modelo 3D
+    .s_moto_media_img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+}
+
+// En «Moto 3D» el modelo ocupa la columna junto al nombre
+.s_moto_3d .s_moto_3d_stage {
+    aspect-ratio: 4 / 3;
+}
+
+@media (min-width: 992px) {
+    .s_moto_3d_media_left .s_moto_3d_row {
+        flex-direction: row-reverse;
+    }
+}
+
+.s_moto_3d_stage model-viewer,
+.s_moto_3d_stage .s_moto_media_img {
+    transform-origin: 50% 85%;
+    will-change: transform;
+}
+
+// Giro 360° con fotos: arrastrar en horizontal gira, en vertical desplaza la página
+.s_moto_360_sequence {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    cursor: grab;
+    touch-action: pan-y;
+    user-select: none;
+
+    &.s_moto_360_dragging {
+        cursor: grabbing;
+    }
+
+    &:focus-visible {
+        outline: 2px solid #e00000;
+        outline-offset: -2px;
+    }
+
+    .s_moto_media_img {
+        pointer-events: none;
+        transition: transform 0.15s ease-out;
+    }
+}
+
+body.editor_enable .s_moto_360_sequence {
+    cursor: default;
+}
+
+.s_moto_360_viewer:fullscreen {
+    aspect-ratio: auto;
+    border-radius: 0;
+    background-color: #ffffff;
+}
+
+// Aviso visible solo en el editor mientras no hay modelo
+.s_moto_empty {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    padding: 1.5rem;
+    border: 1px dashed rgba(127, 127, 127, 0.5);
+    border-radius: inherit;
+    background-color: rgba(127, 127, 127, 0.06);
+    text-align: center;
+
+    > * {
+        max-width: 100%;
+    }
+}
+
+.s_moto_empty_title {
+    font-weight: 600;
+}
+
+.s_moto_empty_hint {
+    font-size: 0.875rem;
+    opacity: 0.75;
+}
+
+.s_moto_has_model .s_moto_empty {
+    display: none;
+}
+
+.s_moto_3d_replay {
+    position: absolute;
+    right: 1rem;
+    bottom: 1rem;
+    min-height: 44px;
+}
+
+.s_moto_360_controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+
+    .btn {
+        min-width: 44px;
+        min-height: 44px;
+    }
+}
+
+// Con una imagen no hay giro ni acercamiento: solo queda la pantalla completa
+.s_moto_360_image_mode {
+    .s_moto_360_autorotate,
+    .s_moto_360_zoom_in,
+    .s_moto_360_zoom_out,
+    .s_moto_360_reset {
+        display: none;
+    }
+}
+
+body:not(.editor_enable) .s_moto_360_image_mode .s_moto_360_hint {
+    display: none;
+}
+
+.s_moto_360_hint {
+    margin: 0.75rem 0 0;
+    font-size: 0.875rem;
+    text-align: center;
+    opacity: 0.75;
+}
+
+// Panel lateral: colores y puntos destacados
+.s_moto_360_panel {
+    padding: 1.25rem;
+    border: 1px solid rgba(127, 127, 127, 0.25);
+    border-radius: 1rem;
+}
+
+.s_moto_360_swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.s_moto_360_swatch {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 3px solid #ffffff;
+    background-clip: padding-box;
+    box-shadow: 0 0 0 1px #c9cbd1;
+    cursor: pointer;
+
+    &.active {
+        box-shadow: 0 0 0 2px #e00000;
+    }
+
+    &:focus-visible {
+        outline: 2px solid #e00000;
+        outline-offset: 2px;
+    }
+}
+
+.s_moto_360_color_name {
+    margin-top: 0.75rem;
+    font-size: 0.875rem;
+    opacity: 0.75;
+}
+
+.s_moto_360_hotspots {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    counter-reset: moto-hotspot;
+}
+
+.s_moto_360_hotspot {
+    position: relative;
+    padding: 0.5rem 0.5rem 0.5rem 2.75rem;
+    border-radius: 0.5rem;
+    counter-increment: moto-hotspot;
+    cursor: pointer;
+
+    &::before {
+        content: counter(moto-hotspot);
+        position: absolute;
+        top: 0.5rem;
+        left: 0.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.75rem;
+        height: 1.75rem;
+        border-radius: 50%;
+        background-color: #e00000;
+        color: #ffffff;
+        font-size: 0.8125rem;
+        font-weight: 700;
+    }
+
+    &.active {
+        background-color: rgba(224, 0, 0, 0.08);
+    }
+
+    &:focus-visible {
+        outline: 2px solid #e00000;
+    }
+}
+
+// En el editor, un punto aún sin ubicar en el modelo se marca con borde punteado
+body.editor_enable .s_moto_360_hotspot:not([data-position])::before {
+    background-color: transparent;
+    border: 2px dashed #e00000;
+    color: #e00000;
+}
+
+// Marcadores numerados sobre el modelo
+.s_moto_360_marker {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    background-color: #e00000;
+    color: #ffffff;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+    cursor: pointer;
+
+    &[data-visible="false"] {
+        opacity: 0.35;
+    }
+
+    &.active {
+        outline: 3px solid rgba(224, 0, 0, 0.35);
+    }
+}
+
+// Modo «Ubicar punto» en el editor
+.s_moto_360_picking {
+    outline: 2px dashed #e00000;
+    outline-offset: 4px;
+
+    model-viewer {
+        cursor: crosshair;
+    }
+}
+
+// Para los visitantes, sin modelo (o si falla la carga) no se muestra el recuadro 3D;
+// en «Moto 3D» se conservan el nombre y los botones.
+html:not(.o_add_snippets_preview) body:not(.editor_enable) {
+    .s_moto_3d,
+    .s_moto_360 {
+        &:not([data-model-src]),
+        &[data-model-src=""],
+        &.s_moto_error {
+            &.s_moto_360 {
+                display: none !important;
+            }
+
+            .s_moto_3d_stage {
+                display: none !important;
+            }
+        }
+    }
+}

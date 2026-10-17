@@ -1,0 +1,27 @@
+# Base de datos y datos persistentes
+/postgresql/
+/etc/filestore/
+/etc/sessions/
+
+# Configuración y secretos locales
+/etc/odoo.conf
+/.env
+
+# Logs
+/etc/odoo-server.log
+*.log
+
+# Archivos temporales de Python
+__pycache__/
+*.py[cod]
+
+# Entorno local
+.venv/
+venv/
+
+# Archivos del sistema
+.DS_Storepostgresql/
+etc/odoo-server.log
+etc/addons/
+etc/sessions/
+etc/filestore/

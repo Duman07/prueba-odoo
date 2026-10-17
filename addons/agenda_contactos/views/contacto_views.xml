@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_agenda_contacto_list" model="ir.ui.view">
+        <field name="name">agenda.contacto.list</field>
+        <field name="model">agenda.contacto</field>
+        <field name="arch" type="xml">
+            <list string="Contactos">
+                <field name="name"/>
+                <field name="telefono"/>
+                <field name="correo"/>
+                <field name="empresa"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_agenda_contacto_form" model="ir.ui.view">
+        <field name="name">agenda.contacto.form</field>
+        <field name="model">agenda.contacto</field>
+        <field name="arch" type="xml">
+            <form string="Contacto">
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="telefono"/>
+                        <field name="correo"/>
+                        <field name="direccion"/>
+                        <field name="empresa"/>
+                    </group>
+                    <group>
+                        <field name="notas"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_agenda_contactos" model="ir.actions.act_window">
+        <field name="name">Agenda de Contactos</field>
+        <field name="res_model">agenda.contacto</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_agenda_contactos_root"
+              name="Agenda de Contactos"
+              sequence="20"
+              groups="base.group_user"/>
+
+    <menuitem id="menu_agenda_contactos"
+              name="Contactos"
+              parent="menu_agenda_contactos_root"
+              action="action_agenda_contactos"
+              sequence="10"
+              groups="base.group_user"/>
+</odoo>
