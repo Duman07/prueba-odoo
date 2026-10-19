@@ -1,12 +1,14 @@
 {
     "name": "Motos Alfa - Ficha de producto Hunk 150 XT",
-    "version": "18.0.1.3.0",
+    "version": "18.0.1.4.0",
     "summary": "Estructura base de la página de la Hero Hunk 150 XT, preparada para modelo 3D, animación de entrada y vista 360°",
     "category": "Website/Website",
     "author": "Personalización local",
     "license": "LGPL-3",
-    "depends": ["website"],
+    "depends": ["website", "website_sale"],
     "data": [
+        "views/product_category_views.xml",
+        "views/moto_mega_menu.xml",
         "views/hunk_150_xt_page.xml",
         "views/snippets/s_moto_snippets.xml",
     ],

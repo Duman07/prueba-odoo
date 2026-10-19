@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Página maestra de cada categoría de motos (diseño de /moto/<moto>) -->
+    <record id="product_category_form_view_moto" model="ir.ui.view">
+        <field name="name">product.category.form.moto.master.page</field>
+        <field name="model">product.category</field>
+        <field name="inherit_id" ref="product.product_category_form_view"/>
+        <field name="arch" type="xml">
+            <field name="parent_id" position="after">
+                <field name="moto_master_page_id" options="{'no_create': True}"/>
+            </field>
+        </field>
+    </record>
+
+</odoo>

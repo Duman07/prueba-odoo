@@ -112,6 +112,14 @@ publicWidget.registry.MotoIntro3D = publicWidget.Widget.extend({
             });
         }
         this.stage.appendChild(this.media);
+        if (this.isImage) {
+            this._onColorChange = (ev) => {
+                if (isImageSrc(ev.detail.src) && this.media.getAttribute("src") !== ev.detail.src) {
+                    this.media.src = ev.detail.src;
+                }
+            };
+            document.addEventListener("moto-color-change", this._onColorChange);
+        }
         this.el.classList.add("s_moto_has_model");
 
         const animate = this.el.dataset.motoIntro !== "false" && !this.editableMode && !prefersReducedMotion();
@@ -140,6 +148,9 @@ publicWidget.registry.MotoIntro3D = publicWidget.Widget.extend({
     },
 
     destroy() {
+        if (this._onColorChange) {
+            document.removeEventListener("moto-color-change", this._onColorChange);
+        }
         if (this.frame) {
             cancelAnimationFrame(this.frame);
         }

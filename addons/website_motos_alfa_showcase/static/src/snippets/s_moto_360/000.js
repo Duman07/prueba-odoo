@@ -7,6 +7,7 @@ import {
     isImageSrc,
     loadModelViewer,
     prefersReducedMotion,
+    waitForModelLoad,
 } from "@website_motos_alfa_showcase/js/model_viewer_loader";
 import { FrameSequence, parseFrames } from "@website_motos_alfa_showcase/js/frame_sequence";
 
@@ -14,6 +15,15 @@ const INITIAL_ORBIT = "-30deg 75deg 105%";
 const ZOOM_STEP = 3;
 // Distancia de cámara al enfocar un punto destacado (% de la distancia ideal).
 const HOTSPOT_RADIUS = "55%";
+
+/**
+ * Valores de atributo del enlace de la tienda (/moto/...#attribute_values=19), que indican
+ * el color elegido por el visitante en el bloque «Productos».
+ */
+function hashAttributeValues() {
+    const match = window.location.hash.match(/attribute_values=([\d,]+)/);
+    return match ? match[1].split(",") : [];
+}
 
 /**
  * Bloque «Visor 360°»: rotación con arrastre, acercamiento, giro automático,
@@ -52,17 +62,36 @@ publicWidget.registry.MotoViewer360 = publicWidget.Widget.extend({
         this.autoRotate = this.el.dataset.autoRotate !== "false";
 
         const mainSrc = (this.el.dataset.modelSrc || "").trim();
+        let linkedIndex = -1;
         if (!this.editableMode) {
             this._makeItemsInteractive();
             if (this.swatches.length) {
+                const values = hashAttributeValues();
+                linkedIndex = values.length
+                    ? this.swatches.findIndex((swatch) =>
+                          (swatch.dataset.attributeValueIds || "").split(",").some((id) => values.includes(id)))
+                    : -1;
                 const initial = this.swatches.findIndex((swatch) => mainSrc && swatch.dataset.modelSrc === mainSrc);
-                this._selectSwatch(Math.max(initial, 0), false);
+                this._selectSwatch(linkedIndex >= 0 ? linkedIndex : Math.max(initial, 0), false);
             }
         }
         if (!this.viewerWrap || !mainSrc) {
             return;
         }
         await this._showSrc(mainSrc);
+        if (linkedIndex >= 0) {
+            // La variante de material del color solo se conoce cuando termina de cargar el modelo.
+            if (this.viewer && !this.viewer.classList.contains("d-none")) {
+                try {
+                    await waitForModelLoad(this.viewer);
+                } catch {
+                    return;
+                }
+            }
+            if (!this.isDestroyed()) {
+                await this._selectSwatch(linkedIndex);
+            }
+        }
     },
 
     destroy() {
@@ -238,6 +267,10 @@ publicWidget.registry.MotoViewer360 = publicWidget.Widget.extend({
         const src = (swatch.dataset.modelSrc || this.el.dataset.modelSrc || "").trim();
         if (src) {
             await this._showSrc(src);
+        }
+        if (swatch.dataset.modelSrc && isImageSrc(src)) {
+            // La foto del color también se muestra en el bloque «Moto 3D» de la página.
+            this.el.dispatchEvent(new CustomEvent("moto-color-change", { bubbles: true, detail: { src } }));
         }
         const variant = (swatch.dataset.variant || "").trim();
         if (variant && this.viewer && !isImageSrc(src) && this.viewer.availableVariants?.includes(variant)) {

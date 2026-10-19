@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!--
+        Mega menú «Modelos»: en lugar del contenido guardado desde el editor, lista las motos del
+        inventario (categoría MOTOS), una columna por subcategoría (ECO, HUNK…), con el mismo diseño.
+    -->
+    <template id="moto_mega_menu_content" name="Mega menú de motos">
+        <section class="s_mega_menu_odoo_menu pt16 o_colored_level o_cc o_cc1">
+            <div class="container">
+                <div class="row">
+                    <t t-set="moto_groups" t-value="request.env['product.template']._moto_menu_groups()"/>
+                    <div t-foreach="moto_groups" t-as="group" class="col-12 col-lg-3 pt16 pb24 o_colored_level">
+                        <h4 class="text-uppercase h5 fw-bold mt-0" t-out="group[0].name"/>
+                        <div class="s_hr pt4 pb16" data-name="Separador">
+                            <hr class="w-100 mx-auto" t-attf-style="border-top-width: 2px; border-top-color: var(--#{'secondary' if group_index % 2 else 'primary'});"/>
+                        </div>
+                        <nav class="nav flex-column">
+                            <a t-foreach="group[1]" t-as="moto" t-att-href="moto._moto_url()" class="nav-link px-0" data-name="Menu Item" t-out="moto.name"/>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+            <div class="container-fluid border-top s_mega_menu_odoo_menu_footer">
+                <div class="row">
+                    <div class="col-12 pt8 pb8">
+                        <div class="s_social_media text-center o_not_editable" data-name="Social Media">
+                            <h5 class="s_social_media_title d-none">Síganos</h5>
+                            <a href="/website/social/facebook" class="s_social_media_facebook me-3 ms-3" target="_blank" aria-label="Facebook">
+                                <i class="fa fa-2x fa-facebook m-1"/>
+                            </a>
+                            <a href="/website/social/twitter" class="s_social_media_twitter me-3 ms-3" target="_blank" aria-label="X">
+                                <i class="fa fa-2x fa-twitter m-1"/>
+                            </a>
+                            <a href="/website/social/linkedin" class="s_social_media_linkedin me-3 ms-3" target="_blank" aria-label="LinkedIn">
+                                <i class="fa fa-2x fa-linkedin m-1"/>
+                            </a>
+                            <a href="/website/social/github" class="s_social_media_github me-3 ms-3" target="_blank" aria-label="GitHub">
+                                <i class="fa fa-2x fa-github m-1"/>
+                            </a>
+                            <a href="/website/social/youtube" class="s_social_media_youtube me-3 ms-3" target="_blank" aria-label="YouTube">
+                                <i class="fa fa-2x fa-youtube m-1"/>
+                            </a>
+                            <a href="/website/social/instagram" class="s_social_media_instagram me-3 ms-3" target="_blank" aria-label="Instagram">
+                                <i class="fa fa-2x fa-instagram m-1"/>
+                            </a>
+                            <a href="/website/social/tiktok" class="s_social_media_tiktok me-3 ms-3" target="_blank" aria-label="TikTok">
+                                <i class="fa fa-2x fa-tiktok m-1"/>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </template>
+
+    <template id="submenu_moto_catalog" inherit_id="website.submenu" name="Mega menú Modelos con motos del inventario">
+        <xpath expr="//div[@data-name='Mega Menu']" position="attributes">
+            <attribute name="t-if">not is_mobile and not submenu._moto_is_catalog_menu()</attribute>
+        </xpath>
+        <xpath expr="//div[@data-name='Mega Menu']" position="after">
+            <div t-if="not is_mobile and submenu._moto_is_catalog_menu()"
+                 t-attf-class="dropdown-menu o_mega_menu o_not_editable #{submenu.mega_menu_classes}"
+                 data-name="Mega Menu" role="menuitem">
+                <t t-call="website_motos_alfa_showcase.moto_mega_menu_content"/>
+            </div>
+        </xpath>
+    </template>
+
+</odoo>
