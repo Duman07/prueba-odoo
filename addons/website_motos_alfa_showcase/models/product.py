@@ -161,6 +161,7 @@ class ProductTemplate(models.Model):
             specs.append({
                 "name": line.attribute_id.name,
                 "value": ", ".join(line.value_ids.mapped("name")),
+                "values": line.value_ids.mapped("name"),
                 "image_url": self._moto_attachment_url(image) if image else "",
             })
         return specs

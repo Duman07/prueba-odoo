@@ -111,6 +111,22 @@ class TestMotoPages(HttpCase):
         cls.moto2 = cls.env["product.template"].create({"name": "Moto Dos", "categ_id": cls.line2.id})
         cls.moto3 = cls.env["product.template"].create({"name": "Moto Tres", "categ_id": cls.line2_child.id})
 
+    def test_spec_with_several_values(self):
+        suspension = self.env["product.attribute"].create({
+            "name": "Suspensión prueba",
+            "create_variant": "no_variant",
+            "value_ids": [(0, 0, {"name": "Delantera: Hidráulica"}), (0, 0, {"name": "Trasera: Monoshock"})],
+        })
+        self.moto.attribute_line_ids = [(0, 0, {"attribute_id": suspension.id, "value_ids": [(6, 0, suspension.value_ids.ids)]})]
+        wrap = self._wrap(self.url_open(self.moto._moto_url()))
+        # Una tarjeta más, con un valor por línea: la etiqueta en negrilla y el detalle con el color del diseño, sin negrilla.
+        self.assertEqual(wrap.count("o_diseno_col"), 2)
+        self.assertIn(
+            '<strong>Suspensión prueba </strong><br><strong>Delantera: </strong><span><font style="color: red;">Hidráulica</font></span>'
+            '<br><strong>Trasera: </strong><span><font style="color: red;">Monoshock</font></span>', wrap)
+        # La tarjeta con un solo valor queda como en el diseño.
+        self.assertIn('<strong>Motor prueba </strong><strong><font style="color: red;">160 cc 4V</font></strong>', wrap)
+
     def _wrap(self, response):
         self.assertEqual(response.status_code, 200)
         return response.text[response.text.index('<div id="wrap"'):response.text.index("</main>")].replace("&amp;", "&")

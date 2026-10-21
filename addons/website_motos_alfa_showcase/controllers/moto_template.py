@@ -135,6 +135,37 @@ def _spec_targets(card):
     return (titles[0], None) if titles else (None, None)
 
 
+def _fill_spec_values(value_el, values):
+    """Un valor por línea con el formato del valor del diseño; en «Etiqueta: detalle» la etiqueta va en negrilla sin ese
+    formato y el detalle con el color del diseño, sin negrilla.
+    Un solo valor sin etiqueta queda como en el diseño («Motor 160 cc 4V»)."""
+    if len(values) == 1 and ":" not in values[0]:
+        _set_text(value_el, values[0])
+        return
+    parent = value_el.getparent()
+    position = parent.index(value_el)
+    tail = value_el.tail
+    parent.remove(value_el)
+    elements = []
+    for value in values:
+        label, separator, detail = (part.strip() for part in value.partition(":"))
+        elements.append(html.Element("br"))
+        if separator and detail:
+            label_el = html.Element("strong")
+            label_el.text = f"{label}: "
+            elements.append(label_el)
+        line = copy.deepcopy(value_el)
+        line.tail = None
+        if separator and detail and line.tag in ("strong", "b"):
+            # Con etiqueta, el detalle va sin negrilla (conserva el color del diseño) para distinguirlo de la etiqueta.
+            line.tag = "span"
+        _set_text(line, detail if separator and detail else value)
+        elements.append(line)
+    elements[-1].tail = tail
+    for offset, element in enumerate(elements):
+        parent.insert(position + offset, element)
+
+
 def _fill_specs(wrap, specs):
     lists = _find(wrap, "s_product_list")
     cards = [card for block in lists for card in _find(block, "s_card")] or _find(wrap, "s_card")
@@ -175,7 +206,7 @@ def _fill_specs(wrap, specs):
         name_el, value_el = _spec_targets(card)
         if value_el is not None:
             _set_text(name_el, f"{spec['name']} ")
-            _set_text(value_el, spec["value"])
+            _fill_spec_values(value_el, spec["values"])
         elif name_el is not None:
             _set_text(name_el, f"{spec['name']}: {spec['value']}")
         row.insert(position + offset, new_column)
