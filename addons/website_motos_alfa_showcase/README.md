@@ -3,7 +3,7 @@
 Integrado en el sitio existente mediante `website.layout` (usa el encabezado, el menú y el pie de página del sitio).
 
 ## Relación entre archivos
-Los archivos del manifiesto llevan la etiqueta de su grupo (`[Bloques]`, `[Páginas de motos]`, `[Formulario]`).
+Los archivos del manifiesto llevan la etiqueta de su grupo (`[Bloques]`, `[Páginas de motos]`, `[Formulario]`, `[Tipos de moto]`).
 
 **[Bloques] «Moto 3D» y «Visor 360°»**
 - `views/snippets/s_moto_snippets.xml`: plantillas `s_moto_3d` y `s_moto_360`, grupo «Motos Alfa» del panel (miniaturas en `static/src/img/snippets_thumbs/`) y opciones del panel Personalizar.
@@ -31,9 +31,27 @@ Los archivos del manifiesto llevan la etiqueta de su grupo (`[Bloques]`, `[Pági
 - `views/moto_mega_menu.xml` + `models/website_menu.py`: mega menú con las motos por subcategoría.
 - Pruebas: `tests/test_moto_pages.py` (reutiliza `FAKE_GLB` de `tests/test_model_upload.py`).
 
+**[Tipos de moto] Bloque «Tipos de moto» en `/motos` y páginas `/motos/<tipo>`**
+- `views/snippets/s_moto_snippets.xml`: plantillas `s_moto_types` (el bloque, solo con su aviso) y `s_moto_types_content` (las tarjetas).
+- `static/src/snippets/s_moto_types/000.js`: pide las tarjetas a `controllers/motos.py` (`/website_motos_alfa_showcase/moto_types[/<tipo>]`) y las pone en el bloque.
+- `controllers/motos.py`: `moto_types_content` (tarjetas) y `moto_type_page` (`/motos/<tipo>`, muestra la página `/motos`).
+- `models/product.py`: `_moto_types`, `_moto_is_type`, `_moto_type_motos` y `_moto_type_url` de la categoría.
+- `static/src/snippets/s_moto_snippets.scss`: recuadro del aviso (oculto para los visitantes).
+- Pruebas: `tests/test_moto_types.py` (reutiliza `PIXEL_PNG` de `tests/test_moto_pages.py`).
+
 **[Formulario] Departamentos de Colombia**
 - `static/src/js/colombia_form_states.js` (formularios `.s_website_form`) → `controllers/colombia.py` (`/website_motos_alfa_showcase/colombia_states`).
 - Pruebas: `tests/test_colombia_states.py`.
+
+## Tipos de moto: página Motocicletas
+Las subcategorías **directas** de MOTOS son los **tipos** (Trabajadora, Urbana, Doble propósito, Scooter) y dentro de
+cada tipo van las líneas (ECO, Hunk, XPULSE, XOOM) con sus motos: `MOTOS / Urbana / Hunk`.
+- Bloque «Tipos de moto» (grupo «Motos Alfa»): se pone en la página `/motos` del editor. Ahí muestra una tarjeta por
+  tipo que tenga motos (foto de su primera moto con foto), en el orden en que se crearon los tipos.
+- Al hacer clic se abre `/motos/<tipo>` (p. ej. `/motos/urbana-95`): la misma página `/motos` (mismo diseño), con el
+  nombre del tipo, «Todos los tipos» y una tarjeta por moto que lleva a su página `/moto/...`.
+- Las tarjetas no se guardan en la página: se arman al abrirla, así un tipo o una moto nueva aparece sola.
+- Si `/motos` no está publicada, `/motos/<tipo>` tampoco se ve (salvo para los editores). El diseño se edita en `/motos`.
 
 ## Motos del inventario: páginas y mega menú automáticos
 Cada producto de la categoría **MOTOS** (o de sus subcategorías) que se pueda vender tiene su página en `/moto/<nombre>-<id>`.

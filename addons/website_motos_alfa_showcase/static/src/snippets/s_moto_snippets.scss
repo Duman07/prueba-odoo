@@ -112,6 +112,12 @@ body.editor_enable .s_moto_360_sequence {
     display: none;
 }
 
+// «Tipos de moto»: el aviso ocupa un recuadro mientras no hay tarjetas.
+.s_moto_types:not(.s_moto_has_content) .s_moto_types_content {
+    position: relative;
+    min-height: 10rem;
+}
+
 .s_moto_3d_replay {
     position: absolute;
     right: 1rem;
@@ -290,5 +296,10 @@ html:not(.o_add_snippets_preview) body:not(.editor_enable) {
                 display: none !important;
             }
         }
+    }
+
+    // «Tipos de moto»: el aviso no se muestra mientras cargan las tarjetas (o si fallan).
+    .s_moto_types:not(.s_moto_has_content) .s_moto_empty {
+        display: none !important;
     }
 }

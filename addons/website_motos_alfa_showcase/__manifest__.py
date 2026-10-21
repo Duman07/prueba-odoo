@@ -1,6 +1,6 @@
 {
     "name": "Motos Alfa - Ficha de producto Hunk 150 XT",
-    "version": "18.0.1.7.0",
+    "version": "18.0.1.8.0",
     "summary": "Estructura base de la página de la Hero Hunk 150 XT, preparada para modelo 3D, animación de entrada y vista 360°",
     "category": "Website/Website",
     "author": "Personalización local",
@@ -10,6 +10,7 @@
     #   [Bloques] Bloques «Moto 3D» y «Visor 360°»
     #   [Páginas de motos] Páginas de cada moto (/moto/...) y mega menú «Modelos»
     #   [Formulario] Formulario: departamentos de Colombia
+    #   [Tipos de moto] Bloque «Tipos de moto» en /motos y páginas /motos/<tipo>
     "data": [
         # [Páginas de motos] Campo «Página maestra» de la categoría y mega menú «Modelos»
         "views/product_category_views.xml",
@@ -17,6 +18,7 @@
         # [Páginas de motos] Campo «Fotos 360°» en la variante (color) y en la moto (models/product.py)
         "views/product_moto_360_views.xml",
         # [Bloques] Plantillas de los bloques, grupo «Motos Alfa» y sus opciones
+        # [Tipos de moto] Plantillas s_moto_types (bloque) y s_moto_types_content (tarjetas, controllers/motos.py)
         "views/snippets/s_moto_snippets.xml",
     ],
     "assets": {
@@ -29,6 +31,8 @@
             # (data-main-src, de controllers/moto_template.py) y s_moto_3d/000.js gira con sus fotos 360°
             "website_motos_alfa_showcase/static/src/snippets/s_moto_3d/000.js",
             "website_motos_alfa_showcase/static/src/snippets/s_moto_360/000.js",
+            # [Tipos de moto] Pide las tarjetas del bloque a controllers/motos.py
+            "website_motos_alfa_showcase/static/src/snippets/s_moto_types/000.js",
             # [Formulario] Departamentos de Colombia en los formularios del sitio
             "website_motos_alfa_showcase/static/src/js/colombia_form_states.js",
         ],

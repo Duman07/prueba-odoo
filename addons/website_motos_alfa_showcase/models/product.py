@@ -60,6 +60,31 @@ class ProductCategory(models.Model):
     def _moto_root(self):
         return self.sudo().search([("name", "=ilike", MOTO_CATEGORY_NAME), ("parent_id", "=", False)], limit=1)
 
+    # Tipos de moto: subcategorías directas de MOTOS (Trabajadora, Urbana…), para el bloque «Tipos de moto».
+
+    @api.model
+    def _moto_types(self):
+        """Tipos que tienen motos, en el orden en que se crearon."""
+        root = self._moto_root()
+        return root.child_id.sorted("id").filtered(lambda moto_type: moto_type._moto_type_motos())
+
+    def _moto_is_type(self):
+        self.ensure_one()
+        root = self._moto_root()
+        return bool(root) and self.sudo().parent_id == root
+
+    def _moto_type_motos(self):
+        """Motos del tipo (de sus líneas y subcategorías), por nombre."""
+        self.ensure_one()
+        parent_path = self.sudo().parent_path
+        return self.env["product.template"]._moto_search().filtered(
+            lambda moto: moto.categ_id.parent_path.startswith(parent_path))
+
+    def _moto_type_url(self):
+        self.ensure_one()
+        # Con el nombre del tipo y no el completo («MOTOS / Urbana»): /motos/urbana-95.
+        return f"/motos/{self.env['ir.http']._slug((self.id, self.name))}"
+
     def write(self, vals):
         res = super().write(vals)
         if MENU_FIELDS & set(vals):

@@ -93,6 +93,43 @@
         </section>
     </template>
 
+    <!-- Bloque «Tipos de moto»: las tarjetas las pone static/src/snippets/s_moto_types/000.js -->
+    <template id="s_moto_types" name="Tipos de moto">
+        <section class="s_moto_types o_cc o_cc1 pt48 pb48">
+            <div class="container">
+                <div class="s_moto_types_content o_not_editable">
+                    <div class="s_moto_empty">
+                        <span class="s_moto_empty_title">Tipos de moto</span>
+                        <span class="s_moto_empty_hint">Se llena solo: en /motos los tipos de MOTOS (Trabajadora, Urbana…) y en /motos/&lt;tipo&gt; sus motos.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </template>
+
+    <!-- Tarjetas del bloque «Tipos de moto» (controllers/motos.py), con el estilo del bloque «Productos» -->
+    <template id="s_moto_types_content" name="Tarjetas de tipos de moto">
+        <div t-if="moto_type" class="d-flex flex-wrap justify-content-between align-items-baseline gap-2 mb-4">
+            <h2 class="h3 text-uppercase mb-0" t-out="moto_type.name"/>
+            <a t-att-href="motos_page_url"><i class="fa fa-long-arrow-left me-2" role="presentation"/>Todos los tipos</a>
+        </div>
+        <div class="row g-4">
+            <div t-foreach="cards" t-as="card" class="col-6 col-lg-3">
+                <div class="o_carousel_product_card bg-transparent w-100 card border-0">
+                    <a class="o_carousel_product_img_link stretched-link" t-att-href="card['url']">
+                        <div t-if="card['image_url']" class="overflow-hidden rounded">
+                            <img class="card-img-top o_img_product_square o_img_product_cover h-auto" loading="lazy"
+                                 t-att-src="card['image_url']" t-att-alt="card['name']"/>
+                        </div>
+                    </a>
+                    <div class="p-3">
+                        <div class="h6 card-title text-uppercase" t-out="card['name']"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
     <!-- Registro en el panel de bloques: grupo «Motos Alfa» -->
     <template id="snippets" inherit_id="website.snippets" name="Motos Alfa snippets">
         <xpath expr="//t[@id='installed_snippets_hook']" position="after">
@@ -107,6 +144,10 @@
             <t t-snippet="website_motos_alfa_showcase.s_moto_360" string="Visor 360°" group="motos_alfa"
                 t-thumbnail="/website_motos_alfa_showcase/static/src/img/snippets_thumbs/s_moto_360.svg">
                 <keywords>moto, motocicleta, 360, 3d, glb, gltf, imagen, foto, fotos, secuencia, visor, girar, zoom</keywords>
+            </t>
+            <t t-snippet="website_motos_alfa_showcase.s_moto_types" string="Tipos de moto" group="motos_alfa"
+                t-thumbnail="/website_motos_alfa_showcase/static/src/img/snippets_thumbs/s_moto_group.svg">
+                <keywords>moto, motocicleta, tipos, categorías, trabajadora, urbana, doble propósito, scooter, catálogo</keywords>
             </t>
         </xpath>
     </template>
