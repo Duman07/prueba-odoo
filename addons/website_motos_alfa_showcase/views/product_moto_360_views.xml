@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Fotos 360° de cada color (variante): giro del «Visor 360°» e imagen principal de /moto/<moto> -->
+    <record id="product_variant_easy_edit_view_moto_360" model="ir.ui.view">
+        <field name="name">product.product.variant.form.moto.360</field>
+        <field name="model">product.product</field>
+        <field name="inherit_id" ref="website_sale.product_product_view_form_easy_inherit_website_sale"/>
+        <field name="arch" type="xml">
+            <group name="product_variant_images" position="after">
+                <group colspan="2" name="moto_360_images" string="Fotos 360°">
+                    <field name="moto_360_image_ids" widget="many2many_binary" colspan="2" nolabel="1"/>
+                    <div colspan="2" class="text-muted">
+                        Selecciona a la vez todas las fotos tomadas alrededor de la moto (p. ej. 24, una cada 15°).
+                        Se ordenan por nombre (moto-2 antes que moto-10): la primera es la vista de frente.
+                    </div>
+                </group>
+            </group>
+        </field>
+    </record>
+
+    <!-- Color principal y fotos 360° de la moto (para motos sin colores o colores sin fotos propias) -->
+    <record id="product_template_form_view_moto_360" model="ir.ui.view">
+        <field name="name">product.template.form.moto.360</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="website_sale.product_template_form_view"/>
+        <field name="arch" type="xml">
+            <group name="product_template_images" position="after">
+                <group colspan="2" name="moto_360_images" string="Página de la moto" invisible="not sale_ok">
+                    <field name="moto_main_variant_id" options="{'no_create': True, 'no_open': True}"/>
+                    <field name="moto_360_image_ids" widget="many2many_binary"/>
+                    <div colspan="2" class="text-muted">
+                        Color principal: el color con el que se abre la página. Fotos 360°: para motos sin colores
+                        o colores sin fotos propias (Variantes → Fotos 360°); se ordenan por nombre y la primera es la vista de frente.
+                    </div>
+                </group>
+            </group>
+        </field>
+    </record>
+
+</odoo>

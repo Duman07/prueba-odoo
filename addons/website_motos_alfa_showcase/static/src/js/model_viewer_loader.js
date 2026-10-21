@@ -84,3 +84,22 @@ export function waitForModelLoad(viewer) {
         viewer.addEventListener("error", reject, { once: true });
     });
 }
+
+/**
+ * Valores de atributo del enlace de la tienda (/moto/...#attribute_values=19), que indican
+ * el color elegido por el visitante en el bloque «Productos».
+ */
+export function hashAttributeValues() {
+    const match = window.location.hash.match(/attribute_values=([\d,]+)/);
+    return match ? match[1].split(",") : [];
+}
+
+/** Posición de la muestra de color del enlace de la tienda, o -1. */
+export function linkedSwatchIndex(swatches) {
+    const values = hashAttributeValues();
+    if (!values.length) {
+        return -1;
+    }
+    return swatches.findIndex((swatch) =>
+        (swatch.dataset.attributeValueIds || "").split(",").some((id) => values.includes(id)));
+}

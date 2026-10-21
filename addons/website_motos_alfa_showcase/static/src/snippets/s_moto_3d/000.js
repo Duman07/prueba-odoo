@@ -6,6 +6,7 @@ import {
     createModelViewer,
     getBaseYaw,
     isImageSrc,
+    linkedSwatchIndex,
     loadModelViewer,
     prefersReducedMotion,
     waitForModelLoad,
@@ -30,9 +31,6 @@ const TURN_RIGHT_DEG = 25;
 // Cabeceo al frenar (compresión de la horquilla) y desenfoque de velocidad.
 const BRAKE_DIVE_DEG = 1.5;
 const MAX_BLUR_PX = 2;
-// Con una imagen en lugar de modelo, el giro se simula con perspectiva: la foto se inclina
-// durante la fase de giro y vuelve a quedar de frente (ángulo máximo en grados).
-const IMAGE_TURN_DEG = 12;
 
 const clamp01 = (value) => Math.min(1, Math.max(0, value));
 const progress = (time, from, to) => clamp01((time - from) / (to - from));
@@ -71,21 +69,26 @@ function phaseAt(time) {
 }
 
 /**
- * Bloque «Moto 3D»: carga el modelo (o una imagen) y reproduce la animación de entrada
- * (entrada, aceleración, giro a la derecha, frenada) al hacerse visible.
- * Emite el evento "moto-intro-phase" en cada cambio de fase.
+ * Bloque «Moto 3D»: carga el modelo (o una imagen).
+ * - Modelo 3D: al hacerse visible reproduce la entrada (entrada, aceleración, giro a la derecha y frenada)
+ *   y emite "moto-intro-phase" en cada fase.
+ * - Foto (o fotos 360°, de las que se usa la primera, de frente): foto fija, sin animación.
+ * En la página de una moto, el color elegido cambia la foto: con los colores dentro de este bloque
+ * o en el «Visor 360°» (evento "moto-color-change").
  */
 publicWidget.registry.MotoIntro3D = publicWidget.Widget.extend({
     selector: ".s_moto_3d",
     disabledInEditableMode: false,
     read_events: {
         "click .s_moto_3d_replay": "_onReplayClick",
+        "click .s_moto_360_swatch": "_onSwatchClick",
+        "keydown .s_moto_360_swatch": "_onSwatchKeydown",
     },
 
     async start() {
         await this._super(...arguments);
         this.stage = this.el.querySelector(".s_moto_3d_stage");
-        // Con una secuencia de fotos 360° se usa la primera foto.
+        // Con una secuencia de fotos 360° se muestra la primera (de frente).
         const rawSrc = (this.el.dataset.modelSrc || "").trim();
         const src = parseFrames(rawSrc)[0] || rawSrc;
         if (!this.stage || !src) {
@@ -112,8 +115,16 @@ publicWidget.registry.MotoIntro3D = publicWidget.Widget.extend({
             });
         }
         this.stage.appendChild(this.media);
+        if (this.isImage) {
+            this._onColorChange = (ev) => this._showImage(ev.detail.src);
+            document.addEventListener("moto-color-change", this._onColorChange);
+        }
         this.el.classList.add("s_moto_has_model");
 
+        this._setupSwatches();
+        if (this.isImage) {
+            return;
+        }
         const animate = this.el.dataset.motoIntro !== "false" && !this.editableMode && !prefersReducedMotion();
         if (!animate) {
             this._applyPose(introPose(INTRO_DURATION));
@@ -121,7 +132,7 @@ publicWidget.registry.MotoIntro3D = publicWidget.Widget.extend({
         }
         this._applyPose(introPose(0));
         try {
-            await (this.isImage ? this.media.decode() : waitForModelLoad(this.media));
+            await waitForModelLoad(this.media);
         } catch {
             this._applyPose(introPose(INTRO_DURATION));
             return;
@@ -129,17 +140,23 @@ publicWidget.registry.MotoIntro3D = publicWidget.Widget.extend({
         if (this.isDestroyed()) {
             return;
         }
-        this.observer = new IntersectionObserver((entries) => {
-            if (entries.some((entry) => entry.isIntersecting)) {
-                this.observer.disconnect();
-                this.observer = null;
-                this._playIntro();
-            }
-        }, { threshold: 0.35 });
-        this.observer.observe(this.stage);
+        this._playWhenVisible(() => this._playIntro());
     },
 
     destroy() {
+        // Deja el HTML como estaba para que el editor no guarde estados de visualización.
+        for (const swatch of this.swatches || []) {
+            swatch.classList.remove("active");
+            for (const attribute of ["role", "tabindex", "aria-pressed", "aria-label"]) {
+                swatch.removeAttribute(attribute);
+            }
+        }
+        if (this.colorNameEl && this.initialColorName !== undefined) {
+            this.colorNameEl.textContent = this.initialColorName;
+        }
+        if (this._onColorChange) {
+            document.removeEventListener("moto-color-change", this._onColorChange);
+        }
         if (this.frame) {
             cancelAnimationFrame(this.frame);
         }
@@ -150,13 +167,62 @@ publicWidget.registry.MotoIntro3D = publicWidget.Widget.extend({
         this._super(...arguments);
     },
 
+    _playWhenVisible(play) {
+        this.observer = new IntersectionObserver((entries) => {
+            if (entries.some((entry) => entry.isIntersecting)) {
+                this.observer.disconnect();
+                this.observer = null;
+                play();
+            }
+        }, { threshold: 0.35 });
+        this.observer.observe(this.stage);
+    },
+
     _applyPose({ x, turn, dive, blur }) {
-        const imageTilt = IMAGE_TURN_DEG * Math.sin((Math.PI * turn) / TURN_RIGHT_DEG);
-        const imageTurn = this.isImage ? ` perspective(1200px) rotateY(${-imageTilt}deg)` : "";
-        this.media.style.transform = `translate3d(${x}%, 0, 0) rotate(${dive}deg)${imageTurn}`;
+        this.media.style.transform = `translate3d(${x}%, 0, 0) rotate(${dive}deg)`;
         this.media.style.filter = blur > 0.1 ? `blur(${blur.toFixed(2)}px)` : "";
-        if (!this.isImage) {
-            this.media.setAttribute("orientation", `0deg 0deg ${this.baseYaw - turn}deg`);
+        this.media.setAttribute("orientation", `0deg 0deg ${this.baseYaw - turn}deg`);
+    },
+
+    /**
+     * Colores movidos a este bloque (panel «Colores» del Visor 360°): al elegir uno se muestran sus fotos.
+     * Abre en el color del enlace de la tienda (#attribute_values=…) o en el primero.
+     */
+    _setupSwatches() {
+        this.swatches = [...this.el.querySelectorAll(".s_moto_360_swatch")];
+        this.colorNameEl = this.el.querySelector(".s_moto_360_color_name");
+        this.initialColorName = this.colorNameEl?.textContent;
+        if (this.editableMode || !this.swatches.length) {
+            return;
+        }
+        this.swatches.forEach((swatch, index) => {
+            swatch.setAttribute("role", "button");
+            swatch.setAttribute("tabindex", "0");
+            swatch.setAttribute("aria-label", swatch.dataset.colorName || `Color ${index + 1}`);
+        });
+        this._selectSwatch(Math.max(linkedSwatchIndex(this.swatches), 0));
+    },
+
+    _selectSwatch(index) {
+        const swatch = this.swatches[index];
+        this.swatches.forEach((el, i) => {
+            el.classList.toggle("active", i === index);
+            el.setAttribute("aria-pressed", i === index ? "true" : "false");
+        });
+        if (this.colorNameEl && swatch.dataset.colorName) {
+            this.colorNameEl.textContent = swatch.dataset.colorName;
+        }
+        const src = swatch.dataset.mainSrc || swatch.dataset.modelSrc;
+        if (this.isImage && src) {
+            this._showImage(src);
+        }
+    },
+
+    /** Color elegido: su foto (con fotos 360°, la primera, de frente). */
+    _showImage(rawSrc) {
+        const src = parseFrames(rawSrc)[0] || (rawSrc || "").trim();
+        if (isImageSrc(src) && this.media.getAttribute("src") !== src) {
+            this.media.src = src;
         }
     },
 
@@ -177,18 +243,29 @@ publicWidget.registry.MotoIntro3D = publicWidget.Widget.extend({
                 this.frame = requestAnimationFrame(step);
             } else {
                 this.frame = null;
-                this._showReplayButton();
+                this._showReplayButton("Repetir animación");
             }
         };
         this.frame = requestAnimationFrame(step);
     },
 
-    _showReplayButton() {
+    _showReplayButton(label) {
         this.replayButton = document.createElement("button");
         this.replayButton.type = "button";
         this.replayButton.className = "btn btn-light s_moto_3d_replay";
-        this.replayButton.textContent = "Repetir animación";
+        this.replayButton.textContent = label;
         this.stage.appendChild(this.replayButton);
+    },
+
+    _onSwatchClick(ev) {
+        this._selectSwatch(this.swatches.indexOf(ev.currentTarget));
+    },
+
+    _onSwatchKeydown(ev) {
+        if (ev.key === "Enter" || ev.key === " ") {
+            ev.preventDefault();
+            ev.currentTarget.click();
+        }
     },
 
     _onReplayClick() {
