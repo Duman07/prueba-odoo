@@ -43,14 +43,20 @@ class MotoPages(http.Controller):
             "motos": request.env["product.template"]._moto_search(),
             "colors": moto._moto_colors(),
             "specs": moto._moto_specs(),
-            # Como en la página maestra: la foto en «Moto 3D» y el modelo .glb en el «Visor 360°».
-            "intro_src": image_url or model_url,
+            "media": moto._moto_media(moto.product_template_image_ids),
+            "description": moto._moto_description(),
             "model_url": model_url,
             "image_url": image_url,
         }
-        # Sin modelo 3D, el visor empieza con la foto del primer color.
-        first_color_image = values["colors"][0]["image_url"] if values["colors"] else ""
-        values["viewer_src"] = model_url or first_color_image or image_url
+        # Imagen principal y visor con el primer color: la imagen principal es una foto fija (la primera
+        # foto 360°, de frente, o la del color); el visor gira con las fotos 360° o usa el modelo .glb.
+        # Elegir otro color solo cambia la imagen principal.
+        colors = values["colors"]
+        frames = colors[0]["frames"] if colors else moto._moto_360_urls(moto.moto_360_image_ids)
+        first_color_image = colors[0]["image_url"] if colors else ""
+        sequence = " ".join(frames) if len(frames) > 1 else ""
+        values["intro_src"] = (frames[:1] or [first_color_image or image_url or model_url])[0]
+        values["viewer_src"] = model_url or sequence or (frames[:1] or [first_color_image or image_url])[0]
         # Sin marcas del editor: así nadie puede guardar los datos de esta moto dentro del diseño maestro.
         page_html = request.env["ir.ui.view"].with_context(inherit_branding=False)._render_template(
             master.key, {"additional_title": moto.name},
@@ -101,6 +107,26 @@ class MotoPages(http.Controller):
         if not variant or not variant.image_variant_1920:
             raise NotFound()
         stream = request.env["ir.binary"]._get_image_stream_from(variant, "image_variant_1920")
+        return stream.get_response(max_age=MEDIA_MAX_AGE)
+
+    @http.route("/moto/media/<int:moto_id>/medio/<int:media_id>/<string:filename>", type="http", auth="public", readonly=True)
+    def moto_extra_media(self, moto_id, media_id, filename, **kwargs):
+        moto = self._get_moto(moto_id)
+        media = moto._moto_extra_media().filtered(lambda m: m.id == media_id)
+        if not media or not media.image_1920:
+            raise NotFound()
+        stream = request.env["ir.binary"]._get_image_stream_from(media, "image_1920")
+        return stream.get_response(max_age=MEDIA_MAX_AGE)
+
+    @http.route("/moto/media/<int:moto_id>/giro/<int:attachment_id>/<string:filename>", type="http", auth="public", readonly=True)
+    def moto_360_image(self, moto_id, attachment_id, filename, **kwargs):
+        moto = self._get_moto(moto_id)
+        attachment = moto._moto_360_attachments().filtered(lambda a: a.id == attachment_id)
+        if not attachment:
+            raise NotFound()
+        stream = request.env["ir.binary"]._get_stream_from(attachment)
+        if not stream.mimetype.startswith("image/") or stream.mimetype == "image/svg+xml":
+            raise NotFound()
         return stream.get_response(max_age=MEDIA_MAX_AGE)
 
     @http.route("/moto/media/<int:moto_id>/adjunto/<int:attachment_id>/<string:filename>", type="http", auth="public", readonly=True)

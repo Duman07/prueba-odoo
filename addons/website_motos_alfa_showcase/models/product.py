@@ -1,6 +1,11 @@
+import re
 from urllib.parse import quote
 
+from lxml import html
+
 from odoo import api, fields, models
+
+from odoo.addons.web_editor.tools import get_video_url_data
 
 # Categoría raíz del inventario cuyas motos (y las de sus subcategorías) tienen página en el sitio.
 MOTO_CATEGORY_NAME = "MOTOS"
@@ -21,6 +26,11 @@ DEFAULT_SWATCH = "#8a9097"
 
 # Campos que cambian lo que muestra el mega menú «Modelos».
 MENU_FIELDS = {"name", "categ_id", "active", "sale_ok", "parent_id"}
+
+
+def _natural_key(attachment):
+    """Orden natural por nombre: moto-2 antes que moto-10."""
+    return [int(part) if part.isdigit() else part.casefold() for part in re.split(r"(\d+)", attachment.name or "")]
 
 
 def _clear_menu_cache(env):
@@ -59,6 +69,16 @@ class ProductCategory(models.Model):
 
 class ProductTemplate(models.Model):
     _inherit = "product.template"
+
+    moto_main_variant_id = fields.Many2one(
+        "product.product", string="Color principal", domain="[('product_tmpl_id', '=', id)]",
+        help="Color con el que se abre la página de la moto (primera muestra, imagen principal, visor, "
+             "fondo y video). Si está vacío, el primero de Odoo (por referencia interna).")
+    moto_360_image_ids = fields.Many2many(
+        "ir.attachment", "product_template_moto_360_rel", "product_tmpl_id", "attachment_id",
+        string="Fotos 360°",
+        help="Fotos tomadas alrededor de la moto (p. ej. 24, una cada 15°), para motos sin colores o "
+             "colores sin fotos propias. Se ordenan por nombre: la primera es la vista de frente.")
 
     @api.model
     def _moto_domain(self):
@@ -145,11 +165,59 @@ class ProductTemplate(models.Model):
             })
         return specs
 
+    def _moto_360_attachments(self):
+        """Fotos 360° de la moto y de sus colores."""
+        self.ensure_one()
+        return self.moto_360_image_ids | self.product_variant_ids.moto_360_image_ids
+
+    def _moto_360_urls(self, attachments):
+        """URL de las fotos 360°, en orden natural por nombre (solo imágenes)."""
+        images = attachments.filtered(lambda a: (a.mimetype or "").startswith("image/") and a.mimetype != "image/svg+xml")
+        return [
+            f"/moto/media/{self.id}/giro/{attachment.id}/{quote(attachment.name)}"
+            for attachment in images.sorted(_natural_key)
+        ]
+
+    def _moto_media_url(self, media):
+        unique = int(media.write_date.timestamp()) if media.write_date else 0
+        return f"/moto/media/{self.id}/medio/{media.id}/imagen.png?unique={unique}"
+
+    def _moto_extra_media(self):
+        """«Medios adicionales» del producto y de sus variantes (eCommerce)."""
+        self.ensure_one()
+        return self.product_template_image_ids | self.product_variant_ids.product_variant_image_ids
+
+    def _moto_media(self, medias):
+        """Fotos y videos de unos «Medios adicionales», en su orden: fondos y videos de la página."""
+        images, videos = [], []
+        for media in medias.sorted(lambda m: (m.sequence, m.id)):
+            if media.video_url:
+                data = get_video_url_data(media.video_url, autoplay=True, loop=True, hide_controls=True)
+                if not data.get("error"):
+                    videos.append(data["embed_url"])
+            elif media.image_1920:
+                images.append(self._moto_media_url(media))
+        return {"images": images, "videos": videos}
+
+    def _moto_description(self):
+        """Frase del producto (Descripción para comercio electrónico) en texto plano."""
+        self.ensure_one()
+        if not self.description_ecommerce:
+            return ""
+        return " ".join(html.fragment_fromstring(self.description_ecommerce, create_parent="div").text_content().split())
+
     def _moto_colors(self):
         """Una muestra por variante (Negro, Rojo, Verde…)."""
         self.ensure_one()
+        product_media = self._moto_media(self.product_template_image_ids)
+        product_frames = self._moto_360_urls(self.moto_360_image_ids)
+        product_image = self._moto_image_url()
         colors = []
-        for variant in self.product_variant_ids:
+        variants = self.product_variant_ids
+        if self.moto_main_variant_id in variants:
+            # El color principal va primero.
+            variants = self.moto_main_variant_id | variants
+        for variant in variants:
             values = variant.product_template_attribute_value_ids
             if not values:
                 continue
@@ -158,16 +226,26 @@ class ProductTemplate(models.Model):
                 DEFAULT_SWATCH,
             )
             unique = int(variant.write_date.timestamp()) if variant.write_date else 0
+            # Fotos y videos del color (Variantes → Medios adicionales); sin ellos, los del producto.
+            media = self._moto_media(variant.product_variant_image_ids)
+            image_url = (
+                f"/moto/media/{self.id}/variante/{variant.id}/imagen.png?unique={unique}"
+                if variant.image_variant_1920 else ""
+            )
+            frames = self._moto_360_urls(variant.moto_360_image_ids) or product_frames
             colors.append({
                 "name": ", ".join(values.mapped("name")),
                 "html_color": html_color,
                 # Foto propia de la variante (Variantes → imagen); sin ella el color usa la foto del producto.
-                "image_url": (
-                    f"/moto/media/{self.id}/variante/{variant.id}/imagen.png?unique={unique}"
-                    if variant.image_variant_1920 else ""
-                ),
+                "image_url": image_url,
+                # Fotos 360° del color (o de la moto) y la foto de la imagen principal al elegirlo:
+                # la primera foto 360° (de frente); sin ellas, la foto del color o la del producto.
+                "frames": frames,
+                "main_src": (frames[:1] or [image_url or product_image])[0],
                 # Mismos ids que el enlace de la tienda (#attribute_values=…), para abrir el visor en ese color.
                 "attribute_value_ids": ",".join(map(str, values.product_attribute_value_id.ids)),
+                "media_images": media["images"] or product_media["images"],
+                "media_videos": media["videos"] or product_media["videos"],
             })
         return colors
 
@@ -187,3 +265,13 @@ class ProductTemplate(models.Model):
         res = super().unlink()
         _clear_menu_cache(self.env)
         return res
+
+
+class ProductProduct(models.Model):
+    _inherit = "product.product"
+
+    moto_360_image_ids = fields.Many2many(
+        "ir.attachment", "product_product_moto_360_rel", "product_id", "attachment_id",
+        string="Fotos 360°",
+        help="Fotos de este color tomadas alrededor de la moto (p. ej. 24, una cada 15°). "
+             "Se ordenan por nombre: la primera es la vista de frente.")

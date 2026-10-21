@@ -3,9 +3,11 @@
 Los datos se colocan en los bloques que ya usa el diseño, sin marcas especiales:
 - «Moto 3D» (.s_moto_3d): foto, nombre en el <h1> y categoría en el texto que lo precede.
 - Cualquier texto igual al título original del diseño: nombre de la moto.
-- «Visor 360°» (.s_moto_360): modelo .glb y una muestra por color, copiando la primera muestra del diseño;
-  sin modelo, cada color muestra la foto de su variante (también en «Moto 3D»).
+- «Visor 360°» (.s_moto_360): modelo .glb o fotos 360° del primer color y una muestra por color, copiando la
+  primera muestra del diseño. Elegir un color solo cambia la imagen principal («Moto 3D», data-main-src).
 - Tarjetas de especificaciones (.s_card): una por especificación, copiando la primera tarjeta del diseño.
+- Secciones con imagen de fondo y videos del diseño: fotos y videos de «Medios adicionales» del primer color
+  (o del producto), en orden; el título de la primera sección con fondo lleva la descripción del producto.
 - Campo «Modelo» del formulario: lista de motos, con la actual elegida.
 - Enlaces a la página maestra: pasan a la página de la moto.
 """
@@ -68,7 +70,7 @@ def _fill_viewers(wrap, intro_src, viewer_src, moto):
         block.set("data-model-alt", moto.name)
 
 
-def _fill_colors(wrap, colors, model_url, image_url):
+def _fill_colors(wrap, colors):
     for container in _find(wrap, "s_moto_360_swatches"):
         swatches = _find(container, "s_moto_360_swatch")
         if not swatches:
@@ -83,12 +85,9 @@ def _fill_colors(wrap, colors, model_url, image_url):
                 swatch.attrib.pop(attribute, None)
             swatch.set("style", f"background-color: {color['html_color']};")
             swatch.set("data-color-name", color["name"])
-            if model_url:
-                # Con modelo 3D: si el .glb tiene una variante de material con el nombre del color, el visor la aplica.
-                swatch.set("data-variant", color["name"])
-            elif color["image_url"] or image_url:
-                # Sin modelo 3D: al elegir el color se muestra la foto de esa variante (o la del producto si no tiene).
-                swatch.set("data-model-src", color["image_url"] or image_url)
+            # Al elegir el color, la imagen principal muestra su foto (la primera foto 360°); el visor no cambia.
+            if color["main_src"]:
+                swatch.set("data-main-src", color["main_src"])
             swatch.set("data-attribute-value-ids", color["attribute_value_ids"])
             container.append(swatch)
         panel = container.getparent()
@@ -98,6 +97,33 @@ def _fill_colors(wrap, colors, model_url, image_url):
             continue
         for name in _find(panel, "s_moto_360_color_name"):
             _set_text(name, colors[0]["name"])
+
+
+BACKGROUND_IMAGE = re.compile(r"background-image:\s*url\((&quot;|[\"']?)(.*?)\1\)")
+
+
+def _inside_moto_block(element):
+    return any({"s_moto_3d", "s_moto_360"} & set(_classes(el)) for el in element.iterancestors())
+
+
+def _fill_media(wrap, media, description):
+    """Fondos de sección y videos del diseño (en orden) con los del producto; sin ellos se deja el del diseño."""
+    sections = [
+        el for el in _find(wrap, "oe_img_bg")
+        if BACKGROUND_IMAGE.search(el.get("style") or "")
+        and not {"s_moto_3d", "s_moto_360"} & set(_classes(el)) and not _inside_moto_block(el)
+    ]
+    for section, image in zip(sections, media["images"]):
+        section.set("style", BACKGROUND_IMAGE.sub(f'background-image: url("{image}")', section.get("style"), count=1))
+    for video, src in zip(_find(wrap, "media_iframe_video"), media["videos"]):
+        video.set("data-oe-expression", src)
+        iframe = next(iter(video.iter("iframe")), None)
+        if iframe is not None:
+            iframe.set("src", src)
+    if description and sections:
+        title = next((el for el in sections[0].iter("h1", "h2", "h3", "h4", "h5", "h6")), None)
+        if title is not None:
+            _set_text(title, description)
 
 
 def _spec_targets(card):
@@ -188,8 +214,13 @@ def fill_moto_page(page_html, moto, values, master_url, editor_notice=None):
     container = html.fragment_fromstring(page_html[start:end], create_parent="div")
     _fill_title(container, moto)
     _fill_viewers(container, values["intro_src"], values["viewer_src"], moto)
-    _fill_colors(container, values["colors"], values["model_url"], values["image_url"])
+    _fill_colors(container, values["colors"])
     _fill_specs(container, values["specs"])
+    colors = values["colors"]
+    page_media = (
+        {"images": colors[0]["media_images"], "videos": colors[0]["media_videos"]} if colors else values["media"]
+    )
+    _fill_media(container, page_media, values["description"])
     _fill_form(container, moto, values["motos"])
     _fill_links(container, master_url, moto._moto_url())
     if editor_notice is not None:

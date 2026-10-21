@@ -5,6 +5,7 @@ import {
     createMediaImage,
     createModelViewer,
     isImageSrc,
+    linkedSwatchIndex,
     loadModelViewer,
     prefersReducedMotion,
     waitForModelLoad,
@@ -15,15 +16,6 @@ const INITIAL_ORBIT = "-30deg 75deg 105%";
 const ZOOM_STEP = 3;
 // Distancia de cámara al enfocar un punto destacado (% de la distancia ideal).
 const HOTSPOT_RADIUS = "55%";
-
-/**
- * Valores de atributo del enlace de la tienda (/moto/...#attribute_values=19), que indican
- * el color elegido por el visitante en el bloque «Productos».
- */
-function hashAttributeValues() {
-    const match = window.location.hash.match(/attribute_values=([\d,]+)/);
-    return match ? match[1].split(",") : [];
-}
 
 /**
  * Bloque «Visor 360°»: rotación con arrastre, acercamiento, giro automático,
@@ -66,11 +58,7 @@ publicWidget.registry.MotoViewer360 = publicWidget.Widget.extend({
         if (!this.editableMode) {
             this._makeItemsInteractive();
             if (this.swatches.length) {
-                const values = hashAttributeValues();
-                linkedIndex = values.length
-                    ? this.swatches.findIndex((swatch) =>
-                          (swatch.dataset.attributeValueIds || "").split(",").some((id) => values.includes(id)))
-                    : -1;
+                linkedIndex = linkedSwatchIndex(this.swatches);
                 const initial = this.swatches.findIndex((swatch) => mainSrc && swatch.dataset.modelSrc === mainSrc);
                 this._selectSwatch(linkedIndex >= 0 ? linkedIndex : Math.max(initial, 0), false);
             }
@@ -259,6 +247,14 @@ publicWidget.registry.MotoViewer360 = publicWidget.Widget.extend({
         });
         if (this.colorNameEl && swatch.dataset.colorName) {
             this.colorNameEl.textContent = swatch.dataset.colorName;
+        }
+        if ("mainSrc" in swatch.dataset) {
+            // Página de una moto: el color solo cambia la imagen principal («Moto 3D»); el visor no cambia.
+            this.el.dispatchEvent(new CustomEvent("moto-color-change", {
+                bubbles: true,
+                detail: { src: swatch.dataset.mainSrc },
+            }));
+            return;
         }
         if (!applyToModel || !this.el.classList.contains("s_moto_has_model")) {
             return;

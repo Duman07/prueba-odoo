@@ -29,6 +29,10 @@ MASTER_ARCH = """
                     <p class="s_moto_360_color_name">Color 1</p>
                 </div>
             </section>
+            <section class="s_image_title oe_img_bg" style="background-position: 50% 70%; background-image: url(&quot;/web/image/9/fondo-plantilla.webp&quot;);">
+                <div class="container"><h1 class="display-3">Frase de la plantilla</h1></div>
+            </section>
+            <section class="s_text_block"><div class="media_iframe_video" data-oe-expression="//www.youtube.com/embed/AAAAAAAAAAA"/></section>
             <section class="s_product_list">
                 <div class="row">
                     <div class="col-lg-12"><h2>Especificaciones técnicas</h2></div>
@@ -123,7 +127,11 @@ class TestMotoPages(HttpCase):
         self.assertIn(f'data-model-src="{self.moto._moto_model_url()}"', wrap)
         # Una muestra por color, copiando la primera muestra del diseño.
         self.assertEqual(wrap.count("s_moto_360_swatch o_diseno"), 2)
-        self.assertIn(f'data-color-name="Rojo" data-variant="Rojo" data-attribute-value-ids="{self.red.id}"', wrap)
+        # Elegir un color solo cambia la imagen principal: sin fotos propias, la foto del producto.
+        self.assertIn(
+            f'data-color-name="Rojo" data-main-src="{self.moto._moto_image_url()}" data-attribute-value-ids="{self.red.id}"',
+            wrap)
+        self.assertNotIn("data-variant=", wrap)
         self.assertNotIn("/x.glb", wrap)
         # Una tarjeta por especificación, con el formato de la tarjeta «Motor» del diseño.
         self.assertEqual(wrap.count("o_diseno_col"), 1)
@@ -171,6 +179,97 @@ class TestMotoPages(HttpCase):
         # Los demás adjuntos del producto no se publican.
         self.assertEqual(self.url_open(self.moto._moto_attachment_url(self.pdf)).status_code, 404)
 
+    def test_extra_media_and_description(self):
+        """Fondos y videos de «Medios adicionales» del color (o del producto) y frase del producto."""
+        red = self.moto.product_variant_ids.filtered(lambda v: v.product_template_attribute_value_ids.name == "Rojo")
+        Media = self.env["product.image"]
+        product_photo = Media.create({"name": "Moto.png", "image_1920": PIXEL_PNG, "product_tmpl_id": self.moto.id})
+        Media.create({"name": "Video moto", "image_1920": PIXEL_PNG, "product_tmpl_id": self.moto.id,
+                      "video_url": "https://www.youtube.com/watch?v=BBBBBBBBBBB"})
+        red_photo = Media.create({"name": "Rojo.png", "image_1920": PIXEL_PNG, "product_variant_id": red.id})
+        Media.create({"name": "Video rojo", "image_1920": PIXEL_PNG, "product_variant_id": red.id,
+                      "video_url": "https://youtu.be/CCCCCCCCCCC"})
+
+        colors = {c["name"]: c for c in self.moto._moto_colors()}
+        self.assertEqual(colors["Rojo"]["media_images"], [self.moto._moto_media_url(red_photo)])
+        self.assertIn("/embed/CCCCCCCCCCC", colors["Rojo"]["media_videos"][0])
+        # Color sin medios propios: los del producto.
+        self.assertEqual(colors["Negro"]["media_images"], [self.moto._moto_media_url(product_photo)])
+        self.assertIn("/embed/BBBBBBBBBBB", colors["Negro"]["media_videos"][0])
+
+        # Sin descripción la frase del diseño se conserva; con descripción, la del producto.
+        self.assertIn("Frase de la plantilla", self._wrap(self.url_open(self.moto._moto_url())))
+        self.moto.description_ecommerce = "<p>La moto de <b>prueba</b></p>"
+        wrap = self._wrap(self.url_open(self.moto._moto_url()))
+        self.assertIn('<h1 class="display-3">La moto de prueba</h1>', wrap)
+        self.assertNotIn("Frase de la plantilla", wrap)
+        # Fondo y video: los del primer color, fijos (elegir otro color no los cambia).
+        first = self.moto._moto_colors()[0]
+        self.assertIn(f'background-image: url("{first["media_images"][0]}")', wrap)
+        self.assertIn(f'data-oe-expression="{first["media_videos"][0]}"', wrap)
+        self.assertNotIn("fondo-plantilla", wrap)
+        self.assertNotIn("AAAAAAAAAAA", wrap)
+
+        photo = self.url_open(self.moto._moto_media_url(red_photo))
+        self.assertEqual(photo.status_code, 200)
+        self.assertTrue(photo.headers["Content-Type"].startswith("image/"))
+        # Un medio de otra moto no se sirve con esta dirección.
+        self.assertEqual(self.url_open(f"/moto/media/{self.moto2.id}/medio/{red_photo.id}/imagen.png").status_code, 404)
+
+    def test_360_photos(self):
+        """Fotos 360° del color (o de la moto), en orden natural: giro de la imagen principal y del visor."""
+        moto = self.env["product.template"].create({
+            "name": "Moto Giro",
+            "categ_id": self.line.id,
+            "image_1920": PIXEL_PNG,
+            "attribute_line_ids": [(0, 0, {
+                "attribute_id": self.red.attribute_id.id,
+                "value_ids": [(6, 0, self.red.attribute_id.value_ids.ids)],
+            })],
+        })
+        red = moto.product_variant_ids.filtered(lambda v: v.product_template_attribute_value_ids.name == "Rojo")
+        Attachment = self.env["ir.attachment"]
+        red.moto_360_image_ids = Attachment.create([
+            {"name": name, "datas": PIXEL_PNG, "res_model": "product.product", "res_id": red.id}
+            for name in ("rojo-10.png", "rojo-2.png", "rojo-1.png")
+        ])
+        moto.moto_360_image_ids = Attachment.create([
+            {"name": name, "datas": PIXEL_PNG, "res_model": "product.template", "res_id": moto.id}
+            for name in ("moto-1.png", "moto-2.png")
+        ])
+        colors = {c["name"]: c for c in moto._moto_colors()}
+        red_frames = colors["Rojo"]["frames"]
+        self.assertEqual([url.rsplit("/", 1)[1] for url in red_frames], ["rojo-1.png", "rojo-2.png", "rojo-10.png"])
+        self.assertEqual(colors["Rojo"]["main_src"], red_frames[0])
+        # Color sin fotos propias: las de la moto.
+        self.assertEqual([url.rsplit("/", 1)[1] for url in colors["Negro"]["frames"]], ["moto-1.png", "moto-2.png"])
+
+        wrap = self._wrap(self.url_open(moto._moto_url()))
+        first = moto._moto_colors()[0]
+        sequence = " ".join(first["frames"])
+        # Sin modelo .glb, el visor gira con las fotos del primer color; la imagen principal es la primera foto.
+        self.assertEqual(wrap.count(f'data-model-src="{sequence}"'), 1)
+        self.assertIn(f'data-model-src="{first["frames"][0]}"', wrap)
+        self.assertIn(f'data-color-name="Rojo" data-main-src="{red_frames[0]}"', wrap)
+
+        photo = self.url_open(red_frames[0])
+        self.assertEqual(photo.status_code, 200)
+        self.assertTrue(photo.headers["Content-Type"].startswith("image/"))
+        # Solo las fotos 360° de esta moto.
+        self.assertEqual(self.url_open(f"/moto/media/{moto.id}/giro/{self.glb.id}/moto.glb").status_code, 404)
+
+        # Color principal: va primero y la página abre con sus fotos.
+        for main in moto.product_variant_ids:
+            with self.subTest(color=main.product_template_attribute_value_ids.name):
+                moto.moto_main_variant_id = main
+                main_colors = moto._moto_colors()
+                self.assertEqual(main_colors[0]["name"], main.product_template_attribute_value_ids.name)
+                wrap = self._wrap(self.url_open(moto._moto_url()))
+                self.assertEqual(wrap.count(f'data-model-src="{" ".join(main_colors[0]["frames"])}"'), 1)
+                self.assertIn(f'data-model-src="{main_colors[0]["frames"][0]}"', wrap)
+                self.assertLess(wrap.index(f'data-color-name="{main_colors[0]["name"]}"'),
+                                wrap.index(f'data-color-name="{main_colors[1]["name"]}"'))
+
     def test_shop_links_use_moto_template(self):
         self.assertEqual(self.moto.website_url, self.moto._moto_url())
         self.assertTrue(self.moto.product_variant_ids[0].website_url.startswith(self.moto._moto_url()))
@@ -207,9 +306,8 @@ class TestMotoPages(HttpCase):
         self.assertFalse(colors["Blanco"]["image_url"])
 
         wrap = self._wrap(self.url_open(moto._moto_url()))
-        self.assertIn(f'data-color-name="Azul" data-model-src="{colors["Azul"]["image_url"]}"', wrap)
-        self.assertNotIn('data-variant="Azul"', wrap)
-        self.assertIn(f'data-color-name="Blanco" data-model-src="{moto._moto_image_url()}"', wrap)
+        self.assertIn(f'data-color-name="Azul" data-main-src="{colors["Azul"]["image_url"]}"', wrap)
+        self.assertIn(f'data-color-name="Blanco" data-main-src="{moto._moto_image_url()}"', wrap)
         photo = self.url_open(colors["Azul"]["image_url"])
         self.assertEqual(photo.status_code, 200)
         self.assertTrue(photo.headers["Content-Type"].startswith("image/"))
