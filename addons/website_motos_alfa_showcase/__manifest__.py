@@ -1,6 +1,6 @@
 {
     "name": "Motos Alfa - Ficha de producto Hunk 150 XT",
-    "version": "18.0.1.8.0",
+    "version": "18.0.1.9.0",
     "summary": "Estructura base de la página de la Hero Hunk 150 XT, preparada para modelo 3D, animación de entrada y vista 360°",
     "category": "Website/Website",
     "author": "Personalización local",
@@ -20,6 +20,8 @@
         # [Bloques] Plantillas de los bloques, grupo «Motos Alfa» y sus opciones
         # [Tipos de moto] Plantillas s_moto_types (bloque) y s_moto_types_content (tarjetas, controllers/motos.py)
         "views/snippets/s_moto_snippets.xml",
+        # [whatsApp] boton flotante 
+        "views/whatsapp_button.xml",
     ],
     "assets": {
         "web.assets_frontend": [
@@ -35,6 +37,8 @@
             "website_motos_alfa_showcase/static/src/snippets/s_moto_types/000.js",
             # [Formulario] Departamentos de Colombia en los formularios del sitio
             "website_motos_alfa_showcase/static/src/js/colombia_form_states.js",
+            # [whatsApp] boton flotante
+            "website_motos_alfa_showcase/static/src/scss/whatsapp.scss",
         ],
         "website.assets_wysiwyg": [
             # [Bloques] Opciones de los bloques en el editor (subir archivo, ubicar puntos destacados)

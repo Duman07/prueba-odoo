@@ -1,5 +1,6 @@
 from lxml import html
 from werkzeug.exceptions import NotFound
+from urllib.parse import quote
 
 from odoo import http
 from odoo.http import request
@@ -17,6 +18,7 @@ DEFAULT_MASTER_KEY = "website.hunk-160r-4v"
 
 # Página del editor con el bloque «Tipos de moto»; /motos/<tipo> la muestra con las motos de ese tipo.
 MOTOS_PAGE_URL = "/motos"
+WHATSAPP_NUMBER = "573223995269"
 
 
 class MotoPages(http.Controller):
@@ -60,9 +62,12 @@ class MotoPages(http.Controller):
         sequence = " ".join(frames) if len(frames) > 1 else ""
         values["intro_src"] = (frames[:1] or [first_color_image or image_url or model_url])[0]
         values["viewer_src"] = model_url or sequence or (frames[:1] or [first_color_image or image_url])[0]
+        moto_link = request.httprequest.host_url.rstrip("/") + moto._moto_url()
+        whatsapp_text = f"Hola Motos Alfa, estoy interesado en la moto {moto.name}"
+        whatsapp_url = f"https://wa.me/{WHATSAPP_NUMBER}?text={quote(whatsapp_text)}"
         # Sin marcas del editor: así nadie puede guardar los datos de esta moto dentro del diseño maestro.
         page_html = request.env["ir.ui.view"].with_context(inherit_branding=False)._render_template(
-            master.key, {"additional_title": moto.name},
+            master.key, {"additional_title": moto.name, "whatsapp_url": whatsapp_url},
         )
         master_url = request.env["website.page"].sudo().search([("view_id", "=", master.id)], limit=1).url
         notice = None
