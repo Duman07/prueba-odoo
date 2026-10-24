@@ -16,8 +16,8 @@ MASTER_ARCH = """
                 <div class="o_grid_item">
                     <p><span class="o_small-fs"><strong><font style="color: red;">HERO · DISEÑO</font></strong></span></p>
                     <h1><span class="display-1-fs"><strong>DISEÑO 150</strong></span></h1>
-                    self.assertIn('<p class="s_moto_price_label">Precio Desde: </p>', wrap)
-                    self.assertIn('<p class="s_moto_price">$8.400.000</p>', wrap)
+                    <p>Precio Desde: </p>
+                    <p>$0.</p>
                     <a class="btn" href="/test-moto-master#cotizar">Contáctanos</a>
                 </div>
                 <div class="s_moto_3d_stage"/>
@@ -333,9 +333,11 @@ class TestMotoPages(HttpCase):
     def test_price(self):
         self.moto.list_price = 8400000
         wrap = self._wrap(self.url_open(self.moto._moto_url()))
-        self.assertIn('<span class="h3-fs"><strong>$8.400.000</strong></span>', wrap)
+        self.assertIn('<p class="s_moto_price_label">Precio Desde: </p>', wrap)
+        self.assertIn('<p class="s_moto_price">$8.400.000</p>', wrap)
         # Sin precio, no aparecen ni el precio ni «Precio Desde:».
         self.moto.list_price = 0
         wrap = self._wrap(self.url_open(self.moto._moto_url()))
         self.assertNotIn("Precio Desde", wrap)
         self.assertNotIn("$0", wrap)
+        

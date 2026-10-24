@@ -303,13 +303,15 @@ html:not(.o_add_snippets_preview) body:not(.editor_enable) {
         display: none !important;
     }
 }
+
+
 // [Páginas de motos] Precio de la moto en «Moto 3D». Las clases las pone _fill_price
 // (controllers/moto_template.py) en los párrafos «Precio Desde:» y «$0.» de la página maestra.
 .s_moto_3d .s_moto_price_label {
     margin-bottom: 0;
     font-size: $h5-font-size;
 }
-        
+
 
 .s_moto_3d .s_moto_price {
     font-size: $h3-font-size;

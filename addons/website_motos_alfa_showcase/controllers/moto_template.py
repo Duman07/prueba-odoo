@@ -94,6 +94,7 @@ def _fill_price(wrap, price):
             if label is not None:
                 label.set("class", " ".join(_classes(label) + ["s_moto_price_label"]))
 
+
 def _fill_colors(wrap, colors):
     for container in _find(wrap, "s_moto_360_swatches"):
         swatches = _find(container, "s_moto_360_swatch")
@@ -195,6 +196,8 @@ def _fill_specs(wrap, specs):
     cards = [card for block in lists for card in _find(block, "s_card")] or _find(wrap, "s_card")
     if not cards:
         return
+
+    
     # Tarjeta modelo: la primera con nombre y valor (en el diseño, «Motor 160 cc 4V»).
     prototype_card = next((card for card in cards if _spec_targets(card)[1] is not None), cards[0])
     column = prototype_card.getparent()
