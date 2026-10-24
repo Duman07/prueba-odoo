@@ -70,6 +70,30 @@ def _fill_viewers(wrap, intro_src, viewer_src, moto):
         block.set("data-model-alt", moto.name)
 
 
+PRICE_TEXT = re.compile(r"^\$\s*0[.,]?$")
+
+
+def _fill_price(wrap, price):
+    """Precio en «Moto 3D»: el texto «$0» del diseño lleva el precio de la moto y la clase s_moto_price
+    (el «Precio desde:» de encima, s_moto_price_label); el estilo está en s_moto_snippets.scss.
+    Si no tiene precio, se quitan los dos."""
+    for block in _find(wrap, "s_moto_3d"):
+        for element in list(block.iter("p")):
+            if not PRICE_TEXT.match(_norm(element.text_content())):
+                continue
+            label = element.getprevious()
+            if label is not None and "desde" not in _norm(label.text_content()):
+                label = None
+            if not price:
+                if label is not None:
+                    label.getparent().remove(label)
+                element.getparent().remove(element)
+                continue
+            _set_text(element, "$" + f"{round(price):,}".replace(",", "."))
+            element.set("class", " ".join(_classes(element) + ["s_moto_price"]))
+            if label is not None:
+                label.set("class", " ".join(_classes(label) + ["s_moto_price_label"]))
+
 def _fill_colors(wrap, colors):
     for container in _find(wrap, "s_moto_360_swatches"):
         swatches = _find(container, "s_moto_360_swatch")
@@ -234,7 +258,6 @@ def _fill_links(wrap, master_url, moto_url):
         if path.rstrip("/").lower() == master_url.rstrip("/").lower():
             link.set("href", f"#{fragment}" if fragment else moto_url)
 
-
 def fill_moto_page(page_html, moto, values, master_url, editor_notice=None):
     """Devuelve el HTML de la página con los datos de la moto en el contenido principal (<main>)."""
     start = page_html.find("<main>")
@@ -244,6 +267,7 @@ def fill_moto_page(page_html, moto, values, master_url, editor_notice=None):
     start += len("<main>")
     container = html.fragment_fromstring(page_html[start:end], create_parent="div")
     _fill_title(container, moto)
+    _fill_price(container, values["price"])
     _fill_viewers(container, values["intro_src"], values["viewer_src"], moto)
     _fill_colors(container, values["colors"])
     _fill_specs(container, values["specs"])

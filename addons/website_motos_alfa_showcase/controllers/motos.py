@@ -52,6 +52,7 @@ class MotoPages(http.Controller):
             "description": moto._moto_description(),
             "model_url": model_url,
             "image_url": image_url,
+            "price": moto.list_price,
         }
         # Imagen principal y visor con el primer color: la imagen principal es una foto fija (la primera
         # foto 360°, de frente, o la del color); el visor gira con las fotos 360° o usa el modelo .glb.
