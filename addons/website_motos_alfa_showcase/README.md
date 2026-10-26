@@ -3,7 +3,7 @@
 Integrado en el sitio existente mediante `website.layout` (usa el encabezado, el menú y el pie de página del sitio).
 
 ## Relación entre archivos
-Los archivos del manifiesto llevan la etiqueta de su grupo (`[Bloques]`, `[Páginas de motos]`, `[Formulario]`, `[Tipos de moto]`).
+Los archivos del manifiesto llevan la etiqueta de su grupo (`[Bloques]`, `[Páginas de motos]`, `[Formulario]`, `[Tipos de moto]`, `[whatsApp]`).
 
 **[Bloques] «Moto 3D» y «Visor 360°»**
 - `views/snippets/s_moto_snippets.xml`: plantillas `s_moto_3d` y `s_moto_360`, grupo «Motos Alfa» del panel (miniaturas en `static/src/img/snippets_thumbs/`) y opciones del panel Personalizar.
@@ -11,7 +11,13 @@ Los archivos del manifiesto llevan la etiqueta de su grupo (`[Bloques]`, `[Pági
 - `static/src/snippets/s_moto_3d/000.js` y `static/src/snippets/s_moto_360/000.js`: widgets de los bloques; importan
   `static/src/js/model_viewer_loader.js` (carga `static/lib/model-viewer/model-viewer.min.js`) y `static/src/js/frame_sequence.js`.
 - `static/src/js/editor/model_upload_option.js`: subir archivos desde el editor → `controllers/main.py` (`/website_motos_alfa_showcase/upload_model`).
-- `static/src/snippets/s_moto_360/options.js`: ubicar los puntos destacados sobre el modelo.
+- `static/src/snippets/s_moto_360/options.js`: ubicar los puntos destacados en una foto 360° («Foto n.º» + «Ubicar») o sobre
+  el modelo 3D. Para las fotos le pide el clic al widget (`s_moto_360/000.js`) con los eventos `moto-show-frame` y
+  `moto-pick-photo`; el widget usa `pickPoint()`/`pointToView()` de `static/src/js/frame_sequence.js` y dibuja el círculo
+  con la burbuja del texto (estilos en `s_moto_snippets.scss`).
+- En `s_moto_360` cada panel («Colores», «Puntos destacados») va en su propia columna: en cuadrícula se mueven por separado.
+  Los puntos destacados deben quedar dentro de la sección «Visor 360°» (`s_moto_360/000.js` solo los busca ahí);
+  el panel «Colores» también puede ir en «Moto 3D» (lo atiende `s_moto_3d/000.js`).
 - Pruebas: `tests/test_model_upload.py`.
 
 **[Páginas de motos] `/moto/<moto>` y mega menú «Modelos»**
@@ -27,6 +33,9 @@ Los archivos del manifiesto llevan la etiqueta de su grupo (`[Bloques]`, `[Pági
   cambia la foto de la imagen principal. Si el panel «Colores» está dentro de «Moto 3D», lo atiende
   `s_moto_3d/000.js` directamente. Ambos usan `linkedSwatchIndex()` de `static/src/js/model_viewer_loader.js`
   (color del enlace de la tienda).
+- Precio: `controllers/motos.py` pasa `list_price` y `_fill_price` (`controllers/moto_template.py`) cambia el «$0.» de
+  «Moto 3D» por el precio y pone las clases `s_moto_price` / `s_moto_price_label`; su estilo y el de la tarjeta están en
+  `static/src/snippets/s_moto_snippets.scss`.
 - `views/product_category_views.xml`: muestra «Página maestra (diseño web)» en la categoría.
 - `views/moto_mega_menu.xml` + `models/website_menu.py`: mega menú con las motos por subcategoría.
 - Pruebas: `tests/test_moto_pages.py` (reutiliza `FAKE_GLB` de `tests/test_model_upload.py`).
@@ -39,9 +48,13 @@ Los archivos del manifiesto llevan la etiqueta de su grupo (`[Bloques]`, `[Pági
 - `static/src/snippets/s_moto_snippets.scss`: recuadro del aviso (oculto para los visitantes).
 - Pruebas: `tests/test_moto_types.py` (reutiliza `PIXEL_PNG` de `tests/test_moto_pages.py`).
 
-**[Formulario] Departamentos de Colombia**
+**[Formulario] Departamentos de Colombia, casilla de autorización y botón ENVIAR**
 - `static/src/js/colombia_form_states.js` (formularios `.s_website_form`) → `controllers/colombia.py` (`/website_motos_alfa_showcase/colombia_states`).
-- Pruebas: `tests/test_colombia_states.py`.
+- Casilla de autorización de datos: `controllers/moto_template.py` (`CONSENT_FIELD`, `_fill_form`) la pone antes de ENVIAR en
+  `/moto/<moto>`; su estilo y el del botón ENVIAR están en `static/src/snippets/s_moto_snippets.scss`.
+- Pruebas: `tests/test_colombia_states.py` y `test_consent_before_submit` en `tests/test_moto_pages.py`.
+**[whatsApp] Botón flotante**
+- `views/whatsapp_button.xml`: el botón en las páginas del sitio; `static/src/scss/whatsapp.scss`: su estilo (computador y celular).
 
 ## Tipos de moto: página Motocicletas
 Las subcategorías **directas** de MOTOS son los **tipos** (Trabajadora, Urbana, Doble propósito, Scooter) y dentro de

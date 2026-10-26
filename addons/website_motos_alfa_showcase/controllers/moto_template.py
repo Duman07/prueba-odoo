@@ -10,6 +10,7 @@ Los datos se colocan en los bloques que ya usa el diseño, sin marcas especiales
   (o del producto), en orden; el título de la primera sección con fondo lleva la descripción del producto.
 - Campo «Modelo» del formulario: lista de motos, con la actual elegida.
 - Enlaces a la página maestra: pasan a la página de la moto.
+- antes del boton enviar del formulario: se agrega un campo de consentimiento de datos personales para recibir información sobre productos y servicios de la marca.
 """
 import copy
 import re
@@ -239,6 +240,17 @@ def _fill_specs(wrap, specs):
         row.insert(position + offset, new_column)
 
 
+CONSENT_FIELD = """
+<div class="s_website_form_field s_website_form_custom s_website_form_custom s_website_form_required s_moto_form_consent mb-3 col-12" data-type="boolean">
+    <div class="form-check">
+        <input type="checkbox" class="s_website_form_input form-check-input form-check-input" id="moto_consent"
+          name="Autorización de datos" value="Sí" required="required"/>
+        <label class="form-check-label" for="moto_consent">Autorizo el tratamiento de mis datos personales para recibir información sobre productos de la marca. 
+           <a href="https://motosalfa.com.co/politica-tratamiento" target="_blank" style="color: rgb(226, 0, 0)">Política de Tratamiento de Datos</a>
+        </label>
+    </div>
+</div>
+"""
 def _fill_form(wrap, moto, motos):
     for select in wrap.xpath(".//select[@name='Modelo']"):
         for option in list(select):
@@ -249,6 +261,10 @@ def _fill_form(wrap, moto, motos):
             if other == moto:
                 option.set("selected", "selected")
             select.append(option)
+    for submit in _find(wrap, "s_website_form_submit"):
+        if submit.getparent().xpath(".//*[contains(@class, 's_moto_form_consent')]"):
+            continue
+        submit.addprevious(html.fragment_fromstring(CONSENT_FIELD))
 
 
 def _fill_links(wrap, master_url, moto_url):

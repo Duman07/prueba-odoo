@@ -45,7 +45,8 @@ MASTER_ARCH = """
                     <div class="col-lg-2"><div class="s_card card"><div class="card-body"><h3 class="card-title"><a href="#">Sutil</a></h3></div></div></div>
                 </div>
             </section>
-            <form><select name="Modelo" id="m"><option value="Opción 1">Opción 1</option></select></form>
+            <form><select name="Modelo" id="m"><option value="Opción 1">Opción 1</option></select>
+                <div class="s_website_form_submit"><a class="s_website_form_send btn">Enviar</a></div></form>
         </div>
     </t>
 </t>
@@ -340,4 +341,10 @@ class TestMotoPages(HttpCase):
         wrap = self._wrap(self.url_open(self.moto._moto_url()))
         self.assertNotIn("Precio Desde", wrap)
         self.assertNotIn("$0", wrap)
-        
+
+
+    def test_consent_before_submit(self):
+        wrap = self._wrap(self.url_open(self.moto._moto_url()))
+        self.assertEqual(wrap.count("s_moto_form_consent"), 1)
+        self.assertIn('name="Autorización de datos"', wrap)
+        self.assertLess(wrap.index("s_moto_form_consent"), wrap.index("s_website_form_submit"))        

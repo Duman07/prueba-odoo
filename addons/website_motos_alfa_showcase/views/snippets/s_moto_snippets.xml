@@ -60,7 +60,7 @@
                         </div>
                         <p class="s_moto_360_hint">Arrastra para girar la moto. Usa la rueda, pellizca o los botones para acercar.</p>
                     </div>
-                    <div class="col-lg-4 d-flex flex-column gap-4">
+                    <div class="col-lg-4">
                         <div class="s_moto_360_panel">
                             <h3 class="h6 mb-3">Colores</h3>
                             <div class="s_moto_360_swatches">
@@ -70,7 +70,9 @@
                             </div>
                             <p class="s_moto_360_color_name mb-0">Color 1</p>
                         </div>
-                        <div class="s_moto_360_panel flex-grow-1">
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="s_moto_360_panel">
                             <h3 class="h6 mb-3">Puntos destacados</h3>
                             <div class="s_moto_360_hotspots">
                                 <div class="s_moto_360_hotspot">
@@ -187,9 +189,14 @@
                 <we-input class="o_we_large" string="Archivo de este color" data-select-data-attribute="" data-attribute-name="modelSrc" data-no-preview="true" placeholder="Opcional"/>
                 <we-input class="o_we_large" string="Variante del modelo" data-select-data-attribute="" data-attribute-name="variant" data-no-preview="true" placeholder="Opcional"/>
             </div>
-            <!-- Cada punto destacado: se puede mover, duplicar, borrar y ubicar sobre el modelo -->
+            <!-- Cada punto destacado: se puede mover, duplicar, borrar y ubicar en una foto 360° o sobre el modelo -->
             <div data-js="MotoHotspotPosition" data-selector=".s_moto_360_hotspot" data-drop-near=".s_moto_360_hotspot">
-                <we-row string="Ubicación en el modelo">
+                <we-input string="Foto n.º" data-select-data-attribute="" data-attribute-name="frame" data-no-preview="true" placeholder="1"/>
+                <we-row string="Ubicación en la foto">
+                    <we-button data-pick-photo-position="true" data-no-preview="true">Ubicar</we-button>
+                    <we-button data-clear-photo-position="true" data-no-preview="true">Quitar</we-button>
+                </we-row>
+                <we-row string="Ubicación en el modelo 3D">
                     <we-button data-pick-position="true" data-no-preview="true">Ubicar</we-button>
                     <we-button data-clear-position="true" data-no-preview="true">Quitar</we-button>
                 </we-row>

@@ -9,8 +9,9 @@
     # Grupos de archivos relacionados (detalle en el README, «Relación entre archivos»):
     #   [Bloques] Bloques «Moto 3D» y «Visor 360°»
     #   [Páginas de motos] Páginas de cada moto (/moto/...) y mega menú «Modelos»
-    #   [Formulario] Formulario: departamentos de Colombia
+    #   [Formulario] Formulario: departamentos de Colombia, casilla de autorización de datos y botón ENVIAR
     #   [Tipos de moto] Bloque «Tipos de moto» en /motos y páginas /motos/<tipo>
+    #   [whatsApp] Botón flotante de WhatsApp
     "data": [
         # [Páginas de motos] Campo «Página maestra» de la categoría y mega menú «Modelos»
         "views/product_category_views.xml",
@@ -26,6 +27,10 @@
     "assets": {
         "web.assets_frontend": [
             # [Bloques] Estilos, carga de <model-viewer>, secuencia de fotos y widget de cada bloque
+            # [Páginas de motos] s_moto_snippets.scss también da estilo al precio y a su tarjeta
+            # (clases s_moto_price / s_moto_price_label que pone _fill_price en controllers/moto_template.py)
+            # [Formulario] ... y a la casilla de autorización (_fill_form) y al botón ENVIAR
+            # [Bloques] frame_sequence.js: giro con fotos y puntos destacados ubicados en una foto
             "website_motos_alfa_showcase/static/src/snippets/s_moto_snippets.scss",
             "website_motos_alfa_showcase/static/src/js/model_viewer_loader.js",
             "website_motos_alfa_showcase/static/src/js/frame_sequence.js",
@@ -41,7 +46,8 @@
             "website_motos_alfa_showcase/static/src/scss/whatsapp.scss",
         ],
         "website.assets_wysiwyg": [
-            # [Bloques] Opciones de los bloques en el editor (subir archivo, ubicar puntos destacados)
+            # [Bloques] Opciones de los bloques en el editor (subir archivo, ubicar puntos destacados en una foto 360°
+            # o en el modelo 3D; options.js le pide el clic al widget s_moto_360/000.js con eventos propios)
             "website_motos_alfa_showcase/static/src/js/editor/model_upload_option.js",
             "website_motos_alfa_showcase/static/src/snippets/s_moto_360/options.js",
         ],

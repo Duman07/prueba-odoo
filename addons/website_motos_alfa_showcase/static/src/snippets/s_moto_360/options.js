@@ -3,10 +3,54 @@
 import options from "@web_editor/js/editor/snippets.options";
 
 /**
- * Opción «Ubicación en el modelo» de cada punto destacado del Visor 360°:
- * tras pulsar «Ubicar», un clic sobre el modelo guarda la posición 3D del punto.
+ * Opciones de cada punto destacado del Visor 360°:
+ * - «Foto n.º» + «Ubicar en la foto»: con fotos 360°, un clic sobre esa foto guarda dónde está el punto
+ *   (data-frame, data-frame-x, data-frame-y). El widget (s_moto_360/000.js) muestra la foto y espera el clic.
+ * - «Ubicación en el modelo 3D»: tras pulsar «Ubicar», un clic sobre el modelo guarda la posición 3D del punto.
  */
 options.registry.MotoHotspotPosition = options.Class.extend({
+    /** Al elegir el punto en el editor, el visor muestra su foto. */
+    onFocus() {
+        this._super(...arguments);
+        this._showFrame();
+    },
+
+    async selectDataAttribute(previewMode, widgetValue, params) {
+        await this._super(...arguments);
+        if (params.attributeName === "frame" && !previewMode) {
+            await this._refreshPublicWidgets($(this.$target[0].closest(".s_moto_360")));
+            this._showFrame();
+        }
+    },
+
+    async pickPhotoPosition(previewMode) {
+        if (previewMode) {
+            return;
+        }
+        const target = this.$target[0];
+        const block = target.closest(".s_moto_360");
+        const frame = this._frameIndex();
+        const point = await this._askViewer(block, "moto-pick-photo", { frame, index: this._hotspotIndex() });
+        if (!point) {
+            return;
+        }
+        target.dataset.frame = String(frame + 1);
+        target.dataset.frameX = point.x.toFixed(2);
+        target.dataset.frameY = point.y.toFixed(2);
+        await this._refreshPublicWidgets($(block));
+        this._showFrame();
+    },
+
+    async clearPhotoPosition(previewMode) {
+        if (previewMode) {
+            return;
+        }
+        delete this.$target[0].dataset.frameX;
+        delete this.$target[0].dataset.frameY;
+        await this._refreshPublicWidgets($(this.$target[0].closest(".s_moto_360")));
+        this._showFrame();
+    },
+
     async pickPosition(previewMode) {
         if (previewMode) {
             return;
@@ -35,10 +79,42 @@ options.registry.MotoHotspotPosition = options.Class.extend({
     },
 
     _computeWidgetState(methodName) {
-        if (methodName === "pickPosition" || methodName === "clearPosition") {
+        if (["pickPosition", "clearPosition", "pickPhotoPosition", "clearPhotoPosition"].includes(methodName)) {
             return "";
         }
         return this._super(...arguments);
+    },
+
+    /** «Foto n.º» del punto (desde 1 en el panel) → índice de la foto (desde 0). */
+    _frameIndex() {
+        return Math.max((parseInt(this.$target[0].dataset.frame, 10) || 1) - 1, 0);
+    },
+
+    _hotspotIndex() {
+        const block = this.$target[0].closest(".s_moto_360");
+        return [...block.querySelectorAll(".s_moto_360_hotspot")].indexOf(this.$target[0]);
+    },
+
+    _showFrame() {
+        const block = this.$target[0].closest(".s_moto_360");
+        if (block) {
+            this._askViewer(block, "moto-show-frame", { frame: this._frameIndex(), index: this._hotspotIndex() });
+        }
+    },
+
+    /**
+     * Envía un aviso al widget del bloque (dentro del iframe del editor) y espera su respuesta.
+     * Si el bloque no muestra fotos 360°, nadie lo atiende y se devuelve null.
+     */
+    _askViewer(block, name, detail) {
+        const win = block.ownerDocument.defaultView;
+        return new Promise((resolve) => {
+            const event = new win.CustomEvent(name, { detail: { ...detail, resolve } });
+            block.dispatchEvent(event);
+            if (!event.detail.handled) {
+                resolve(null);
+            }
+        });
     },
 
     /**
