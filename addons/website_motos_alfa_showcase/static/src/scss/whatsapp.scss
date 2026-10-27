@@ -1,0 +1,139 @@
+// Boton de whatsapp : en computador , circulo del lado izquierdo, 20% mas arriba del borde
+@media (min-width: 1024px) {
+ .o_moto_whatsapp {
+    position: fixed;
+    z-index: 1040;
+    right: 2rem;
+    bottom: 5%;
+    display: flex;
+    align-items: center;
+    justify-content: center;    
+    width: 5rem;
+    height: 3.5rem;
+    border-radius: 2rem;
+    background-color: #e00000;
+    color: #ffffff;
+    font-size: 1.5rem;
+    box-shadow: 0 4px 12px rgb(179, 7, 7);
+    text-decoration: none;
+    transition: width 0.3s ease-in-out;
+    animation:  whatsappBigSmall 2s ease-in-out infinite;
+    //whatsappAnimation 1s ease-in-out infinite,
+
+    &:hover, &:focus {
+        background-color: darken(#e00000, 8%);
+        color: #ffffff;
+        width: 15rem;
+        transition: width 0.3s ease-in-out;;
+    }
+    .o_moto_whatsapp_text {
+        display: none;
+    }
+    &:hover {
+        .o_moto_whatsapp_text {
+            display: inline;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+    }
+   
+  }
+}
+
+@keyframes whatsappAnimation {
+    0% {
+        transform: translate(0);
+        box-shadow: 0 4px 12px rgb(255, 255, 255);
+    }
+    50% {
+        transform: translate(0);
+        box-shadow: 0 4px 12px rgb(179, 7, 7);
+    }
+    100% {
+        transform: translate(0);
+        box-shadow: 0 4px 12px rgb(255, 255, 255);
+        
+    }
+
+}
+
+@keyframes whatsappBigSmall {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+   // -----------------------celular: isla abajo de todo-------------------------------------------------------------------------------------------------//
+   @media (max-width: 1023.98px) {
+    .o_moto_whatsapp{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      position: fixed;
+      left: 50%;
+      right: auto;
+      transform: translateX(-50%);
+      bottom: calc(.75rem + env(safe-area-inset-bottom));
+      z-index: 1040;
+      width: 70%;
+      padding: 0 1.5rem;
+      white-space: nowrap;
+      height: 3.25rem;
+      border-radius: 2rem;
+      background-color: #e00000;
+      box-shadow: 0 4px 12px rgb(179, 7, 7);
+      color: #ffffff;
+      gap: .5rem;
+      font-size: 1.4rem;
+
+    }
+
+
+    @media (max-width: 1023.98px){
+        #wrapwrap::after {
+            content: "";
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 5rem;
+            background: linear-gradient(
+                to top,
+               rgba(0, 0, 0, 0.50) 0%, 
+               rgba(18, 18, 18, 0.35) 33.33%, 
+               rgba(28, 28, 30, 0.15) 66.66%,
+                rgba(28, 28, 30, 0) 100%
+            );
+            pointer-events: none;
+            z-index: 1030;
+        }
+    }
+        .o_moto_whatsapp .o_moto_whatsapp_text{
+        display: inline;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+
+    body.editor_enable #wrapwrap::after {
+        display: none;
+    }
+   }
+ 
+
+@include media-breakpoint-down(lg){
+    #wrapwrap {
+        padding-bottom: 0rem;
+    }
+}
+
+body.editor_enable .o_moto_whatsapp {
+    display: none;
+}

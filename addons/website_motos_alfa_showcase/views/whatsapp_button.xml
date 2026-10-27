@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <template id="whatsapp_button" inherit_id="website.layout" name="Whatsapp Button">
+        <xpath expr="//div[@id='wrapwrap']" position="inside">
+            <a class="o_moto_whatsapp" target="_blank" rel ="noopener" 
+                t-att-href="whatsapp_url or 'https://wa.me/573223995269?text=Hola%20Motos%20Alfa,%20estoy%20interesado%20en%20la%20moto'"
+                aria-label="Enviar mensaje por WhatsApp">
+                 <i class="fa fa-whatsapp" role="presentation"></i>
+                 <span class="o_moto_whatsapp_text">WhatsApp</span>
+                </a>
+        </xpath>
+    </template>
+</odoo>

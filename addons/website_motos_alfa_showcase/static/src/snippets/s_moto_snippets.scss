@@ -47,6 +47,7 @@
 
 // Giro 360° con fotos: arrastrar en horizontal gira, en vertical desplaza la página
 .s_moto_360_sequence {
+    position: relative;
     width: 100%;
     height: 100%;
     overflow: hidden;
@@ -112,6 +113,12 @@ body.editor_enable .s_moto_360_sequence {
     display: none;
 }
 
+// «Tipos de moto»: el aviso ocupa un recuadro mientras no hay tarjetas.
+.s_moto_types:not(.s_moto_has_content) .s_moto_types_content {
+    position: relative;
+    min-height: 10rem;
+}
+
 .s_moto_3d_replay {
     position: absolute;
     right: 1rem;
@@ -155,8 +162,7 @@ body:not(.editor_enable) .s_moto_360_image_mode .s_moto_360_hint {
 
 // Panel lateral: colores y puntos destacados
 .s_moto_360_panel {
-    padding: 1.25rem;
-    border: 1px solid rgba(127, 127, 127, 0.25);
+    //border: 1px solid rgba(127, 127, 127, 0.25);
     border-radius: 1rem;
 }
 
@@ -231,15 +237,25 @@ body:not(.editor_enable) .s_moto_360_image_mode .s_moto_360_hint {
     }
 }
 
-// En el editor, un punto aún sin ubicar en el modelo se marca con borde punteado
-body.editor_enable .s_moto_360_hotspot:not([data-position])::before {
+// [Bloques] Puntos destacados OCULTOS por ahora (27-10-2026), se dejan para más adelante: el panel (y su columna,
+// si no tiene también los colores) y los marcadores sobre la moto. Las plantillas ya guardadas conservan sus puntos.
+// Para volver a mostrarlos: borrar esta regla y descomentar el panel en views/snippets/s_moto_snippets.xml.
+.s_moto_360_panel:has(> .s_moto_360_hotspots),
+.s_moto_360 .row > :has(> .s_moto_360_panel > .s_moto_360_hotspots):not(:has(.s_moto_360_swatches)),
+.s_moto_360_marker {
+    display: none !important;
+}
+
+// En el editor, un punto aún sin ubicar (ni en el modelo ni en una foto) se marca con borde punteado
+body.editor_enable .s_moto_360_hotspot:not([data-position]):not([data-frame-x])::before {
     background-color: transparent;
     border: 2px dashed #e00000;
     color: #e00000;
 }
 
-// Marcadores numerados sobre el modelo
+// Marcadores numerados sobre el modelo o sobre las fotos 360°
 .s_moto_360_marker {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -264,7 +280,52 @@ body.editor_enable .s_moto_360_hotspot:not([data-position])::before {
     }
 }
 
-// Modo «Ubicar punto» en el editor
+// Sobre las fotos 360°: el JS lo ubica con left/top (px) en el punto de la foto; se centra ahí.
+.s_moto_360_photo_marker {
+    position: absolute;
+    z-index: 1;
+    transform: translate(-50%, -50%);
+}
+
+// Burbuja del punto destacado (la crea _createMarker en s_moto_360/000.js): título y descripción
+.s_moto_360_marker_info {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: calc(100% + 0.5rem);
+    transform: translateY(-50%);
+    width: max-content;
+    max-width: 220px;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    background-color: #ffffff;
+    color: #1a1b1e;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    font-size: 0.8125rem;
+    font-weight: 400;
+    text-align: left;
+
+    strong {
+        display: block;
+        margin-bottom: 0.25rem;
+    }
+
+    @media (max-width: 767.98px) {
+        max-width: 160px;
+    }
+}
+
+// Cerca del borde derecho de la foto, la burbuja se abre hacia la izquierda.
+.s_moto_360_marker_left .s_moto_360_marker_info {
+    right: calc(100% + 0.5rem);
+    left: auto;
+}
+
+.s_moto_360_marker.active .s_moto_360_marker_info {
+    display: block;
+}
+
+// Modo «Ubicar punto» en el editor (sobre el modelo o sobre la foto)
 .s_moto_360_picking {
     outline: 2px dashed #e00000;
     outline-offset: 4px;
@@ -272,6 +333,10 @@ body.editor_enable .s_moto_360_hotspot:not([data-position])::before {
     model-viewer {
         cursor: crosshair;
     }
+}
+
+body.editor_enable .s_moto_360_picking .s_moto_360_sequence {
+    cursor: crosshair;
 }
 
 // Para los visitantes, sin modelo (o si falla la carga) no se muestra el recuadro 3D;
@@ -291,4 +356,78 @@ html:not(.o_add_snippets_preview) body:not(.editor_enable) {
             }
         }
     }
+
+    // «Tipos de moto»: el aviso no se muestra mientras cargan las tarjetas (o si fallan).
+    .s_moto_types:not(.s_moto_has_content) .s_moto_empty {
+        display: none !important;
+    }
+}
+
+
+// [Páginas de motos] Precio de la moto en «Moto 3D». Las clases las pone _fill_price
+// (controllers/moto_template.py) en los párrafos «Precio Desde:» y «$0.» de la página maestra.
+.s_moto_3d .s_moto_price_label {
+    margin-bottom: 0;
+    font-size: $h5-font-size;
+}
+
+
+.s_moto_3d .s_moto_price {
+    font-size: $h3-font-size;
+    font-weight: $font-weight-bold;
+    color: rgb(226, 0, 0);
+}
+
+
+// [Páginas de motos] Tarjeta del precio: el cuadro de la cuadrícula que contiene el precio.
+.s_moto_3d .o_grid_item:has(> .s_moto_price) {
+    //border: 1px solid rgb(212, 212, 212);
+    //border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+// [Páginas de motos] Separación del texto con el borde izquierdo de la tarjeta (Odoo fija el padding
+// de los cuadros de la cuadrícula con !important, por eso va en los párrafos).
+.s_moto_3d .s_moto_price_label,
+.s_moto_3d .s_moto_price {
+    padding-left: 0;
+}
+
+.s_moto_3d .s_moto_price_note{
+    margin: 0.25rem 0 0;
+    font-size: 0.75rem;
+    opacity: 0.7;
+}
+
+// [Formulario] Casilla de consentimiento de datos personales para recibir información sobre productos y servicios
+// de la marca. La pone _fill_form (controllers/moto_template.py) antes del botón ENVIAR del formulario.
+.s_moto_form_consent .form-check-input:checked {
+    background-color: rgb(226, 0, 0);
+    border-color: rgb(226, 0, 0);
+
+}
+
+.s_moto_form_consent a{
+    color: rgb(226, 0, 0);
+    text-decoration: underline;
+}
+
+// [Formulario] Botón ENVIAR de ancho completo (todos los formularios del sitio)
+.s_website_form .s_website_form_send {
+    display:block;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid rgba(127, 127, 127, 0.25);
+    border-radius: 0.5rem;
+    background-color: rgb(226, 0, 0);
+    color: #ffffff;
+    text-align: center;
+}
+
+.s_website_form .s_website_form_send:hover {
+    background-color: rgb(190, 0, 0);
+    border-color: rgb(190, 0, 0);
+    color: #ffffff;
 }

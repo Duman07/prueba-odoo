@@ -21,11 +21,13 @@ export function parseFrames(src) {
  * (todo el ancho del visor = una vuelta), con giro automático, zoom y teclado (flechas).
  */
 export class FrameSequence {
-    constructor(blockEl, frames, { interactive = true, reverse = false, onAutoRotateChange } = {}) {
+    constructor(blockEl, frames, { interactive = true, reverse = false, onAutoRotateChange, onRender } = {}) {
         this.frames = frames;
         this.interactive = interactive;
         this.direction = reverse ? -1 : 1;
         this.onAutoRotateChange = onAutoRotateChange;
+        // Se llama al cambiar de foto o de zoom (y al cargar cada foto), para mover los puntos destacados.
+        this.onRender = onRender;
         this.index = 0;
         this.zoom = 1;
         this.autoRotate = false;
@@ -36,16 +38,22 @@ export class FrameSequence {
         this.img.className = "s_moto_media_img";
         this.img.alt = blockEl.dataset.modelAlt || "Motocicleta";
         this.img.draggable = false;
+        this.img.loading = "lazy";
         this.img.src = frames[0];
+        this.img.addEventListener("load", () => this.onRender?.());
         this.el.appendChild(this.img);
 
-        // Precarga todas las fotos para que el giro no parpadee.
-        this.preloaded = frames.map((url) => {
-            const image = new Image();
-            image.decoding = "async";
-            image.src = url;
-            return image;
-        });
+        // Las fotos se precargan y el giro automático avanza solo con el visor cerca de la pantalla
+        // (antes se descargaban las 24 al abrir la página, aunque el visitante no llegara al visor).
+        this.preloaded = [];
+        this.visible = false;
+        this.observer = new IntersectionObserver((entries) => {
+            this.visible = entries.some((entry) => entry.isIntersecting);
+            if (this.visible) {
+                this._preload();
+            }
+        }, { rootMargin: "300px" });
+        this.observer.observe(blockEl);
 
         if (interactive) {
             this.el.tabIndex = 0;
@@ -59,9 +67,23 @@ export class FrameSequence {
     }
 
     destroy() {
+        this.observer.disconnect();
         this.setAutoRotate(false);
         clearTimeout(this.resumeTimer);
         this.el.remove();
+    }
+
+    /** Precarga todas las fotos (una sola vez) para que el giro no parpadee. */
+    _preload() {
+        if (this.preloaded.length) {
+            return;
+        }
+        this.preloaded = this.frames.map((url) => {
+            const image = new Image();
+            image.decoding = "async";
+            image.src = url;
+            return image;
+        });
     }
 
     setFrame(index) {
@@ -76,7 +98,7 @@ export class FrameSequence {
         this.autoRotate = active;
         if (active) {
             const delay = AUTO_ROTATE_TURN_MS / this.frames.length;
-            this.autoRotateTimer = setInterval(() => this.setFrame(this.index + this.direction), delay);
+            this.autoRotateTimer = setInterval(() => this.visible && this.setFrame(this.index + this.direction), delay);
         }
         this.onAutoRotateChange?.(active);
     }
@@ -97,6 +119,92 @@ export class FrameSequence {
         if (this.interactive) {
             this.el.setAttribute("aria-valuenow", String(this.index + 1));
         }
+        this.onRender?.();
+    }
+
+    /**
+     * Rectángulo de la foto dentro del visor, sin zoom: la foto se ve completa (object-fit: contain),
+     * así que puede dejar franjas a los lados o arriba y abajo.
+     */
+    _photoBox() {
+        const width = this.el.clientWidth;
+        const height = this.el.clientHeight;
+        const naturalWidth = this.img.naturalWidth || width;
+        const naturalHeight = this.img.naturalHeight || height;
+        const scale = Math.min(width / naturalWidth, height / naturalHeight);
+        const boxWidth = naturalWidth * scale;
+        const boxHeight = naturalHeight * scale;
+        return { left: (width - boxWidth) / 2, top: (height - boxHeight) / 2, width: boxWidth, height: boxHeight };
+    }
+
+    /**
+     * Punto de la foto (x, y en % de su ancho y alto) → posición en px dentro del visor, con el zoom
+     * aplicado (el zoom agranda la foto desde el centro del visor).
+     */
+    pointToView(x, y) {
+        const box = this._photoBox();
+        const centerX = this.el.clientWidth / 2;
+        const centerY = this.el.clientHeight / 2;
+        return {
+            left: centerX + (box.left + (x / 100) * box.width - centerX) * this.zoom,
+            top: centerY + (box.top + (y / 100) * box.height - centerY) * this.zoom,
+        };
+    }
+
+    /** Lo contrario: un clic en la pantalla → punto de la foto en %, o null si cae fuera de la foto. */
+    viewToPoint(clientX, clientY) {
+        const rect = this.el.getBoundingClientRect();
+        const box = this._photoBox();
+        const centerX = this.el.clientWidth / 2;
+        const centerY = this.el.clientHeight / 2;
+        const viewX = centerX + (clientX - rect.left - centerX) / this.zoom;
+        const viewY = centerY + (clientY - rect.top - centerY) / this.zoom;
+        const x = ((viewX - box.left) / box.width) * 100;
+        const y = ((viewY - box.top) / box.height) * 100;
+        return x < 0 || x > 100 || y < 0 || y > 100 ? null : { x, y };
+    }
+
+    /**
+     * Editor, «Ubicar en la foto»: espera un clic sobre la foto y devuelve el punto en %.
+     * Un clic fuera de la foto o Escape cancelan (null).
+     */
+    pickPoint() {
+        const doc = this.el.ownerDocument;
+        const wrap = this.el.parentElement;
+        wrap?.classList.add("s_moto_360_picking");
+        return new Promise((resolve) => {
+            const isOnPhoto = (ev) => this.el.contains(ev.target);
+            const block = (ev) => {
+                if (isOnPhoto(ev)) {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                }
+            };
+            const finish = (point) => {
+                doc.removeEventListener("mousedown", block, true);
+                doc.removeEventListener("click", onClick, true);
+                doc.removeEventListener("keydown", onKeydown, true);
+                wrap?.classList.remove("s_moto_360_picking");
+                resolve(point);
+            };
+            const onClick = (ev) => {
+                if (!isOnPhoto(ev)) {
+                    finish(null);
+                    return;
+                }
+                ev.preventDefault();
+                ev.stopPropagation();
+                finish(this.viewToPoint(ev.clientX, ev.clientY));
+            };
+            const onKeydown = (ev) => {
+                if (ev.key === "Escape") {
+                    finish(null);
+                }
+            };
+            doc.addEventListener("mousedown", block, true);
+            doc.addEventListener("click", onClick, true);
+            doc.addEventListener("keydown", onKeydown, true);
+        });
     }
 
     _bindEvents() {

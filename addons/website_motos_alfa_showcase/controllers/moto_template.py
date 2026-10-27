@@ -10,6 +10,7 @@ Los datos se colocan en los bloques que ya usa el diseño, sin marcas especiales
   (o del producto), en orden; el título de la primera sección con fondo lleva la descripción del producto.
 - Campo «Modelo» del formulario: lista de motos, con la actual elegida.
 - Enlaces a la página maestra: pasan a la página de la moto.
+- antes del boton enviar del formulario: se agrega un campo de consentimiento de datos personales para recibir información sobre productos y servicios de la marca.
 """
 import copy
 import re
@@ -70,6 +71,34 @@ def _fill_viewers(wrap, intro_src, viewer_src, moto):
         block.set("data-model-alt", moto.name)
 
 
+PRICE_TEXT = re.compile(r"^\$\s*0[.,]?$")
+#Estatuto del consumidor 
+PRICE_NOTE = "Precio con IVA incluido, sujeto a cambios. No incluye matrícula ni SOAT."
+def _fill_price(wrap, price):
+    """Precio en «Moto 3D»: el texto «$0» del diseño lleva el precio de la moto y la clase s_moto_price
+    (el «Precio desde:» de encima, s_moto_price_label); el estilo está en s_moto_snippets.scss.
+    Si no tiene precio, se quitan los dos."""
+    for block in _find(wrap, "s_moto_3d"):
+        for element in list(block.iter("p")):
+            if not PRICE_TEXT.match(_norm(element.text_content())):
+                continue
+            label = element.getprevious()
+            if label is not None and "desde" not in _norm(label.text_content()):
+                label = None
+            if not price:
+                if label is not None:
+                    label.getparent().remove(label)
+                element.getparent().remove(element)
+                continue
+            _set_text(element, "$" + f"{round(price):,}".replace(",", "."))
+            element.set("class", " ".join(_classes(element) + ["s_moto_price"]))
+            if label is not None:
+                label.set("class", " ".join(_classes(label) + ["s_moto_price_label"]))
+            note = html.Element("p", {"class": "s_moto_price_note"})
+            note.text = PRICE_NOTE
+            element.addnext(note)
+
+
 def _fill_colors(wrap, colors):
     for container in _find(wrap, "s_moto_360_swatches"):
         swatches = _find(container, "s_moto_360_swatch")
@@ -104,6 +133,16 @@ BACKGROUND_IMAGE = re.compile(r"background-image:\s*url\((&quot;|[\"']?)(.*?)\1\
 
 def _inside_moto_block(element):
     return any({"s_moto_3d", "s_moto_360"} & set(_classes(el)) for el in element.iterancestors())
+
+
+def _single_h1(wrap):
+    """Un solo <h1> por página: el nombre de la moto en «Moto 3D». Los demás (p. ej. la frase de la sección con fondo)
+    pasan a <h2> con la clase h1 de Bootstrap, que conserva su tamaño."""
+    for title in list(wrap.iter("h1")):
+        if any("s_moto_3d" in _classes(el) for el in title.iterancestors()):
+            continue
+        title.tag = "h2"
+        title.set("class", " ".join(_classes(title) + ["h1"]))
 
 
 def _fill_media(wrap, media, description):
@@ -171,6 +210,8 @@ def _fill_specs(wrap, specs):
     cards = [card for block in lists for card in _find(block, "s_card")] or _find(wrap, "s_card")
     if not cards:
         return
+
+    
     # Tarjeta modelo: la primera con nombre y valor (en el diseño, «Motor 160 cc 4V»).
     prototype_card = next((card for card in cards if _spec_targets(card)[1] is not None), cards[0])
     column = prototype_card.getparent()
@@ -212,6 +253,17 @@ def _fill_specs(wrap, specs):
         row.insert(position + offset, new_column)
 
 
+CONSENT_FIELD = """
+<div class="s_website_form_field s_website_form_custom s_website_form_custom s_website_form_required s_moto_form_consent mb-3 col-12" data-type="boolean">
+    <div class="form-check">
+        <input type="checkbox" class="s_website_form_input form-check-input form-check-input" id="moto_consent"
+          name="Autorización de datos" value="Sí" required="required"/>
+        <label class="form-check-label" for="moto_consent">Autorizo el tratamiento de mis datos personales para recibir información sobre productos de la marca. 
+           <a href="https://motosalfa.com.co/politica-tratamiento" target="_blank" style="color: rgb(226, 0, 0)">Política de Tratamiento de Datos</a>
+        </label>
+    </div>
+</div>
+"""
 def _fill_form(wrap, moto, motos):
     for select in wrap.xpath(".//select[@name='Modelo']"):
         for option in list(select):
@@ -222,6 +274,10 @@ def _fill_form(wrap, moto, motos):
             if other == moto:
                 option.set("selected", "selected")
             select.append(option)
+    for submit in _find(wrap, "s_website_form_submit"):
+        if submit.getparent().xpath(".//*[contains(@class, 's_moto_form_consent')]"):
+            continue
+        submit.addprevious(html.fragment_fromstring(CONSENT_FIELD))
 
 
 def _fill_links(wrap, master_url, moto_url):
@@ -234,7 +290,6 @@ def _fill_links(wrap, master_url, moto_url):
         if path.rstrip("/").lower() == master_url.rstrip("/").lower():
             link.set("href", f"#{fragment}" if fragment else moto_url)
 
-
 def fill_moto_page(page_html, moto, values, master_url, editor_notice=None):
     """Devuelve el HTML de la página con los datos de la moto en el contenido principal (<main>)."""
     start = page_html.find("<main>")
@@ -244,6 +299,7 @@ def fill_moto_page(page_html, moto, values, master_url, editor_notice=None):
     start += len("<main>")
     container = html.fragment_fromstring(page_html[start:end], create_parent="div")
     _fill_title(container, moto)
+    _fill_price(container, values["price"])
     _fill_viewers(container, values["intro_src"], values["viewer_src"], moto)
     _fill_colors(container, values["colors"])
     _fill_specs(container, values["specs"])
@@ -254,6 +310,7 @@ def fill_moto_page(page_html, moto, values, master_url, editor_notice=None):
     _fill_media(container, page_media, values["description"])
     _fill_form(container, moto, values["motos"])
     _fill_links(container, master_url, moto._moto_url())
+    _single_h1(container)
     if editor_notice is not None:
         wrap = container.get_element_by_id("wrap", None)
         (wrap if wrap is not None else container).insert(0, editor_notice)

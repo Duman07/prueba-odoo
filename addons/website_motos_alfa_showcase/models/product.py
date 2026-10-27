@@ -25,7 +25,7 @@ FALLBACK_COLORS = {
 DEFAULT_SWATCH = "#8a9097"
 
 # Campos que cambian lo que muestra el mega menú «Modelos».
-MENU_FIELDS = {"name", "categ_id", "active", "sale_ok", "parent_id"}
+MENU_FIELDS = {"name", "categ_id", "active", "sale_ok", "parent_id", "is_published", "website_published"}
 
 
 def _natural_key(attachment):
@@ -60,6 +60,31 @@ class ProductCategory(models.Model):
     def _moto_root(self):
         return self.sudo().search([("name", "=ilike", MOTO_CATEGORY_NAME), ("parent_id", "=", False)], limit=1)
 
+    # Tipos de moto: subcategorías directas de MOTOS (Trabajadora, Urbana…), para el bloque «Tipos de moto».
+
+    @api.model
+    def _moto_types(self):
+        """Tipos que tienen motos, en el orden en que se crearon."""
+        root = self._moto_root()
+        return root.child_id.sorted("id").filtered(lambda moto_type: moto_type._moto_type_motos())
+
+    def _moto_is_type(self):
+        self.ensure_one()
+        root = self._moto_root()
+        return bool(root) and self.sudo().parent_id == root
+
+    def _moto_type_motos(self):
+        """Motos del tipo (de sus líneas y subcategorías), por nombre."""
+        self.ensure_one()
+        parent_path = self.sudo().parent_path
+        return self.env["product.template"]._moto_search().filtered(
+            lambda moto: moto.categ_id.parent_path.startswith(parent_path))
+
+    def _moto_type_url(self):
+        self.ensure_one()
+        # Con el nombre del tipo y no el completo («MOTOS / Urbana»): /motos/urbana-95.
+        return f"/motos/{self.env['ir.http']._slug((self.id, self.name))}"
+
     def write(self, vals):
         res = super().write(vals)
         if MENU_FIELDS & set(vals):
@@ -85,7 +110,7 @@ class ProductTemplate(models.Model):
         root = self.env["product.category"]._moto_root()
         if not root:
             return [("id", "=", False)]
-        return [("categ_id", "child_of", root.id), ("sale_ok", "=", True)]
+        return [("categ_id", "child_of", root.id), ("sale_ok", "=", True), ("is_published", "=", True)]
 
     @api.model
     def _moto_search(self):
@@ -207,6 +232,17 @@ class ProductTemplate(models.Model):
             return ""
         return " ".join(html.fragment_fromstring(self.description_ecommerce, create_parent="div").text_content().split())
 
+
+    def _default_website_meta(self):
+        """Motos sin «Descripción de venta»: la descripción para buscadores y al compartir es su frase
+        («Descripción para comercio electrónico»)."""
+        res = super()._default_website_meta()
+        if self._moto_is_moto() and not self.description_sale:
+            description = self._moto_description()
+            res["default_opengraph"]["og:description"] = res["default_twitter"]["twitter:description"] = description
+            res["default_meta_description"] = description
+        return res
+
     def _moto_colors(self):
         """Una muestra por variante (Negro, Rojo, Verde…)."""
         self.ensure_one()
@@ -239,10 +275,8 @@ class ProductTemplate(models.Model):
                 "html_color": html_color,
                 # Foto propia de la variante (Variantes → imagen); sin ella el color usa la foto del producto.
                 "image_url": image_url,
-                # Fotos 360° del color (o de la moto) y la foto de la imagen principal al elegirlo:
-                # la primera foto 360° (de frente); sin ellas, la foto del color o la del producto.
                 "frames": frames,
-                "main_src": (frames[:1] or [image_url or product_image])[0],
+                "main_src": image_url or (frames[:1] or [product_image])[0],
                 # Mismos ids que el enlace de la tienda (#attribute_values=…), para abrir el visor en ese color.
                 "attribute_value_ids": ",".join(map(str, values.product_attribute_value_id.ids)),
                 "media_images": media["images"] or product_media["images"],

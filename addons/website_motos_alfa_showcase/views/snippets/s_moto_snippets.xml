@@ -27,7 +27,7 @@
         </section>
     </template>
 
-    <!-- Bloque «Visor 360°»: visor con controles + panel de colores y puntos destacados -->
+    <!-- Bloque «Visor 360°»: visor con controles + panel de colores (puntos destacados ocultos por ahora) -->
     <template id="s_moto_360" name="Visor 360°">
         <section class="s_moto_360 o_cc o_cc1 pt48 pb48" data-model-src="" data-model-alt="Motocicleta" data-model-yaw="90" data-auto-rotate="true">
             <div class="container">
@@ -60,7 +60,7 @@
                         </div>
                         <p class="s_moto_360_hint">Arrastra para girar la moto. Usa la rueda, pellizca o los botones para acercar.</p>
                     </div>
-                    <div class="col-lg-4 d-flex flex-column gap-4">
+                    <div class="col-lg-4">
                         <div class="s_moto_360_panel">
                             <h3 class="h6 mb-3">Colores</h3>
                             <div class="s_moto_360_swatches">
@@ -70,7 +70,11 @@
                             </div>
                             <p class="s_moto_360_color_name mb-0">Color 1</p>
                         </div>
-                        <div class="s_moto_360_panel flex-grow-1">
+                    </div>
+                    <!-- Panel «Puntos destacados»: oculto por ahora (27-10-2026), se deja para más adelante.
+                         Para volver a usarlo: descomentar y borrar la regla de s_moto_snippets.scss.
+                    <div class="col-lg-4">
+                        <div class="s_moto_360_panel">
                             <h3 class="h6 mb-3">Puntos destacados</h3>
                             <div class="s_moto_360_hotspots">
                                 <div class="s_moto_360_hotspot">
@@ -88,9 +92,47 @@
                             </div>
                         </div>
                     </div>
+                    -->
                 </div>
             </div>
         </section>
+    </template>
+
+    <!-- Bloque «Tipos de moto»: las tarjetas las pone static/src/snippets/s_moto_types/000.js -->
+    <template id="s_moto_types" name="Tipos de moto">
+        <section class="s_moto_types o_cc o_cc1 pt48 pb48">
+            <div class="container">
+                <div class="s_moto_types_content o_not_editable">
+                    <div class="s_moto_empty">
+                        <span class="s_moto_empty_title">Tipos de moto</span>
+                        <span class="s_moto_empty_hint">Se llena solo: en /motos los tipos de MOTOS (Trabajadora, Urbana…) y en /motos/&lt;tipo&gt; sus motos.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </template>
+
+    <!-- Tarjetas del bloque «Tipos de moto» (controllers/motos.py), con el estilo del bloque «Productos» -->
+    <template id="s_moto_types_content" name="Tarjetas de tipos de moto">
+        <div t-if="moto_type" class="d-flex flex-wrap justify-content-between align-items-baseline gap-2 mb-4">
+            <h2 class="h3 text-uppercase mb-0" t-out="moto_type.name"/>
+            <a t-att-href="motos_page_url"><i class="fa fa-long-arrow-left me-2" role="presentation"/>Todos los tipos</a>
+        </div>
+        <div class="row g-4">
+            <div t-foreach="cards" t-as="card" class="col-6 col-lg-3">
+                <div class="o_carousel_product_card bg-transparent w-100 card border-0">
+                    <a class="o_carousel_product_img_link stretched-link" t-att-href="card['url']">
+                        <div t-if="card['image_url']" class="overflow-hidden rounded">
+                            <img class="card-img-top o_img_product_square o_img_product_cover h-auto" loading="lazy"
+                                 t-att-src="card['image_url']" t-att-alt="card['name']"/>
+                        </div>
+                    </a>
+                    <div class="p-3">
+                        <div class="h6 card-title text-uppercase" t-out="card['name']"/>
+                    </div>
+                </div>
+            </div>
+        </div>
     </template>
 
     <!-- Registro en el panel de bloques: grupo «Motos Alfa» -->
@@ -107,6 +149,10 @@
             <t t-snippet="website_motos_alfa_showcase.s_moto_360" string="Visor 360°" group="motos_alfa"
                 t-thumbnail="/website_motos_alfa_showcase/static/src/img/snippets_thumbs/s_moto_360.svg">
                 <keywords>moto, motocicleta, 360, 3d, glb, gltf, imagen, foto, fotos, secuencia, visor, girar, zoom</keywords>
+            </t>
+            <t t-snippet="website_motos_alfa_showcase.s_moto_types" string="Tipos de moto" group="motos_alfa"
+                t-thumbnail="/website_motos_alfa_showcase/static/src/img/snippets_thumbs/s_moto_group.svg">
+                <keywords>moto, motocicleta, tipos, categorías, trabajadora, urbana, doble propósito, scooter, catálogo</keywords>
             </t>
         </xpath>
     </template>
@@ -146,9 +192,14 @@
                 <we-input class="o_we_large" string="Archivo de este color" data-select-data-attribute="" data-attribute-name="modelSrc" data-no-preview="true" placeholder="Opcional"/>
                 <we-input class="o_we_large" string="Variante del modelo" data-select-data-attribute="" data-attribute-name="variant" data-no-preview="true" placeholder="Opcional"/>
             </div>
-            <!-- Cada punto destacado: se puede mover, duplicar, borrar y ubicar sobre el modelo -->
+            <!-- Cada punto destacado: se puede mover, duplicar, borrar y ubicar en una foto 360° o sobre el modelo -->
             <div data-js="MotoHotspotPosition" data-selector=".s_moto_360_hotspot" data-drop-near=".s_moto_360_hotspot">
-                <we-row string="Ubicación en el modelo">
+                <we-input string="Foto n.º" data-select-data-attribute="" data-attribute-name="frame" data-no-preview="true" placeholder="1"/>
+                <we-row string="Ubicación en la foto">
+                    <we-button data-pick-photo-position="true" data-no-preview="true">Ubicar</we-button>
+                    <we-button data-clear-photo-position="true" data-no-preview="true">Quitar</we-button>
+                </we-row>
+                <we-row string="Ubicación en el modelo 3D">
                     <we-button data-pick-position="true" data-no-preview="true">Ubicar</we-button>
                     <we-button data-clear-position="true" data-no-preview="true">Quitar</we-button>
                 </we-row>

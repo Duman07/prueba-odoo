@@ -1,5 +1,6 @@
 from lxml import html
 from werkzeug.exceptions import NotFound
+from urllib.parse import quote
 
 from odoo import http
 from odoo.http import request
@@ -15,6 +16,16 @@ MEDIA_MAX_AGE = 24 * 60 * 60
 MASTER_KEY_PARAM = "website_motos_alfa_showcase.master_page_key"
 DEFAULT_MASTER_KEY = "website.hunk-160r-4v"
 
+# Página del editor con el bloque «Tipos de moto»; /motos/<tipo> la muestra con las motos de ese tipo.
+MOTOS_PAGE_URL = "/motos"
+WHATSAPP_NUMBER = "573223995269"
+def sitemap_motos(env, rule, qs):
+    """Páginas de las motos publicadas en /sitemap.xml (antes no estaban: sitemap=False)."""
+    for moto in env["product.template"]._moto_search():
+        url = moto._moto_url()
+        if not qs or qs.lower() in url:
+            yield {"loc": url}
+
 
 class MotoPages(http.Controller):
     """Página de cada moto del inventario (categoría MOTOS) con el diseño de la página maestra del editor."""
@@ -23,9 +34,12 @@ class MotoPages(http.Controller):
         moto = request.env["product.template"].sudo().browse(moto_id).exists()
         if not moto or not moto._moto_is_moto():
             raise NotFound()
+        # Sin publicar: solo la ven los editores del sitio (para revisarla antes de publicarla).
+        if not moto.is_published and not request.env.user.has_group("website.group_website_restricted_editor"):
+            raise NotFound()
         return moto
 
-    @http.route("/moto/<string:moto_slug>", type="http", auth="public", website=True, sitemap=False)
+    @http.route("/moto/<string:moto_slug>", type="http", auth="public", website=True, sitemap= sitemap_motos)
     def moto_page(self, moto_slug, **kwargs):
         _name, moto_id = request.env["ir.http"]._unslug(moto_slug)
         if not moto_id:
@@ -47,6 +61,7 @@ class MotoPages(http.Controller):
             "description": moto._moto_description(),
             "model_url": model_url,
             "image_url": image_url,
+            "price": moto.list_price,
         }
         # Imagen principal y visor con el primer color: la imagen principal es una foto fija (la primera
         # foto 360°, de frente, o la del color); el visor gira con las fotos 360° o usa el modelo .glb.
@@ -55,11 +70,14 @@ class MotoPages(http.Controller):
         frames = colors[0]["frames"] if colors else moto._moto_360_urls(moto.moto_360_image_ids)
         first_color_image = colors[0]["image_url"] if colors else ""
         sequence = " ".join(frames) if len(frames) > 1 else ""
-        values["intro_src"] = (frames[:1] or [first_color_image or image_url or model_url])[0]
+        values["intro_src"] = first_color_image or (frames[:1] or [image_url or model_url])[0]
         values["viewer_src"] = model_url or sequence or (frames[:1] or [first_color_image or image_url])[0]
+        moto_link = request.httprequest.host_url.rstrip("/") + moto._moto_url()
+        whatsapp_text = f"Hola Motos Alfa, estoy interesado en la moto {moto.name}"
+        whatsapp_url = f"https://wa.me/{WHATSAPP_NUMBER}?text={quote(whatsapp_text)}"
         # Sin marcas del editor: así nadie puede guardar los datos de esta moto dentro del diseño maestro.
         page_html = request.env["ir.ui.view"].with_context(inherit_branding=False)._render_template(
-            master.key, {"additional_title": moto.name},
+            master.key, {"additional_title": moto.name, "whatsapp_url": whatsapp_url, "main_object": moto},
         )
         master_url = request.env["website.page"].sudo().search([("view_id", "=", master.id)], limit=1).url
         notice = None
@@ -91,6 +109,55 @@ class MotoPages(http.Controller):
             link.text = "Editar el diseño"
             notice.append(link)
         return notice
+
+    @http.route("/motos/<string:type_slug>", type="http", auth="public", website=True, sitemap=False)
+    def moto_type_page(self, type_slug, **kwargs):
+        """La página /motos (con su diseño) para un tipo: el bloque «Tipos de moto» muestra sus motos."""
+        _name, type_id = request.env["ir.http"]._unslug(type_slug)
+        moto_type = request.env["product.category"].sudo().browse(type_id).exists() if type_id else None
+        if not moto_type or not moto_type._moto_is_type():
+            raise NotFound()
+        if f"/motos/{type_slug}" != moto_type._moto_type_url():
+            return request.redirect(moto_type._moto_type_url(), code=301)
+        page = request.env["website.page"].sudo().search(
+            [("url", "=", MOTOS_PAGE_URL)] + request.website.website_domain(), order="website_id", limit=1)
+        # Sin publicar, /motos/<tipo> tampoco se ve, salvo para los editores (igual que /motos).
+        if not page or not (page.is_visible or request.env.user.has_group("website.group_website_restricted_editor")):
+            raise NotFound()
+        # Sin marcas del editor: el diseño se edita en /motos.
+        page_html = request.env["ir.ui.view"].with_context(inherit_branding=False)._render_template(
+            page.view_id.key, {"additional_title": moto_type.name},
+        )
+        return request.make_response(page_html, headers=[("Content-Type", "text/html; charset=utf-8")])
+
+    @http.route([
+        "/website_motos_alfa_showcase/moto_types",
+        "/website_motos_alfa_showcase/moto_types/<int:type_id>",
+    ], type="http", auth="public", website=True, methods=["GET"], readonly=True, sitemap=False)
+    def moto_types_content(self, type_id=None, **kwargs):
+        """Tarjetas del bloque «Tipos de moto»: los tipos o, con type_id, las motos de ese tipo."""
+        categories = request.env["product.category"].sudo()
+        moto_type = categories
+        if type_id:
+            moto_type = categories.browse(type_id).exists()
+            if not moto_type or not moto_type._moto_is_type():
+                raise NotFound()
+            cards = [self._moto_card(moto.name, moto._moto_url(), moto) for moto in moto_type._moto_type_motos()]
+        else:
+            cards = [
+                # Foto de la primera moto del tipo que tenga foto.
+                self._moto_card(category.name, category._moto_type_url(),
+                                next((m for m in category._moto_type_motos() if m.image_1920), None))
+                for category in categories._moto_types()
+            ]
+        return request.render("website_motos_alfa_showcase.s_moto_types_content", {
+            "moto_type": moto_type,
+            "cards": cards,
+            "motos_page_url": MOTOS_PAGE_URL,
+        })
+
+    def _moto_card(self, name, url, moto):
+        return {"name": name, "url": url, "image_url": moto._moto_image_url() if moto else ""}
 
     @http.route("/moto/media/<int:moto_id>/foto/<string:filename>", type="http", auth="public", readonly=True)
     def moto_image(self, moto_id, filename, **kwargs):
