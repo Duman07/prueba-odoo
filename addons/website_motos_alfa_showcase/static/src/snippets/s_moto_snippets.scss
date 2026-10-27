@@ -162,7 +162,7 @@ body:not(.editor_enable) .s_moto_360_image_mode .s_moto_360_hint {
 
 // Panel lateral: colores y puntos destacados
 .s_moto_360_panel {
-    border: 1px solid rgba(127, 127, 127, 0.25);
+    //border: 1px solid rgba(127, 127, 127, 0.25);
     border-radius: 1rem;
 }
 
@@ -235,6 +235,15 @@ body:not(.editor_enable) .s_moto_360_image_mode .s_moto_360_hint {
     &:focus-visible {
         outline: 2px solid #e00000;
     }
+}
+
+// [Bloques] Puntos destacados OCULTOS por ahora (27-10-2026), se dejan para más adelante: el panel (y su columna,
+// si no tiene también los colores) y los marcadores sobre la moto. Las plantillas ya guardadas conservan sus puntos.
+// Para volver a mostrarlos: borrar esta regla y descomentar el panel en views/snippets/s_moto_snippets.xml.
+.s_moto_360_panel:has(> .s_moto_360_hotspots),
+.s_moto_360 .row > :has(> .s_moto_360_panel > .s_moto_360_hotspots):not(:has(.s_moto_360_swatches)),
+.s_moto_360_marker {
+    display: none !important;
 }
 
 // En el editor, un punto aún sin ubicar (ni en el modelo ni en una foto) se marca con borde punteado
@@ -372,8 +381,8 @@ html:not(.o_add_snippets_preview) body:not(.editor_enable) {
 
 // [Páginas de motos] Tarjeta del precio: el cuadro de la cuadrícula que contiene el precio.
 .s_moto_3d .o_grid_item:has(> .s_moto_price) {
-    border: 1px solid rgb(212, 212, 212);
-    border-radius: 12px;
+    //border: 1px solid rgb(212, 212, 212);
+    //border-radius: 12px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -383,7 +392,13 @@ html:not(.o_add_snippets_preview) body:not(.editor_enable) {
 // de los cuadros de la cuadrícula con !important, por eso va en los párrafos).
 .s_moto_3d .s_moto_price_label,
 .s_moto_3d .s_moto_price {
-    padding-left: 2rem;
+    padding-left: 0;
+}
+
+.s_moto_3d .s_moto_price_note{
+    margin: 0.25rem 0 0;
+    font-size: 0.75rem;
+    opacity: 0.7;
 }
 
 // [Formulario] Casilla de consentimiento de datos personales para recibir información sobre productos y servicios

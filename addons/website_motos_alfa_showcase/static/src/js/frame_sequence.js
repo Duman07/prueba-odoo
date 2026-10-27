@@ -38,17 +38,22 @@ export class FrameSequence {
         this.img.className = "s_moto_media_img";
         this.img.alt = blockEl.dataset.modelAlt || "Motocicleta";
         this.img.draggable = false;
+        this.img.loading = "lazy";
         this.img.src = frames[0];
         this.img.addEventListener("load", () => this.onRender?.());
         this.el.appendChild(this.img);
 
-        // Precarga todas las fotos para que el giro no parpadee.
-        this.preloaded = frames.map((url) => {
-            const image = new Image();
-            image.decoding = "async";
-            image.src = url;
-            return image;
-        });
+        // Las fotos se precargan y el giro automático avanza solo con el visor cerca de la pantalla
+        // (antes se descargaban las 24 al abrir la página, aunque el visitante no llegara al visor).
+        this.preloaded = [];
+        this.visible = false;
+        this.observer = new IntersectionObserver((entries) => {
+            this.visible = entries.some((entry) => entry.isIntersecting);
+            if (this.visible) {
+                this._preload();
+            }
+        }, { rootMargin: "300px" });
+        this.observer.observe(blockEl);
 
         if (interactive) {
             this.el.tabIndex = 0;
@@ -62,9 +67,23 @@ export class FrameSequence {
     }
 
     destroy() {
+        this.observer.disconnect();
         this.setAutoRotate(false);
         clearTimeout(this.resumeTimer);
         this.el.remove();
+    }
+
+    /** Precarga todas las fotos (una sola vez) para que el giro no parpadee. */
+    _preload() {
+        if (this.preloaded.length) {
+            return;
+        }
+        this.preloaded = this.frames.map((url) => {
+            const image = new Image();
+            image.decoding = "async";
+            image.src = url;
+            return image;
+        });
     }
 
     setFrame(index) {
@@ -79,7 +98,7 @@ export class FrameSequence {
         this.autoRotate = active;
         if (active) {
             const delay = AUTO_ROTATE_TURN_MS / this.frames.length;
-            this.autoRotateTimer = setInterval(() => this.setFrame(this.index + this.direction), delay);
+            this.autoRotateTimer = setInterval(() => this.visible && this.setFrame(this.index + this.direction), delay);
         }
         this.onAutoRotateChange?.(active);
     }

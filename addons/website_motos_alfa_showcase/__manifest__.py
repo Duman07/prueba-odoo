@@ -31,6 +31,7 @@
             # (clases s_moto_price / s_moto_price_label que pone _fill_price en controllers/moto_template.py)
             # [Formulario] ... y a la casilla de autorización (_fill_form) y al botón ENVIAR
             # [Bloques] frame_sequence.js: giro con fotos y puntos destacados ubicados en una foto
+            # (puntos destacados ocultos por ahora con una regla de s_moto_snippets.scss, 27-10-2026)
             "website_motos_alfa_showcase/static/src/snippets/s_moto_snippets.scss",
             "website_motos_alfa_showcase/static/src/js/model_viewer_loader.js",
             "website_motos_alfa_showcase/static/src/js/frame_sequence.js",

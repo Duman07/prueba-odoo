@@ -72,8 +72,8 @@ def _fill_viewers(wrap, intro_src, viewer_src, moto):
 
 
 PRICE_TEXT = re.compile(r"^\$\s*0[.,]?$")
-
-
+#Estatuto del consumidor 
+PRICE_NOTE = "Precio con IVA incluido, sujeto a cambios. No incluye matrícula ni SOAT."
 def _fill_price(wrap, price):
     """Precio en «Moto 3D»: el texto «$0» del diseño lleva el precio de la moto y la clase s_moto_price
     (el «Precio desde:» de encima, s_moto_price_label); el estilo está en s_moto_snippets.scss.
@@ -94,6 +94,9 @@ def _fill_price(wrap, price):
             element.set("class", " ".join(_classes(element) + ["s_moto_price"]))
             if label is not None:
                 label.set("class", " ".join(_classes(label) + ["s_moto_price_label"]))
+            note = html.Element("p", {"class": "s_moto_price_note"})
+            note.text = PRICE_NOTE
+            element.addnext(note)
 
 
 def _fill_colors(wrap, colors):
@@ -130,6 +133,16 @@ BACKGROUND_IMAGE = re.compile(r"background-image:\s*url\((&quot;|[\"']?)(.*?)\1\
 
 def _inside_moto_block(element):
     return any({"s_moto_3d", "s_moto_360"} & set(_classes(el)) for el in element.iterancestors())
+
+
+def _single_h1(wrap):
+    """Un solo <h1> por página: el nombre de la moto en «Moto 3D». Los demás (p. ej. la frase de la sección con fondo)
+    pasan a <h2> con la clase h1 de Bootstrap, que conserva su tamaño."""
+    for title in list(wrap.iter("h1")):
+        if any("s_moto_3d" in _classes(el) for el in title.iterancestors()):
+            continue
+        title.tag = "h2"
+        title.set("class", " ".join(_classes(title) + ["h1"]))
 
 
 def _fill_media(wrap, media, description):
@@ -297,6 +310,7 @@ def fill_moto_page(page_html, moto, values, master_url, editor_notice=None):
     _fill_media(container, page_media, values["description"])
     _fill_form(container, moto, values["motos"])
     _fill_links(container, master_url, moto._moto_url())
+    _single_h1(container)
     if editor_notice is not None:
         wrap = container.get_element_by_id("wrap", None)
         (wrap if wrap is not None else container).insert(0, editor_notice)

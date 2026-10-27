@@ -15,6 +15,10 @@ Los archivos del manifiesto llevan la etiqueta de su grupo (`[Bloques]`, `[Pági
   el modelo 3D. Para las fotos le pide el clic al widget (`s_moto_360/000.js`) con los eventos `moto-show-frame` y
   `moto-pick-photo`; el widget usa `pickPoint()`/`pointToView()` de `static/src/js/frame_sequence.js` y dibuja el círculo
   con la burbuja del texto (estilos en `s_moto_snippets.scss`).
+- **Puntos destacados ocultos por ahora (27-10-2026)**, se dejan para más adelante: una regla de
+  `s_moto_snippets.scss` esconde el panel y los marcadores, y el panel está comentado en `s_moto_snippets.xml`
+  (el bloque nuevo ya no lo trae). Las plantillas guardadas conservan sus puntos. Para volver a mostrarlos: borrar esa
+  regla y descomentar el panel. Pendiente: guardarlos por moto (en el producto) y no en la plantilla.
 - En `s_moto_360` cada panel («Colores», «Puntos destacados») va en su propia columna: en cuadrícula se mueven por separado.
   Los puntos destacados deben quedar dentro de la sección «Visor 360°» (`s_moto_360/000.js` solo los busca ahí);
   el panel «Colores» también puede ir en «Moto 3D» (lo atiende `s_moto_3d/000.js`).
@@ -35,8 +39,16 @@ Los archivos del manifiesto llevan la etiqueta de su grupo (`[Bloques]`, `[Pági
   (color del enlace de la tienda).
 - Precio: `controllers/motos.py` pasa `list_price` y `_fill_price` (`controllers/moto_template.py`) cambia el «$0.» de
   «Moto 3D» por el precio y pone las clases `s_moto_price` / `s_moto_price_label`; su estilo y el de la tarjeta están en
-  `static/src/snippets/s_moto_snippets.scss`.
+  `static/src/snippets/s_moto_snippets.scss`. Debajo va la nota legal `PRICE_NOTE` (clase `s_moto_price_note`, 27-10-2026).
 - `views/product_category_views.xml`: muestra «Página maestra (diseño web)» en la categoría.
+- Sitemap (27-10-2026): `sitemap_motos` (`controllers/motos.py`) pone las `/moto/…` publicadas en `/sitemap.xml` y
+  `models/website.py` (`_enumerate_pages`) quita sus `/shop/…`, que redirigen.
+- SEO y vista previa al compartir (27-10-2026): `controllers/motos.py` pasa la moto como `main_object` y
+  `_default_website_meta` (`models/product.py`) usa su «Descripción para comercio electrónico» como meta descripción;
+  la imagen al compartir (`og:image`) es la foto del producto.
+- Motos sin publicar (27-10-2026): `_moto_domain` (`models/product.py`) pide `is_published`, así que no salen en el mega
+  menú, «Tipos de moto» ni el formulario; `_get_moto` (`controllers/motos.py`) da 404 a su página y fotos, salvo a los
+  editores del sitio. `MENU_FIELDS` incluye `is_published`/`website_published` para refrescar el menú al publicar.
 - `views/moto_mega_menu.xml` + `models/website_menu.py`: mega menú con las motos por subcategoría.
 - Pruebas: `tests/test_moto_pages.py` (reutiliza `FAKE_GLB` de `tests/test_model_upload.py`).
 
@@ -75,11 +87,11 @@ Cada una usa el **diseño de una página maestra** hecha en el editor del sitio:
 Cada página maestra se edita como cualquier otra (mover bloques, tamaños, colores, textos) y conviene dejarla sin publicar.
 
 Al mostrar una moto se colocan sus datos en los bloques del diseño (`controllers/moto_template.py`):
-- «Moto 3D»: foto fija del primer color (su primera foto 360°, de frente) o, sin ellas, su foto o la del producto; el título (`<h1>`) lleva el nombre y el texto de encima, la categoría. Cualquier otro texto igual al título del diseño también pasa a ser el nombre.
+- «Moto 3D»: foto fija del primer color (la foto de su variante) o, sin ella, su primera foto 360° (de frente) o la del producto; el título (`<h1>`) lleva el nombre y el texto de encima, la categoría. Cualquier otro texto igual al título del diseño también pasa a ser el nombre.
 - «Visor 360°»: primer adjunto `.glb`/`.gltf` del producto (clip de adjuntos); sin modelo, las fotos 360° del primer color (giro con arrastre) o su foto. Una muestra por variante de color, copiando la primera muestra del diseño. El color es el color HTML del valor del atributo (tipo «Color») o se deduce del nombre (Negro, Rojo, Verde…).
 - Color principal: Producto → pestaña Ventas → «Página de la moto» → «Color principal». Es la primera muestra y el color con el que abre la página (imagen principal, visor, fondo y video). Vacío: el primero de Odoo (por referencia interna).
 - El panel «Colores» se puede dejar en el «Visor 360°» o moverlo dentro del bloque «Moto 3D» (junto a la imagen principal).
-- Elegir un color solo cambia la **imagen principal** («Moto 3D»): muestra su foto (la primera foto 360°, de frente, o la foto del color), sin animación. El visor, el fondo y el video no cambian. Al llegar desde el bloque «Productos» (`#attribute_values=…`) la imagen principal muestra el color elegido.
+- Elegir un color solo cambia la **imagen principal** («Moto 3D»): muestra su foto (la foto de la variante o, sin ella, la primera foto 360°, de frente), sin animación. El visor, el fondo y el video no cambian. Al llegar desde el bloque «Productos» (`#attribute_values=…`) la imagen principal muestra el color elegido.
 - Fotos 360°: Producto → Variantes → la variante (color) → «Fotos 360°»: se seleccionan todas a la vez (p. ej. 24, una cada 15°) y se ordenan por nombre con orden natural (`moto-2` antes que `moto-10`); la primera es la vista de frente. Para motos sin colores o colores sin fotos propias, el mismo campo en la ficha de la moto (pestaña Ventas).
 - Tarjetas de especificaciones (`s_card` dentro de «Elementos»): una por atributo **de esa moto** con «Creación de variantes: Nunca» (p. ej. Motor = 160 cc 4V), copiando la primera tarjeta con nombre y valor. Cada moto tiene las suyas aunque comparta categoría y página maestra. Un adjunto de imagen con el nombre del atributo (`Motor.jpg`) es la foto de la tarjeta. Sin especificaciones, la sección no se muestra.
 - Fondos y videos: cada sección con imagen de fondo (p. ej. «Título de la imagen») y cada video del diseño

@@ -111,8 +111,8 @@ class TestMotoPages(HttpCase):
             "name": "Línea Dos", "parent_id": root.id, "moto_master_page_id": cls.line_page.id,
         })
         cls.line2_child = cls.env["product.category"].create({"name": "Línea Dos Sport", "parent_id": cls.line2.id})
-        cls.moto2 = cls.env["product.template"].create({"name": "Moto Dos", "categ_id": cls.line2.id})
-        cls.moto3 = cls.env["product.template"].create({"name": "Moto Tres", "categ_id": cls.line2_child.id})
+        cls.moto2 = cls.env["product.template"].create({"name": "Moto Dos", "categ_id": cls.line2.id, "is_published": True,})
+        cls.moto3 = cls.env["product.template"].create({"name": "Moto Tres", "categ_id": cls.line2_child.id, "is_published": True,})
 
     def test_spec_with_several_values(self):
         suspension = self.env["product.attribute"].create({
@@ -183,6 +183,19 @@ class TestMotoPages(HttpCase):
         self.assertEqual(self.url_open(f"/moto/casco-prueba-{self.other.id}").status_code, 404)
         self.assertEqual(self.url_open(f"/moto/media/{self.other.id}/foto/imagen.png").status_code, 404)
 
+    def test_unpublished_moto_only_for_editors(self):
+        self.moto2.is_published = False
+        url = self.moto2._moto_url()
+        # Público: ni la página, ni la foto, ni el menú, ni la lista del formulario.
+        self.assertEqual(self.url_open(url).status_code, 404)
+        self.assertEqual(self.url_open(f"/moto/media/{self.moto2.id}/foto/imagen.png").status_code, 404)
+        self.assertNotIn(self.moto2, self.env["product.template"]._moto_search())
+        # Editor del sitio: sí la ve, para revisarla antes de publicarla.
+        new_test_user(self.env, login="moto_editor", password="moto_editor",
+                      groups="base.group_user,website.group_website_designer")
+        self.authenticate("moto_editor", "moto_editor")
+        self.assertEqual(self.url_open(url).status_code, 200)
+
     def test_old_slug_redirects(self):
         response = self.url_open(f"/moto/otro-nombre-{self.moto.id}", allow_redirects=False)
         self.assertEqual(response.status_code, 301)
@@ -240,7 +253,7 @@ class TestMotoPages(HttpCase):
         moto = self.env["product.template"].create({
             "name": "Moto Giro",
             "categ_id": self.line.id,
-            "image_1920": PIXEL_PNG,
+            "image_1920": PIXEL_PNG, "is_published": True,
             "attribute_line_ids": [(0, 0, {
                 "attribute_id": self.red.attribute_id.id,
                 "value_ids": [(6, 0, self.red.attribute_id.value_ids.ids)],
@@ -288,6 +301,10 @@ class TestMotoPages(HttpCase):
                 self.assertIn(f'data-model-src="{main_colors[0]["frames"][0]}"', wrap)
                 self.assertLess(wrap.index(f'data-color-name="{main_colors[0]["name"]}"'),
                                 wrap.index(f'data-color-name="{main_colors[1]["name"]}"'))
+        # Con foto propia de la variante, la imagen principal es esa foto (no la primera foto 360°).
+        red.image_variant_1920 = PIXEL_PNG
+        red_color = next(c for c in moto._moto_colors() if c["name"] == "Rojo")
+        self.assertEqual(red_color["main_src"], red_color["image_url"])
 
     def test_shop_links_use_moto_template(self):
         self.assertEqual(self.moto.website_url, self.moto._moto_url())
@@ -315,7 +332,7 @@ class TestMotoPages(HttpCase):
         moto = self.env["product.template"].create({
             "name": "Moto Fotos",
             "categ_id": self.line.id,
-            "image_1920": PIXEL_PNG,
+            "image_1920": PIXEL_PNG, "is_published": True,
             "attribute_line_ids": [(0, 0, {"attribute_id": color.id, "value_ids": [(6, 0, color.value_ids.ids)]})],
         })
         blue = moto.product_variant_ids.filtered(lambda v: v.product_template_attribute_value_ids.name == "Azul")
@@ -343,8 +360,27 @@ class TestMotoPages(HttpCase):
         self.assertNotIn("$0", wrap)
 
 
+    def test_seo_meta_uses_moto(self):
+        self.moto.description_ecommerce = "<p>La moto de prueba</p>"
+        html = self.url_open(self.moto._moto_url()).text
+        self.assertIn('<meta name="description" content="La moto de prueba"', html)
+        # Al compartir el enlace se ve la foto de la moto, no el logo del sitio.
+        self.assertIn(f"/web/image/product.template/{self.moto.id}/image_1024", html)
+
+
     def test_consent_before_submit(self):
         wrap = self._wrap(self.url_open(self.moto._moto_url()))
         self.assertEqual(wrap.count("s_moto_form_consent"), 1)
         self.assertIn('name="Autorización de datos"', wrap)
-        self.assertLess(wrap.index("s_moto_form_consent"), wrap.index("s_website_form_submit"))        
+        self.assertLess(wrap.index("s_moto_form_consent"), wrap.index("s_website_form_submit"))  
+
+
+    def test_sitemap_lists_published_motos(self):
+        # Odoo guarda el sitemap 12 horas: se borra para generarlo de nuevo.
+        self.env["ir.attachment"].search([("url", "=like", "/sitemap%")]).unlink()
+        self.moto2.is_published = False
+        sitemap = self.url_open("/sitemap.xml").text
+        self.assertIn(self.moto._moto_url(), sitemap)
+        self.assertNotIn(self.moto2._moto_url(), sitemap)
+        # Las motos ya no van con su dirección de la tienda (redirige); los demás productos sí.
+        self.assertNotIn(f"/shop/{self.env['ir.http']._slug(self.moto)}", sitemap)   

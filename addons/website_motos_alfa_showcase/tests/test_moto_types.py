@@ -41,11 +41,11 @@ class TestMotoTypes(HttpCase):
         cls.line = Category.create({"name": "Línea Tipo", "parent_id": cls.type.id})
         cls.type2 = Category.create({"name": "Tipo Dos", "parent_id": root.id})
         cls.empty_type = Category.create({"name": "Tipo Vacío", "parent_id": root.id})
-        cls.moto_no_image = cls.env["product.template"].create({"name": "A Moto Sin Foto", "categ_id": cls.line.id})
+        cls.moto_no_image = cls.env["product.template"].create({"name": "A Moto Sin Foto", "categ_id": cls.line.id,"is_published":True })
         cls.moto = cls.env["product.template"].create({
-            "name": "B Moto Tipo", "categ_id": cls.line.id, "image_1920": PIXEL_PNG,
+            "name": "B Moto Tipo", "categ_id": cls.line.id, "image_1920": PIXEL_PNG, "is_published": True,
         })
-        cls.moto2 = cls.env["product.template"].create({"name": "Moto Tipo Dos", "categ_id": cls.type2.id})
+        cls.moto2 = cls.env["product.template"].create({"name": "Moto Tipo Dos", "categ_id": cls.type2.id,"is_published": True})
         cls.other = cls.env["product.template"].create({"name": "Casco Tipo", "image_1920": PIXEL_PNG})
 
     def test_types_cards(self):

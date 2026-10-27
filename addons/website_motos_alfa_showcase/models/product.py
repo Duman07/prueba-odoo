@@ -25,7 +25,7 @@ FALLBACK_COLORS = {
 DEFAULT_SWATCH = "#8a9097"
 
 # Campos que cambian lo que muestra el mega menú «Modelos».
-MENU_FIELDS = {"name", "categ_id", "active", "sale_ok", "parent_id"}
+MENU_FIELDS = {"name", "categ_id", "active", "sale_ok", "parent_id", "is_published", "website_published"}
 
 
 def _natural_key(attachment):
@@ -110,7 +110,7 @@ class ProductTemplate(models.Model):
         root = self.env["product.category"]._moto_root()
         if not root:
             return [("id", "=", False)]
-        return [("categ_id", "child_of", root.id), ("sale_ok", "=", True)]
+        return [("categ_id", "child_of", root.id), ("sale_ok", "=", True), ("is_published", "=", True)]
 
     @api.model
     def _moto_search(self):
@@ -232,6 +232,17 @@ class ProductTemplate(models.Model):
             return ""
         return " ".join(html.fragment_fromstring(self.description_ecommerce, create_parent="div").text_content().split())
 
+
+    def _default_website_meta(self):
+        """Motos sin «Descripción de venta»: la descripción para buscadores y al compartir es su frase
+        («Descripción para comercio electrónico»)."""
+        res = super()._default_website_meta()
+        if self._moto_is_moto() and not self.description_sale:
+            description = self._moto_description()
+            res["default_opengraph"]["og:description"] = res["default_twitter"]["twitter:description"] = description
+            res["default_meta_description"] = description
+        return res
+
     def _moto_colors(self):
         """Una muestra por variante (Negro, Rojo, Verde…)."""
         self.ensure_one()
@@ -264,10 +275,8 @@ class ProductTemplate(models.Model):
                 "html_color": html_color,
                 # Foto propia de la variante (Variantes → imagen); sin ella el color usa la foto del producto.
                 "image_url": image_url,
-                # Fotos 360° del color (o de la moto) y la foto de la imagen principal al elegirlo:
-                # la primera foto 360° (de frente); sin ellas, la foto del color o la del producto.
                 "frames": frames,
-                "main_src": (frames[:1] or [image_url or product_image])[0],
+                "main_src": image_url or (frames[:1] or [product_image])[0],
                 # Mismos ids que el enlace de la tienda (#attribute_values=…), para abrir el visor en ese color.
                 "attribute_value_ids": ",".join(map(str, values.product_attribute_value_id.ids)),
                 "media_images": media["images"] or product_media["images"],

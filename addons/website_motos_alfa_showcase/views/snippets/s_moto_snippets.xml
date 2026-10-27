@@ -27,7 +27,7 @@
         </section>
     </template>
 
-    <!-- Bloque «Visor 360°»: visor con controles + panel de colores y puntos destacados -->
+    <!-- Bloque «Visor 360°»: visor con controles + panel de colores (puntos destacados ocultos por ahora) -->
     <template id="s_moto_360" name="Visor 360°">
         <section class="s_moto_360 o_cc o_cc1 pt48 pb48" data-model-src="" data-model-alt="Motocicleta" data-model-yaw="90" data-auto-rotate="true">
             <div class="container">
@@ -71,6 +71,8 @@
                             <p class="s_moto_360_color_name mb-0">Color 1</p>
                         </div>
                     </div>
+                    <!-- Panel «Puntos destacados»: oculto por ahora (27-10-2026), se deja para más adelante.
+                         Para volver a usarlo: descomentar y borrar la regla de s_moto_snippets.scss.
                     <div class="col-lg-4">
                         <div class="s_moto_360_panel">
                             <h3 class="h6 mb-3">Puntos destacados</h3>
@@ -90,6 +92,7 @@
                             </div>
                         </div>
                     </div>
+                    -->
                 </div>
             </div>
         </section>
