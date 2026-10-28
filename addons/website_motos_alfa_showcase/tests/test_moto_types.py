@@ -23,14 +23,8 @@ class TestMotoTypes(HttpCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        website = cls.env["website"].get_current_website()
-        # Se usa la página /motos del sitio si existe (los cambios se deshacen al terminar) o se crea una.
-        cls.page = cls.env["website.page"].search([("url", "=", "/motos")] + website.website_domain(), limit=1)
-        if not cls.page:
-            view = cls.env["ir.ui.view"].create({
-                "name": "Motos prueba", "type": "qweb", "key": "website.test-motos", "arch": "<t/>", "website_id": website.id,
-            })
-            cls.page = cls.env["website.page"].create({"view_id": view.id, "url": "/motos", "website_id": website.id})
+        # La página «Motocicletas» del módulo (views/motos_page.xml); los cambios se deshacen al terminar.
+        cls.page = cls.env.ref("website_motos_alfa_showcase.motos_page")
         cls.page.view_id.arch = MOTOS_ARCH.format(key=cls.page.view_id.key)
         cls.page.is_published = True
 

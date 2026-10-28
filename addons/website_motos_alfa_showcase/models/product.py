@@ -41,21 +41,6 @@ def _clear_menu_cache(env):
 class ProductCategory(models.Model):
     _inherit = "product.category"
 
-    moto_master_page_id = fields.Many2one(
-        "website.page", string="Página maestra (diseño web)", ondelete="set null",
-        help="Página del editor cuyo diseño usan las motos de esta categoría. "
-             "Si está vacío se usa la de la categoría padre.")
-
-    def _moto_master_page(self):
-        """Página maestra de la categoría o, si no tiene, de la más cercana hacia arriba."""
-        self.ensure_one()
-        category = self.sudo()
-        while category:
-            if category.moto_master_page_id:
-                return category.moto_master_page_id
-            category = category.parent_id
-        return self.env["website.page"]
-
     @api.model
     def _moto_root(self):
         return self.sudo().search([("name", "=ilike", MOTO_CATEGORY_NAME), ("parent_id", "=", False)], limit=1)

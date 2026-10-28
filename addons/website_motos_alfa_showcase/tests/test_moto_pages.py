@@ -1,5 +1,7 @@
 import re
 
+from unittest.mock import patch
+from odoo.addons.website_motos_alfa_showcase.controllers import motos
 from odoo.tests import HttpCase, new_test_user, tagged
 
 from .test_model_upload import FAKE_GLB
@@ -18,11 +20,9 @@ MASTER_ARCH = """
                     <h1><span class="display-1-fs"><strong>DISEÑO 150</strong></span></h1>
                     <p>Precio Desde: </p>
                     <p>$0.</p>
-                    <a class="btn" href="/test-moto-master#cotizar">Contáctanos</a>
+                    <a class="btn" href="#cotizar">Contáctanos</a>
+                    <a class="btn" href="#vista-360">Ver en 360°</a>
                 </div>
-                <div class="s_moto_3d_stage"/>
-            </section>
-            <section class="s_moto_360" data-model-src="/web/content/2/diseno.glb">
                 <div class="s_moto_360_panel">
                     <div class="s_moto_360_swatches">
                         <div class="s_moto_360_swatch o_diseno" style="background-color: red;" data-color-name="Color 1" data-model-src="/x.glb"/>
@@ -30,7 +30,9 @@ MASTER_ARCH = """
                     </div>
                     <p class="s_moto_360_color_name">Color 1</p>
                 </div>
+                <div class="s_moto_3d_stage"/>
             </section>
+            <section id="vista-360" class="s_moto_360" data-model-src="/web/content/2/diseno.glb"/>
             <section class="s_image_title oe_img_bg" style="background-position: 50% 70%; background-image: url(&quot;/web/image/9/fondo-plantilla.webp&quot;);">
                 <div class="container"><h1 class="display-3">Frase de la plantilla</h1></div>
             </section>
@@ -64,8 +66,7 @@ class TestMotoPages(HttpCase):
             "name": "Moto maestra prueba", "type": "qweb", "key": "website.test-moto-master",
             "arch": MASTER_ARCH, "website_id": website.id,
         })
-        cls.env["website.page"].create({"view_id": master.id, "url": "/test-moto-master", "website_id": website.id})
-        cls.env["ir.config_parameter"].set_param("website_motos_alfa_showcase.master_page_key", master.key)
+        cls.startClassPatcher(patch.object(motos, "MOTO_TEMPLATE", master.key))
 
         root = cls.env["product.category"]._moto_root() or cls.env["product.category"].create({"name": "MOTOS"})
         cls.line = cls.env["product.category"].create({"name": "Línea Prueba", "parent_id": root.id})
@@ -96,19 +97,8 @@ class TestMotoPages(HttpCase):
         ])
         cls.glb, cls.spec_image, cls.pdf = attachments
         cls.other = cls.env["product.template"].create({"name": "Casco Prueba", "image_1920": PIXEL_PNG})
-
-        # Otra línea con su propio diseño, y una subcategoría suya sin página maestra (hereda la de su padre).
-        line_master = cls.env["ir.ui.view"].create({
-            "name": "Moto maestra línea 2", "type": "qweb", "key": "website.test-moto-master-2",
-            "arch": MASTER_ARCH.replace("website.test-moto-master", "website.test-moto-master-2")
-                               .replace('class="oe_structure"', 'class="oe_structure o_diseno_linea_2"'),
-            "website_id": website.id,
-        })
-        cls.line_page = cls.env["website.page"].create({
-            "view_id": line_master.id, "url": "/test-moto-master-2", "website_id": website.id,
-        })
         cls.line2 = cls.env["product.category"].create({
-            "name": "Línea Dos", "parent_id": root.id, "moto_master_page_id": cls.line_page.id,
+            "name": "Línea Dos", "parent_id": root.id,
         })
         cls.line2_child = cls.env["product.category"].create({"name": "Línea Dos Sport", "parent_id": cls.line2.id})
         cls.moto2 = cls.env["product.template"].create({"name": "Moto Dos", "categ_id": cls.line2.id, "is_published": True,})
@@ -169,7 +159,7 @@ class TestMotoPages(HttpCase):
         self.authenticate("moto_designer", "moto_designer")
         wrap = self._wrap(self.url_open(self.moto._moto_url()))
         self.assertNotIn("data-oe-model", wrap)
-        self.assertIn('href="/test-moto-master"', wrap)
+        self.assertIn("views/moto_template.xml", wrap)
 
     def test_mega_menu_lists_motos(self):
         html = self.url_open("/").text
@@ -233,7 +223,7 @@ class TestMotoPages(HttpCase):
         self.assertIn("Frase de la plantilla", self._wrap(self.url_open(self.moto._moto_url())))
         self.moto.description_ecommerce = "<p>La moto de <b>prueba</b></p>"
         wrap = self._wrap(self.url_open(self.moto._moto_url()))
-        self.assertIn('<h1 class="display-3">La moto de prueba</h1>', wrap)
+        self.assertIn('<h2 class="display-3 h1">La moto de prueba</h2>', wrap)
         self.assertNotIn("Frase de la plantilla", wrap)
         # Fondo y video: los del primer color, fijos (elegir otro color no los cambia).
         first = self.moto._moto_colors()[0]
@@ -314,16 +304,6 @@ class TestMotoPages(HttpCase):
         self.assertEqual(response.status_code, 301)
         self.assertTrue(response.headers["Location"].endswith(self.moto._moto_url()))
 
-    def test_each_category_uses_its_master_page(self):
-        # Sin página maestra en su categoría: la general.
-        self.assertNotIn("o_diseno_linea_2", self._wrap(self.url_open(self.moto._moto_url())))
-        # Con página maestra propia, y en una subcategoría que no tiene: la de la categoría padre.
-        for moto in (self.moto2, self.moto3):
-            with self.subTest(moto=moto.name):
-                wrap = self._wrap(self.url_open(moto._moto_url()))
-                self.assertIn("o_diseno_linea_2", wrap)
-                self.assertIn(moto.name.upper(), wrap)
-
     def test_colors_show_variant_photos_without_model(self):
         color = self.env["product.attribute"].create({
             "name": "Color fotos",
@@ -360,6 +340,20 @@ class TestMotoPages(HttpCase):
         self.assertNotIn("$0", wrap)
 
 
+    def test_360_section_only_with_model_or_photos(self):
+        # self.moto tiene modelo .glb: se ve la sección y el botón.
+        wrap = self._wrap(self.url_open(self.moto._moto_url()))
+        self.assertIn('id="vista-360"', wrap)
+        self.assertIn('href="#vista-360"', wrap)
+        # Sin modelo ni fotos 360°: ni la sección ni el botón.
+        moto = self.env["product.template"].create({
+            "name": "Moto Sin Giro", "categ_id": self.line.id, "image_1920": PIXEL_PNG, "is_published": True,
+        })
+        wrap = self._wrap(self.url_open(moto._moto_url()))
+        self.assertNotIn("vista-360", wrap)
+        self.assertNotIn("s_moto_360_viewer", wrap)
+
+
     def test_seo_meta_uses_moto(self):
         self.moto.description_ecommerce = "<p>La moto de prueba</p>"
         html = self.url_open(self.moto._moto_url()).text
@@ -383,4 +377,13 @@ class TestMotoPages(HttpCase):
         self.assertIn(self.moto._moto_url(), sitemap)
         self.assertNotIn(self.moto2._moto_url(), sitemap)
         # Las motos ya no van con su dirección de la tienda (redirige); los demás productos sí.
-        self.assertNotIn(f"/shop/{self.env['ir.http']._slug(self.moto)}", sitemap)   
+        self.assertNotIn(f"/shop/{self.env['ir.http']._slug(self.moto)}", sitemap)
+
+    def test_moto_template_from_module(self):
+        with patch.object(motos, "MOTO_TEMPLATE", "website_motos_alfa_showcase.moto_template"):
+            response = self.url_open(self.moto._moto_url())
+        self.assertEqual(response.status_code, 200)
+        wrap = self._wrap(response)
+        self.assertIn('href="#vista-360"', wrap)
+        self.assertIn('id="vista-360"', wrap)
+        self.assertIn(">Antioquia</option>", wrap)

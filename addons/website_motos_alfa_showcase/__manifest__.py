@@ -1,6 +1,6 @@
 {
     "name": "Motos Alfa - Ficha de producto Hunk 150 XT",
-    "version": "18.0.1.10.0",
+    "version": "18.0.2.0.0",
     "summary": "Estructura base de la página de la Hero Hunk 150 XT, preparada para modelo 3D, animación de entrada y vista 360°",
     "category": "Website/Website",
     "author": "Personalización local",
@@ -13,8 +13,12 @@
     #   [Tipos de moto] Bloque «Tipos de moto» en /motos y páginas /motos/<tipo>
     #   [whatsApp] Botón flotante de WhatsApp
     "data": [
-        # [Páginas de motos] Campo «Página maestra» de la categoría y mega menú «Modelos»
-        "views/product_category_views.xml",
+        # [Páginas de motos] «Plantilla de motos»: diseño de todas las páginas /moto/<moto> (controllers/motos.py);
+        # sus imágenes están en static/src/img/plantilla/
+        "views/moto_template.xml",
+        # [Tipos de moto] Página «Motocicletas» (/motos) con el bloque «Tipos de moto»; /motos/<tipo> usa su diseño
+        "views/motos_page.xml",
+        # [Páginas de motos] Mega menú «Modelos»
         "views/moto_mega_menu.xml",
         # [Páginas de motos] Campo «Fotos 360°» en la variante (color) y en la moto (models/product.py)
         "views/product_moto_360_views.xml",

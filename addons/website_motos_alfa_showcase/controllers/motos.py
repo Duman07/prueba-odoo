@@ -12,9 +12,10 @@ from .moto_template import fill_moto_page
 # Las URL de la foto principal llevan ?unique=<fecha de modificación>; los adjuntos no cambian de contenido.
 MEDIA_MAX_AGE = 24 * 60 * 60
 
-# Página hecha en el editor que usan las motos cuya categoría no tiene página maestra (clave de su vista).
-MASTER_KEY_PARAM = "website_motos_alfa_showcase.master_page_key"
-DEFAULT_MASTER_KEY = "website.hunk-160r-4v"
+# «Plantilla de motos» (views/moto_template.xml): diseño de todas las páginas /moto/<moto>.
+MOTO_TEMPLATE = "website_motos_alfa_showcase.moto_template"
+# Página «Motocicletas» (views/motos_page.xml); /motos/<tipo> usa su diseño.
+MOTOS_PAGE = "website_motos_alfa_showcase.motos_page"
 
 # Página del editor con el bloque «Tipos de moto»; /motos/<tipo> la muestra con las motos de ese tipo.
 MOTOS_PAGE_URL = "/motos"
@@ -48,9 +49,6 @@ class MotoPages(http.Controller):
         # Si cambia el nombre del producto, la dirección antigua lleva a la nueva.
         if f"/moto/{moto_slug}" != moto._moto_url():
             return request.redirect(moto._moto_url(), code=301)
-        master = self._get_master_view(moto)
-        if not master:
-            raise NotFound()
         image_url = moto._moto_image_url()
         model_url = moto._moto_model_url()
         values = {
@@ -72,43 +70,28 @@ class MotoPages(http.Controller):
         sequence = " ".join(frames) if len(frames) > 1 else ""
         values["intro_src"] = first_color_image or (frames[:1] or [image_url or model_url])[0]
         values["viewer_src"] = model_url or sequence or (frames[:1] or [first_color_image or image_url])[0]
+        values["has_360"] = bool(model_url or sequence)
         moto_link = request.httprequest.host_url.rstrip("/") + moto._moto_url()
         whatsapp_text = f"Hola Motos Alfa, estoy interesado en la moto {moto.name}"
         whatsapp_url = f"https://wa.me/{WHATSAPP_NUMBER}?text={quote(whatsapp_text)}"
         # Sin marcas del editor: así nadie puede guardar los datos de esta moto dentro del diseño maestro.
         page_html = request.env["ir.ui.view"].with_context(inherit_branding=False)._render_template(
-            master.key, {"additional_title": moto.name, "whatsapp_url": whatsapp_url, "main_object": moto},
+            MOTO_TEMPLATE, {"additional_title": moto.name, "whatsapp_url": whatsapp_url, "main_object": moto},
         )
-        master_url = request.env["website.page"].sudo().search([("view_id", "=", master.id)], limit=1).url
         notice = None
         if request.env.user.has_group("website.group_website_restricted_editor"):
-            notice = self._editor_notice(master_url)
+            notice = self._editor_notice()
         return request.make_response(
-            fill_moto_page(str(page_html), moto, values, master_url, notice),
+            fill_moto_page(str(page_html), moto, values, notice),
             headers=[("Content-Type", "text/html; charset=utf-8")],
         )
 
-    def _get_master_view(self, moto):
-        """Página del editor cuyo diseño usa la moto: la de su categoría (o la de una categoría padre)
-        y, si ninguna tiene, la general (por defecto la de la Hunk 160R 4V)."""
-        page = moto.categ_id._moto_master_page()
-        if page.view_id:
-            return page.view_id
-        key = request.env["ir.config_parameter"].sudo().get_param(MASTER_KEY_PARAM, DEFAULT_MASTER_KEY)
-        website = request.env["website"].get_current_website()
-        return website.with_context(website_id=website.id).sudo().viewref(key, raise_if_not_found=False)
-
-    def _editor_notice(self, master_url):
-        notice = html.fragment_fromstring(
+    def _editor_notice(self):
+        return html.fragment_fromstring(
             '<div class="alert alert-info rounded-0 mb-0 text-center o_not_editable">'
-            "Esta página usa el diseño de la página maestra con los datos del producto. "
-            "Para cambiar el diseño de todas las motos, edita la página maestra.</div>"
+            "Esta página usa la «Plantilla de motos» con los datos del producto. "
+            "El diseño se cambia en el código (views/moto_template.xml), no en el editor.</div>"
         )
-        if master_url:
-            link = html.Element("a", href=master_url, **{"class": "alert-link ms-1"})
-            link.text = "Editar el diseño"
-            notice.append(link)
-        return notice
 
     @http.route("/motos/<string:type_slug>", type="http", auth="public", website=True, sitemap=False)
     def moto_type_page(self, type_slug, **kwargs):
@@ -119,12 +102,10 @@ class MotoPages(http.Controller):
             raise NotFound()
         if f"/motos/{type_slug}" != moto_type._moto_type_url():
             return request.redirect(moto_type._moto_type_url(), code=301)
-        page = request.env["website.page"].sudo().search(
-            [("url", "=", MOTOS_PAGE_URL)] + request.website.website_domain(), order="website_id", limit=1)
+        page = request.env.ref(MOTOS_PAGE).sudo()
         # Sin publicar, /motos/<tipo> tampoco se ve, salvo para los editores (igual que /motos).
-        if not page or not (page.is_visible or request.env.user.has_group("website.group_website_restricted_editor")):
+        if not (page.is_visible or request.env.user.has_group("website.group_website_restricted_editor")):
             raise NotFound()
-        # Sin marcas del editor: el diseño se edita en /motos.
         page_html = request.env["ir.ui.view"].with_context(inherit_branding=False)._render_template(
             page.view_id.key, {"additional_title": moto_type.name},
         )

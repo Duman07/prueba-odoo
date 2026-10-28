@@ -14,7 +14,7 @@ Los datos se colocan en los bloques que ya usa el diseño, sin marcas especiales
 """
 import copy
 import re
-
+from urllib.parse import unquote
 from lxml import html
 
 ZERO_WIDTH = re.compile("[​‌‍﻿]")
@@ -280,17 +280,17 @@ def _fill_form(wrap, moto, motos):
         submit.addprevious(html.fragment_fromstring(CONSENT_FIELD))
 
 
-def _fill_links(wrap, master_url, moto_url):
-    """Los botones del diseño apuntan a /hunk-160r-4v#…: en cada moto, a su propia página."""
-    if not master_url:
-        return
-    for link in wrap.iter("a"):
-        href = link.get("href") or ""
-        path, _sep, fragment = href.partition("#")
-        if path.rstrip("/").lower() == master_url.rstrip("/").lower():
-            link.set("href", f"#{fragment}" if fragment else moto_url)
+def _drop_360(wrap):
+    """Sin modelo .glb ni fotos 360°: se quita «Explórala en 360°» y los botones que llevan a ella."""
+    for block in _find(wrap, "s_moto_360"):
+        anchor = block.get("id")
+        if anchor:
+            for link in list(wrap.iter("a")):
+                if unquote(link.get("href") or "") == f"#{anchor}":
+                    link.drop_tree()
+        block.getparent().remove(block)
 
-def fill_moto_page(page_html, moto, values, master_url, editor_notice=None):
+def fill_moto_page(page_html, moto, values, editor_notice=None):
     """Devuelve el HTML de la página con los datos de la moto en el contenido principal (<main>)."""
     start = page_html.find("<main>")
     end = page_html.rfind("</main>")
@@ -309,8 +309,9 @@ def fill_moto_page(page_html, moto, values, master_url, editor_notice=None):
     )
     _fill_media(container, page_media, values["description"])
     _fill_form(container, moto, values["motos"])
-    _fill_links(container, master_url, moto._moto_url())
     _single_h1(container)
+    if not values["has_360"]:
+        _drop_360(container)    
     if editor_notice is not None:
         wrap = container.get_element_by_id("wrap", None)
         (wrap if wrap is not None else container).insert(0, editor_notice)

@@ -25,10 +25,13 @@ Los archivos del manifiesto llevan la etiqueta de su grupo (`[Bloques]`, `[Pági
 - Pruebas: `tests/test_model_upload.py`.
 
 **[Páginas de motos] `/moto/<moto>` y mega menú «Modelos»**
-- `controllers/motos.py`: rutas `/moto/<moto>`, `/moto/media/...` y redirección de `/shop/<moto>`; usa
-  `controllers/moto_template.py` (rellena la página maestra; depende de las clases de los bloques `s_moto_3d`/`s_moto_360`) y `models/product.py`.
-- `models/product.py`: campo `moto_master_page_id` de la categoría, `_moto_url()` del producto y sus datos
-  (colores, especificaciones, «Medios adicionales» y descripción).
+- `views/moto_template.xml` (28-10-2026): la **«Plantilla de motos»**, diseño de todas las `/moto/<moto>` (sale de
+  `/plantilla-hunk`); sus imágenes en `static/src/img/plantilla/`. El diseño se cambia ahí, no en el editor.
+- `controllers/motos.py`: rutas `/moto/<moto>`, `/moto/media/...` y redirección de `/shop/<moto>`; dibuja
+  `MOTO_TEMPLATE` (la plantilla de arriba) y usa `controllers/moto_template.py` (la rellena; depende de las clases
+  de los bloques `s_moto_3d`/`s_moto_360`) y `models/product.py`.
+- `models/product.py`: `_moto_url()` del producto y sus datos (colores, especificaciones, «Medios adicionales» y
+  descripción).
 - `views/product_moto_360_views.xml`: campos «Fotos 360°» (variante y moto) y «Color principal» (moto), de `models/product.py`.
   Las fotos se sirven con `/moto/media/<moto>/giro/<id>/…` y los «Medios adicionales» con `/moto/media/<moto>/medio/<id>/…`
   (`controllers/motos.py`).
@@ -40,7 +43,11 @@ Los archivos del manifiesto llevan la etiqueta de su grupo (`[Bloques]`, `[Pági
 - Precio: `controllers/motos.py` pasa `list_price` y `_fill_price` (`controllers/moto_template.py`) cambia el «$0.» de
   «Moto 3D» por el precio y pone las clases `s_moto_price` / `s_moto_price_label`; su estilo y el de la tarjeta están en
   `static/src/snippets/s_moto_snippets.scss`. Debajo va la nota legal `PRICE_NOTE` (clase `s_moto_price_note`, 27-10-2026).
-- `views/product_category_views.xml`: muestra «Página maestra (diseño web)» en la categoría.
+- Sin giro, sin sección 360° (28-10-2026): `values["has_360"]` (`controllers/motos.py`) y `_drop_360`
+  (`controllers/moto_template.py`) quitan «Explórala en 360°» y el botón «Ver en 360°» si la moto no tiene `.glb` ni
+  fotos 360°.
+- Un solo `<h1>` (27-10-2026): `_single_h1` (`controllers/moto_template.py`) pasa a `<h2 class="h1">` los `<h1>` del
+  diseño fuera de «Moto 3D»; el `<h1>` es el nombre de la moto.
 - Sitemap (27-10-2026): `sitemap_motos` (`controllers/motos.py`) pone las `/moto/…` publicadas en `/sitemap.xml` y
   `models/website.py` (`_enumerate_pages`) quita sus `/shop/…`, que redirigen.
 - SEO y vista previa al compartir (27-10-2026): `controllers/motos.py` pasa la moto como `main_object` y
@@ -50,12 +57,14 @@ Los archivos del manifiesto llevan la etiqueta de su grupo (`[Bloques]`, `[Pági
   menú, «Tipos de moto» ni el formulario; `_get_moto` (`controllers/motos.py`) da 404 a su página y fotos, salvo a los
   editores del sitio. `MENU_FIELDS` incluye `is_published`/`website_published` para refrescar el menú al publicar.
 - `views/moto_mega_menu.xml` + `models/website_menu.py`: mega menú con las motos por subcategoría.
-- Pruebas: `tests/test_moto_pages.py` (reutiliza `FAKE_GLB` de `tests/test_model_upload.py`).
+- Pruebas: `tests/test_moto_pages.py` (reutiliza `FAKE_GLB` de `tests/test_model_upload.py`; `test_moto_template_from_module` dibuja la plantilla real).
 
 **[Tipos de moto] Bloque «Tipos de moto» en `/motos` y páginas `/motos/<tipo>`**
 - `views/snippets/s_moto_snippets.xml`: plantillas `s_moto_types` (el bloque, solo con su aviso) y `s_moto_types_content` (las tarjetas).
 - `static/src/snippets/s_moto_types/000.js`: pide las tarjetas a `controllers/motos.py` (`/website_motos_alfa_showcase/moto_types[/<tipo>]`) y las pone en el bloque.
-- `controllers/motos.py`: `moto_types_content` (tarjetas) y `moto_type_page` (`/motos/<tipo>`, muestra la página `/motos`).
+- `views/motos_page.xml` (28-10-2026): la página «Motocicletas» (`/motos`) con su diseño (título, carrusel y el bloque).
+- `controllers/motos.py`: `moto_types_content` (tarjetas) y `moto_type_page` (`/motos/<tipo>`, muestra la página
+  `MOTOS_PAGE`).
 - `models/product.py`: `_moto_types`, `_moto_is_type`, `_moto_type_motos` y `_moto_type_url` de la categoría.
 - `static/src/snippets/s_moto_snippets.scss`: recuadro del aviso (oculto para los visitantes).
 - Pruebas: `tests/test_moto_types.py` (reutiliza `PIXEL_PNG` de `tests/test_moto_pages.py`).
@@ -67,24 +76,23 @@ Los archivos del manifiesto llevan la etiqueta de su grupo (`[Bloques]`, `[Pági
 - Pruebas: `tests/test_colombia_states.py` y `test_consent_before_submit` en `tests/test_moto_pages.py`.
 **[whatsApp] Botón flotante**
 - `views/whatsapp_button.xml`: el botón en las páginas del sitio; `static/src/scss/whatsapp.scss`: su estilo (computador y celular).
+  En celular, `#wrapwrap` deja 4.5rem abajo para que el botón no tape el pie (28-10-2026, D7), menos en el editor.
 
 ## Tipos de moto: página Motocicletas
 Las subcategorías **directas** de MOTOS son los **tipos** (Trabajadora, Urbana, Doble propósito, Scooter) y dentro de
 cada tipo van las líneas (ECO, Hunk, XPULSE, XOOM) con sus motos: `MOTOS / Urbana / Hunk`.
-- Bloque «Tipos de moto» (grupo «Motos Alfa»): se pone en la página `/motos` del editor. Ahí muestra una tarjeta por
+- Bloque «Tipos de moto» (grupo «Motos Alfa»): está en la página `/motos` (`views/motos_page.xml`). Ahí muestra una tarjeta por
   tipo que tenga motos (foto de su primera moto con foto), en el orden en que se crearon los tipos.
 - Al hacer clic se abre `/motos/<tipo>` (p. ej. `/motos/urbana-95`): la misma página `/motos` (mismo diseño), con el
   nombre del tipo, «Todos los tipos» y una tarjeta por moto que lleva a su página `/moto/...`.
 - Las tarjetas no se guardan en la página: se arman al abrirla, así un tipo o una moto nueva aparece sola.
-- Si `/motos` no está publicada, `/motos/<tipo>` tampoco se ve (salvo para los editores). El diseño se edita en `/motos`.
+- Si `/motos` no está publicada, `/motos/<tipo>` tampoco se ve (salvo para los editores). El diseño se cambia en `views/motos_page.xml`.
 
 ## Motos del inventario: páginas y mega menú automáticos
 Cada producto de la categoría **MOTOS** (o de sus subcategorías) que se pueda vender tiene su página en `/moto/<nombre>-<id>`.
-Cada una usa el **diseño de una página maestra** hecha en el editor del sitio:
-- La de su categoría: campo «Página maestra (diseño web)» en Inventario → Configuración → Categorías de producto.
-- Si su categoría no tiene, la de la categoría padre más cercana (p. ej. MOTOS / HUNK / SPORT usa la de MOTOS / HUNK).
-- Si ninguna tiene, la general `/hunk-160r-4v` (vista `website.hunk-160r-4v`; otra se elige con el parámetro del sistema `website_motos_alfa_showcase.master_page_key`).
-Cada página maestra se edita como cualquier otra (mover bloques, tamaños, colores, textos) y conviene dejarla sin publicar.
+Todas usan el **mismo diseño**: la «Plantilla de motos» (`views/moto_template.xml`, 28-10-2026). Antes cada categoría
+elegía una página maestra hecha en el editor; eso se quitó para que el diseño viaje con el código. El diseño se cambia
+en ese XML y se actualiza el módulo (`-u`).
 
 Al mostrar una moto se colocan sus datos en los bloques del diseño (`controllers/moto_template.py`):
 - «Moto 3D»: foto fija del primer color (la foto de su variante) o, sin ella, su primera foto 360° (de frente) o la del producto; el título (`<h1>`) lleva el nombre y el texto de encima, la categoría. Cualquier otro texto igual al título del diseño también pasa a ser el nombre.
@@ -93,7 +101,7 @@ Al mostrar una moto se colocan sus datos en los bloques del diseño (`controller
 - El panel «Colores» se puede dejar en el «Visor 360°» o moverlo dentro del bloque «Moto 3D» (junto a la imagen principal).
 - Elegir un color solo cambia la **imagen principal** («Moto 3D»): muestra su foto (la foto de la variante o, sin ella, la primera foto 360°, de frente), sin animación. El visor, el fondo y el video no cambian. Al llegar desde el bloque «Productos» (`#attribute_values=…`) la imagen principal muestra el color elegido.
 - Fotos 360°: Producto → Variantes → la variante (color) → «Fotos 360°»: se seleccionan todas a la vez (p. ej. 24, una cada 15°) y se ordenan por nombre con orden natural (`moto-2` antes que `moto-10`); la primera es la vista de frente. Para motos sin colores o colores sin fotos propias, el mismo campo en la ficha de la moto (pestaña Ventas).
-- Tarjetas de especificaciones (`s_card` dentro de «Elementos»): una por atributo **de esa moto** con «Creación de variantes: Nunca» (p. ej. Motor = 160 cc 4V), copiando la primera tarjeta con nombre y valor. Cada moto tiene las suyas aunque comparta categoría y página maestra. Un adjunto de imagen con el nombre del atributo (`Motor.jpg`) es la foto de la tarjeta. Sin especificaciones, la sección no se muestra.
+- Tarjetas de especificaciones (`s_card` dentro de «Elementos»): una por atributo **de esa moto** con «Creación de variantes: Nunca» (p. ej. Motor = 160 cc 4V), copiando la primera tarjeta con nombre y valor. Cada moto tiene las suyas aunque comparta categoría y plantilla. Un adjunto de imagen con el nombre del atributo (`Motor.jpg`) es la foto de la tarjeta. Sin especificaciones, la sección no se muestra.
 - Fondos y videos: cada sección con imagen de fondo (p. ej. «Título de la imagen») y cada video del diseño
   se cambian, en orden, por las fotos y los videos de **Medios adicionales** del primer color (Producto → Variantes → la variante).
   Si ese color no tiene, se usan los del producto (pestaña Ventas → «Medios adicionales para el producto») y, si tampoco,
@@ -101,11 +109,11 @@ Al mostrar una moto se colocan sus datos en los bloques del diseño (`controller
 - Frase: el título de la primera sección con imagen de fondo es la «Descripción para comercio electrónico» del producto
   (solo el texto). Sin descripción se deja la frase del diseño.
 - Campo «Modelo» del formulario: todas las motos, con la actual elegida.
-- Enlaces a la página maestra (`/hunk-160r-4v#…`): apuntan a la página de la moto.
+- Sin modelo ni fotos 360°: no se muestran la sección «Explórala en 360°» ni el botón «Ver en 360°».
 
-Estos bloques se pueden mover, redimensionar y cambiar de estilo, pero si se borran de la página maestra sus datos no se muestran.
+Estos bloques se pueden mover y cambiar de estilo en la plantilla, pero si se quitan de ella sus datos no se muestran.
 Las páginas de cada moto se generan sin las marcas del editor: no se pueden editar (así no se guardan datos de una moto en el diseño)
-y los editores ven un aviso con el enlace a la página maestra.
+y los editores ven un aviso que dice que el diseño está en `views/moto_template.xml`.
 
 Las motos enlazan a su página en el bloque «Productos», la tienda y la búsqueda; `/shop/<moto>` redirige a `/moto/<moto>`.
 Solo se publican la imagen del producto y los adjuntos que son imágenes o modelos 3D; los demás adjuntos (PDF, etc.) no.
