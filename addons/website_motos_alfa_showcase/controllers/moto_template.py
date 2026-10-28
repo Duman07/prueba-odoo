@@ -165,93 +165,60 @@ def _fill_media(wrap, media, description):
             _set_text(title, description)
 
 
-def _spec_targets(card):
-    """En la tarjeta del diseño (<strong>Motor </strong><strong>160 cc 4V</strong>): nombre y valor."""
-    strongs = [s for s in card.iter("strong") if s.text_content().strip() and not s.xpath("ancestor::figure")]
-    if len(strongs) >= 2:
-        return strongs[0], strongs[-1]
-    titles = card.xpath(".//*[contains(@class, 'card-title')]")
-    return (titles[0], None) if titles else (None, None)
-
-
-def _fill_spec_values(value_el, values):
-    """Un valor por línea con el formato del valor del diseño; en «Etiqueta: detalle» la etiqueta va en negrilla sin ese
-    formato y el detalle con el color del diseño, sin negrilla.
-    Un solo valor sin etiqueta queda como en el diseño («Motor 160 cc 4V»)."""
-    if len(values) == 1 and ":" not in values[0]:
-        _set_text(value_el, values[0])
-        return
-    parent = value_el.getparent()
-    position = parent.index(value_el)
-    tail = value_el.tail
-    parent.remove(value_el)
-    elements = []
+def _spec_rows(values):
+    """Filas de una especificación: «Etiqueta: valor» → etiqueta (<dt>) y valor (<dd>); sin etiqueta, solo <dd>."""
+    rows = html.Element("dl", {"class": "row mb-0"})
     for value in values:
         label, separator, detail = (part.strip() for part in value.partition(":"))
-        elements.append(html.Element("br"))
         if separator and detail:
-            label_el = html.Element("strong")
-            label_el.text = f"{label}: "
-            elements.append(label_el)
-        line = copy.deepcopy(value_el)
-        line.tail = None
-        if separator and detail and line.tag in ("strong", "b"):
-            # Con etiqueta, el detalle va sin negrilla (conserva el color del diseño) para distinguirlo de la etiqueta.
-            line.tag = "span"
-        _set_text(line, detail if separator and detail else value)
-        elements.append(line)
-    elements[-1].tail = tail
-    for offset, element in enumerate(elements):
-        parent.insert(position + offset, element)
+            term = html.Element("dt", {"class": "col-sm-5"})
+            term.text = label
+            rows.append(term)
+            row = html.Element("dd", {"class": "col-sm-7"})
+            row.text = detail
+        else:
+            row = html.Element("dd", {"class": "col-12"})
+            row.text = value
+        rows.append(row)
+    return rows
 
 
 def _fill_specs(wrap, specs):
-    lists = _find(wrap, "s_product_list")
-    cards = [card for block in lists for card in _find(block, "s_card")] or _find(wrap, "s_card")
-    if not cards:
-        return
-
-    
-    # Tarjeta modelo: la primera con nombre y valor (en el diseño, «Motor 160 cc 4V»).
-    prototype_card = next((card for card in cards if _spec_targets(card)[1] is not None), cards[0])
-    column = prototype_card.getparent()
-    row = column.getparent()
-    section = next(iter(row.iterancestors("section")), None)
-    columns = [card.getparent() for card in cards if card.getparent().getparent() is row]
-    position = row.index(columns[0])
-    tail = columns[-1].tail
-    prototype = copy.deepcopy(column)
-    for old in columns:
-        row.remove(old)
-    if not specs:
-        if section is not None and section.getparent() is not None:
+    """«Especificaciones técnicas» (.s_moto_specs): un grupo del acordeón por especificación, copiando el primero del
+    diseño; solo el primero abierto. Sin especificaciones se quita la sección."""
+    for section in _find(wrap, "s_moto_specs"):
+        accordion = next(iter(_find(section, "accordion")), None)
+        items = _find(section, "accordion-item")
+        if not specs or accordion is None or not items:
             section.getparent().remove(section)
-        return
-    for offset, spec in enumerate(specs):
-        new_column = copy.deepcopy(prototype)
-        new_column.tail = tail
-        card = _find(new_column, "s_card")[0] if _find(new_column, "s_card") else new_column
-        figure = next(iter(card.iter("figure")), None)
-        if figure is not None:
-            image = next(iter(figure.iter("img")), None)
-            if spec["image_url"] and image is not None:
-                for attribute in list(image.attrib):
-                    if attribute.startswith("data-"):
-                        del image.attrib[attribute]
-                image.set("src", spec["image_url"])
-                image.set("alt", spec["name"])
-                for link in figure.iter("a"):
-                    link.attrib.pop("href", None)
-            else:
-                figure.getparent().remove(figure)
-        name_el, value_el = _spec_targets(card)
-        if value_el is not None:
-            _set_text(name_el, f"{spec['name']} ")
-            _fill_spec_values(value_el, spec["values"])
-        elif name_el is not None:
-            _set_text(name_el, f"{spec['name']}: {spec['value']}")
-        row.insert(position + offset, new_column)
-
+            continue
+        prototype = items[0]
+        for item in items:
+            item.getparent().remove(item)
+        accordion_id = accordion.get("id") or "moto_specs"
+        accordion.set("id", accordion_id)
+        for index, spec in enumerate(specs, start=1):
+            item = copy.deepcopy(prototype)
+            button = _find(item, "accordion-button")[0]
+            panel = _find(item, "accordion-collapse")[0]
+            body = _find(item, "accordion-body")[0]
+            button_id, panel_id = f"{accordion_id}_btn_{index}", f"{accordion_id}_{index}"
+            button.set("id", button_id)
+            button.set("data-bs-target", f"#{panel_id}")
+            button.set("aria-controls", panel_id)
+            panel.set("id", panel_id)
+            panel.set("data-bs-parent", f"#{accordion_id}")
+            panel.set("aria-labelledby", button_id)
+            first = index == 1
+            button.set("aria-expanded", "true" if first else "false")
+            button.set("class", " ".join([c for c in _classes(button) if c != "collapsed"] + ([] if first else ["collapsed"])))
+            panel.set("class", " ".join([c for c in _classes(panel) if c != "show"] + (["show"] if first else [])))
+            _set_text(next(iter(button.iter("span")), button), spec["name"])
+            for child in list(body):
+                body.remove(child)
+            body.text = None
+            body.append(_spec_rows(spec["values"]))
+            accordion.append(item)
 
 CONSENT_FIELD = """
 <div class="s_website_form_field s_website_form_custom s_website_form_custom s_website_form_required s_moto_form_consent mb-3 col-12" data-type="boolean">

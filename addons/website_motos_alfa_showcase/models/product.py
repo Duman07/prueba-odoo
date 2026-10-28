@@ -157,24 +157,13 @@ class ProductTemplate(models.Model):
         return self._moto_attachment_url(model) if model else ""
 
     def _moto_specs(self):
-        """Atributos que no crean variantes (p. ej. Motor = 160 cc 4V). Si hay un adjunto con el
-        nombre del atributo (Motor.jpg), se usa como foto de la tarjeta."""
+        """Atributos que no crean variantes (p. ej. Motor = Cilindraje: 160 cc): un grupo de «Especificaciones técnicas»
+        cada uno, con un valor por fila."""
         self.ensure_one()
-        images = {
-            attachment.name.rsplit(".", 1)[0].strip().lower(): attachment
-            for attachment in self._moto_attachments()
-            if (attachment.mimetype or "").startswith("image/")
-        }
-        specs = []
-        for line in self.attribute_line_ids.filtered(lambda l: l.attribute_id.create_variant == "no_variant"):
-            image = images.get(line.attribute_id.name.strip().lower())
-            specs.append({
-                "name": line.attribute_id.name,
-                "value": ", ".join(line.value_ids.mapped("name")),
-                "values": line.value_ids.mapped("name"),
-                "image_url": self._moto_attachment_url(image) if image else "",
-            })
-        return specs
+        return [
+            {"name": line.attribute_id.name, "values": line.value_ids.mapped("name")}
+            for line in self.attribute_line_ids.filtered(lambda l: l.attribute_id.create_variant == "no_variant")
+        ]
 
     def _moto_360_attachments(self):
         """Fotos 360° de la moto y de sus colores."""

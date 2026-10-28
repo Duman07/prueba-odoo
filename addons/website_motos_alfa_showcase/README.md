@@ -26,7 +26,7 @@ Los archivos del manifiesto llevan la etiqueta de su grupo (`[Bloques]`, `[Pági
 
 **[Páginas de motos] `/moto/<moto>` y mega menú «Modelos»**
 - `views/moto_template.xml` (28-10-2026): la **«Plantilla de motos»**, diseño de todas las `/moto/<moto>` (sale de
-  `/plantilla-hunk`); sus imágenes en `static/src/img/plantilla/`. El diseño se cambia ahí, no en el editor.
+  `/plantilla-hunk`); «Especificaciones técnicas» es un acordeón (`s_moto_specs`). El diseño se cambia ahí, no en el editor.
 - `controllers/motos.py`: rutas `/moto/<moto>`, `/moto/media/...` y redirección de `/shop/<moto>`; dibuja
   `MOTO_TEMPLATE` (la plantilla de arriba) y usa `controllers/moto_template.py` (la rellena; depende de las clases
   de los bloques `s_moto_3d`/`s_moto_360`) y `models/product.py`.
@@ -103,7 +103,7 @@ Al mostrar una moto se colocan sus datos en los bloques del diseño (`controller
 - El panel «Colores» se puede dejar en el «Visor 360°» o moverlo dentro del bloque «Moto 3D» (junto a la imagen principal).
 - Elegir un color solo cambia la **imagen principal** («Moto 3D»): muestra su foto (la foto de la variante o, sin ella, la primera foto 360°, de frente), sin animación. El visor, el fondo y el video no cambian. Al llegar desde el bloque «Productos» (`#attribute_values=…`) la imagen principal muestra el color elegido.
 - Fotos 360°: Producto → Variantes → la variante (color) → «Fotos 360°»: se seleccionan todas a la vez (p. ej. 24, una cada 15°) y se ordenan por nombre con orden natural (`moto-2` antes que `moto-10`); la primera es la vista de frente. Para motos sin colores o colores sin fotos propias, el mismo campo en la ficha de la moto (pestaña Ventas).
-- Tarjetas de especificaciones (`s_card` dentro de «Elementos»): una por atributo **de esa moto** con «Creación de variantes: Nunca» (p. ej. Motor = 160 cc 4V), copiando la primera tarjeta con nombre y valor. Cada moto tiene las suyas aunque comparta categoría y plantilla. Un adjunto de imagen con el nombre del atributo (`Motor.jpg`) es la foto de la tarjeta. Sin especificaciones, la sección no se muestra.
+- «Especificaciones técnicas» (acordeón `s_moto_specs`, 28-10-2026): un grupo por atributo **de esa moto** con «Creación de variantes: Nunca» (p. ej. Motor), copiando el primer grupo del diseño; solo el primero abierto. Cada valor del atributo es una fila: «Cilindraje: 160 cc» → etiqueta y valor; sin «:», el texto completo. Sin especificaciones, la sección no se muestra. Estilo (línea bajo cada grupo, «+» cerrado / «−» abierto, colores, tamaños): variables `$moto-specs-*` de `static/src/snippets/s_moto_snippets.scss`.
 - Fondos y videos: cada sección con imagen de fondo (p. ej. «Título de la imagen») y cada video del diseño
   se cambian, en orden, por las fotos y los videos de **Medios adicionales** del primer color (Producto → Variantes → la variante).
   Si ese color no tiene, se usan los del producto (pestaña Ventas → «Medios adicionales para el producto») y, si tampoco,

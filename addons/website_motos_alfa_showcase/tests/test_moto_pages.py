@@ -37,15 +37,18 @@ MASTER_ARCH = """
                 <div class="container"><h1 class="display-3">Frase de la plantilla</h1></div>
             </section>
             <section class="s_text_block"><div class="media_iframe_video" data-oe-expression="//www.youtube.com/embed/AAAAAAAAAAA"/></section>
-            <section class="s_product_list">
-                <div class="row">
-                    <div class="col-lg-12"><h2>Especificaciones técnicas</h2></div>
-                    <div class="col-lg-2 o_diseno_col"><div class="s_card card">
-                        <figure><a href="#"><img src="/web/image/1/diseno.webp" data-original-id="1"/></a></figure>
-                        <strong>Motor </strong><strong><font style="color: red;">150 cc</font></strong>
-                    </div></div>
-                    <div class="col-lg-2"><div class="s_card card"><div class="card-body"><h3 class="card-title"><a href="#">Sutil</a></h3></div></div></div>
-                </div>
+            <section class="s_moto_specs">
+                <h2>Especificaciones técnicas</h2>
+                <div class="s_accordion"><div id="moto_specs" class="accordion">
+                    <div class="accordion-item">
+                        <button class="accordion-button collapsed" data-bs-target="#x1" aria-expanded="false"><span class="flex-grow-1">Diseño motor</span></button>
+                        <div id="x1" class="accordion-collapse collapse"><div class="accordion-body"><p>150 cc</p></div></div>
+                    </div>
+                    <div class="accordion-item">
+                        <button class="accordion-button collapsed"><span class="flex-grow-1">Sutil</span></button>
+                        <div class="accordion-collapse collapse"><div class="accordion-body"/></div>
+                    </div>
+                </div></div>
             </section>
             <form><select name="Modelo" id="m"><option value="Opción 1">Opción 1</option></select>
                 <div class="s_website_form_submit"><a class="s_website_form_send btn">Enviar</a></div></form>
@@ -112,13 +115,13 @@ class TestMotoPages(HttpCase):
         })
         self.moto.attribute_line_ids = [(0, 0, {"attribute_id": suspension.id, "value_ids": [(6, 0, suspension.value_ids.ids)]})]
         wrap = self._wrap(self.url_open(self.moto._moto_url()))
-        # Una tarjeta más, con un valor por línea: la etiqueta en negrilla y el detalle con el color del diseño, sin negrilla.
-        self.assertEqual(wrap.count("o_diseno_col"), 2)
-        self.assertIn(
-            '<strong>Suspensión prueba </strong><br><strong>Delantera: </strong><span><font style="color: red;">Hidráulica</font></span>'
-            '<br><strong>Trasera: </strong><span><font style="color: red;">Monoshock</font></span>', wrap)
-        # La tarjeta con un solo valor queda como en el diseño.
-        self.assertIn('<strong>Motor prueba </strong><strong><font style="color: red;">160 cc 4V</font></strong>', wrap)
+        # Un grupo del acordeón por especificación; solo el primero abierto.
+        self.assertEqual(wrap.count('class="accordion-item"'), 2)
+        self.assertEqual(wrap.count('aria-expanded="true"'), 1)
+        self.assertIn('<span class="flex-grow-1">Suspensión prueba</span>', wrap)
+        # «Etiqueta: valor» → etiqueta y valor en dos columnas; sin etiqueta, una sola.
+        self.assertIn('<dt class="col-sm-5">Delantera</dt><dd class="col-sm-7">Hidráulica</dd>', wrap)
+        self.assertIn('<dd class="col-12">160 cc 4V</dd>', wrap)
 
     def _wrap(self, response):
         self.assertEqual(response.status_code, 200)
@@ -142,11 +145,11 @@ class TestMotoPages(HttpCase):
             wrap)
         self.assertNotIn("data-variant=", wrap)
         self.assertNotIn("/x.glb", wrap)
-        # Una tarjeta por especificación, con el formato de la tarjeta «Motor» del diseño.
-        self.assertEqual(wrap.count("o_diseno_col"), 1)
+         # Un grupo del acordeón por especificación, copiando el primero del diseño, abierto.
+        self.assertEqual(wrap.count('class="accordion-item"'), 1)
         self.assertNotIn("Sutil", wrap)
-        self.assertIn('<strong>Motor prueba </strong><strong><font style="color: red;">160 cc 4V</font></strong>', wrap)
-        self.assertIn(self.moto._moto_attachment_url(self.spec_image), wrap)
+        self.assertIn('<span class="flex-grow-1">Motor prueba</span>', wrap)
+        self.assertIn('class="accordion-collapse collapse show"', wrap)
         self.assertIn("Especificaciones técnicas", wrap)
         # Formulario y enlaces.
         self.assertRegex(wrap, re.compile(r'<option[^>]*value="Moto Prueba 160"[^>]*selected'))

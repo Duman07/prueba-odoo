@@ -123,77 +123,22 @@
                         <p class="s_moto_360_hint o_default_snippet_text">Arrastra para girar la moto. Usa la rueda o pellizca para acercar.</p>
                     </div></div>
             </div>
-        </section><section class="s_product_list pt64 pb64 o_colored_level" data-vcss="001" data-snippet="s_product_list" data-name="Elementos">
+        </section>
+        <section class="s_moto_specs pt64 pb64 o_colored_level" data-name="Especificaciones técnicas">
         <div class="container">
-            <div class="row s_nb_column_fixed">
-                <div class="col-lg-12 pt24">
-                    <p><span class="o_small-fs"><font style="color: rgb(226, 0, 0);"><strong>FICHA TÉCNICA</strong></font></span></p><h2><strong>Especificaciones técnicas</strong></h2>
-                </div>
-                <div data-name="Card" class="col-lg-2 col-6 pb4">
-                    <div class="s_card card o_cc o_cc1 o_colored_level o_card_img_top" data-snippet="s_card" data-vxml="001" data-name="Card">
-                        <figure class="o_card_img_wrapper ratio mb-0 ratio-4x3">
-                            <a aria-label="Enlace al producto" href="#">
-                                <img src="/website_motos_alfa_showcase/static/src/img/plantilla/01caracteristica_Hunk160R4V.webp" alt="" class="o_card_img img img-fluid o_we_custom_image card-img-top" loading="lazy"/>
-                            </a>
-                        </figure>
-                        <strong><font style="color: rgb(226, 0, 0);">Motor</font> </strong><strong><font class="text-black">160 cc 4V</font></strong>
-                    </div>
-                </div>
-                <div data-name="Card" class="col-lg-2 col-6">
-                    <div class="s_card card o_cc o_cc1 o_colored_level o_card_img_top" data-snippet="s_card" data-vxml="001" data-name="Card">
-                        <figure class="o_card_img_wrapper ratio mb-0 ratio-4x3">
-                            <a aria-label="Enlace al producto" href="#">
-                                <img src="/website_motos_alfa_showcase/static/src/img/plantilla/05caracteristica_Hunk160R4V.webp" alt="" class="o_card_img img img-fluid o_we_custom_image card-img-top" loading="lazy"/>
-                            </a>
-                        </figure>
-                        <font style="color: rgb(226, 0, 0);"><strong>Suspensión</strong></font><strong><font class="text-black">Delantera:</font></strong><strong><span style="font-weight: normal;">Hidraulica telescopics</span></strong>
-                    </div>
-                </div>
-                <div data-name="Card" class="col-lg-2 col-6">
-                    <div class="s_card o_card_img_top card o_cc o_cc1 o_colored_level" data-snippet="s_card" data-vxml="001" data-name="Card">
-                        <figure class="o_card_img_wrapper ratio ratio-4x3 mb-0">
-                            <a aria-label="Enlace al producto" href="#">
-                                <img src="/web/image/website.s_product_list_default_image_3" alt="" class="o_card_img card-img-top" loading="lazy"/>
-                            </a>
-                        </figure>
-                        <div class="card-body">
-                            <h3 class="card-title h5-fs" style="text-align: center;"><a href="#" class="o_default_snippet_text">Equilibrado</a></h3>
-                        </div>
-                    </div>
-                </div>
-                <div data-name="Card" class="col-lg-2 col-6">
-                    <div class="s_card o_card_img_top card o_cc o_cc1 o_colored_level" data-snippet="s_card" data-vxml="001" data-name="Card">
-                        <figure class="o_card_img_wrapper ratio ratio-4x3 mb-0">
-                            <a aria-label="Enlace al producto" href="#">
-                                <img src="/web/image/website.s_product_list_default_image_4" alt="" class="o_card_img card-img-top" loading="lazy"/>
-                            </a>
-                        </figure>
-                        <div class="card-body">
-                            <h3 class="card-title h5-fs" style="text-align: center;"><a href="#" class="o_default_snippet_text">Sutil</a></h3>
-                        </div>
-                    </div>
-                </div>
-                <div data-name="Card" class="col-lg-2 col-6">
-                    <div class="s_card o_card_img_top card o_cc o_cc1 o_colored_level" data-snippet="s_card" data-vxml="001" data-name="Card">
-                        <figure class="o_card_img_wrapper ratio ratio-4x3 mb-0">
-                            <a aria-label="Enlace al producto" href="#">
-                                <img src="/web/image/website.s_product_list_default_image_5" alt="" class="o_card_img card-img-top" loading="lazy"/>
-                            </a>
-                        </figure>
-                        <div class="card-body">
-                            <h3 class="card-title h5-fs" style="text-align: center;"><a href="#" class="o_default_snippet_text">Elegante</a></h3>
-                        </div>
-                    </div>
-                </div>
-                <div data-name="Card" class="col-lg-2 col-6">
-                    <div class="s_card o_card_img_top card o_cc o_cc1 o_colored_level" data-snippet="s_card" data-vxml="001" data-name="Card">
-                        <figure class="o_card_img_wrapper ratio ratio-4x3 mb-0">
-                            <a aria-label="Enlace al producto" href="#">
-                                <img src="/web/image/website.s_product_list_default_image_6" alt="" class="o_card_img card-img-top" loading="lazy"/>
-                            </a>
-                        </figure>
-                        <div class="card-body">
-                            <h3 class="card-title h5-fs" style="text-align: center;"><a href="#" class="o_default_snippet_text">Moderno</a></h3>
+            <p><span class="o_small-fs"><font style="color: rgb(226, 0, 0);"><strong>FICHA TÉCNICA</strong></font></span></p>
+            <h2 class="mb-4 s_moto_specs_title"><strong>Especificaciones técnicas</strong></h2>
+            <div class="s_accordion" data-name="Accordion">
+                <div id="moto_specs" class="accordion">
+                    <div class="accordion-item position-relative z-1" data-name="Accordion Item">
+                        <button type="button" id="moto_specs_btn_1" class="accordion-header accordion-button justify-content-between gap-2 bg-transparent h6-fs fw-bold text-decoration-none text-reset transition-none" data-bs-target="#moto_specs_1" aria-controls="moto_specs_1" data-bs-toggle="collapse" aria-expanded="true"><span class="flex-grow-1">Motor</span></button>
+                        <div id="moto_specs_1" class="accordion-collapse collapse show" data-bs-parent="#moto_specs" role="region" aria-labelledby="moto_specs_btn_1">
+                            <div class="accordion-body">
+                                <dl class="row mb-0">
+                                    <dt class="col-sm-5">Cilindraje</dt>
+                                    <dd class="col-sm-7">160 cc</dd>
+                                </dl>
+                            </div>
                         </div>
                     </div>
                 </div>

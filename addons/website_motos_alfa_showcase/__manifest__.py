@@ -14,7 +14,7 @@
     #   [whatsApp] Botón flotante de WhatsApp
     "data": [
         # [Páginas de motos] «Plantilla de motos»: diseño de todas las páginas /moto/<moto> (controllers/motos.py);
-        # sus imágenes están en static/src/img/plantilla/
+        # («Especificaciones técnicas» es un acordeón .s_moto_specs que llena _fill_specs)
         "views/moto_template.xml",
         # [Tipos de moto] Página «Motocicletas» (/motos) con el bloque «Tipos de moto» y su menú; /motos/<tipo> usa su diseño
         "views/motos_page.xml",
@@ -37,6 +37,7 @@
             # [Bloques] frame_sequence.js: giro con fotos y puntos destacados ubicados en una foto
             # (puntos destacados ocultos por ahora con una regla de s_moto_snippets.scss, 27-10-2026)
             # [Páginas de motos] ... y hace que las filas del «Visor 360°» tomen el alto de su contenido (28-10-2026)
+            # [Páginas de motos] ... y el acordeón «Especificaciones técnicas» (.s_moto_specs, variables $moto-specs-*, «+» / «−»)
             "website_motos_alfa_showcase/static/src/snippets/s_moto_snippets.scss",
             "website_motos_alfa_showcase/static/src/js/model_viewer_loader.js",
             "website_motos_alfa_showcase/static/src/js/frame_sequence.js",
