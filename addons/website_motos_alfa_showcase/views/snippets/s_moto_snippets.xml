@@ -142,7 +142,7 @@
                 t-thumbnail="/website_motos_alfa_showcase/static/src/img/snippets_thumbs/s_moto_group.svg"/>
         </xpath>
         <xpath expr="//snippets[@id='snippet_structure']" position="inside">
-            <t t-snippet="website_motos_alfa_showcase.s_moto_3d" string="Moto 3D" group="motos_alfa"
+            <t t-snippet="website_motos_alfa_showcase.s_moto_3d" string="Motos Alfa" group="motos_alfa"
                 t-thumbnail="/website_motos_alfa_showcase/static/src/img/snippets_thumbs/s_moto_3d.svg">
                 <keywords>moto, motocicleta, 3d, glb, gltf, modelo, imagen, foto, animación, entrada</keywords>
             </t>

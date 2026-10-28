@@ -2,7 +2,7 @@
 <odoo>
 
     <!--
-        [Tipos de moto] Página «Motocicletas» (/motos): título, carrusel y bloque «Tipos de moto».
+        [Tipos de moto] Página «Motocicletas» (/motos): título y bloque «Tipos de moto», y su menú.
         Sale de la página /motos de Db-demo (28-10-2026). /motos/<tipo> usa este mismo diseño
         (controllers/motos.py, moto_type_page). El diseño se cambia aquí, no en el editor.
     -->
@@ -11,70 +11,6 @@
         <div id="wrap" class="oe_structure oe_empty"><section class="s_title pt40 pb40 o_colored_level" data-vcss="001" data-snippet="s_title" data-name="Título">
         <div class="s_allow_columns container">
             <h2 class="display-3-fs" style="text-align: center;"><font style="color: rgb(226, 0, 0);">M</font><font class="text-black">otocicletas</font></h2>
-        </div>
-    </section><section class="s_carousel_wrapper p-0" data-vxml="001" data-vcss="001" data-snippet="s_carousel" data-name="Carrusel">
-        <div class="s_carousel s_carousel_default carousel slide o_colored_level" data-bs-ride="true" data-bs-interval="10000" id="myCarousel1792775019335">
-            
-            <div class="carousel-inner">
-                
-                <div class="carousel-item o_cc o_cc5 o_colored_level pb0 pt4 oe_img_bg o_bg_img_center o_bg_img_origin_border_box active" style="background-image: url(&quot;/web/image/website.s_carousel_default_image_1&quot;) !important;" data-name="Slide">
-                    <div class="o_we_bg_filter bg-black-25"/>
-                    <div class="container oe_unremovable">
-                        <div class="row">
-                            <div class="carousel-content col-lg-6 o_colored_level">
-                                <h2 class="display-3-fs o_default_snippet_text">Título de la diapositiva</h2>
-                                <p class="lead o_default_snippet_text">Utilice este snippet para presentar su contenido en un formato tipo presentación de diapositivas. No escriba sobre productos o servicios aquí, escriba sobre soluciones.</p>
-                                <p>
-                                    <a href="/contactus" class="btn btn-primary o_default_snippet_text">Contáctanos</a>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="carousel-item pt96 pb96 o_colored_level oe_img_bg o_bg_img_center o_bg_img_origin_border_box" style="background-image: url(&quot;/web/image/website.s_carousel_default_image_2&quot;) !important;" data-name="Slide">
-                    <div class="container oe_unremovable">
-                        <div class="row">
-                            <div class="carousel-content col-lg-8 offset-lg-2 text-center pt48 pb40 o_colored_level">
-                                <h2 class="display-3-fs o_default_snippet_text">Eslogan inteligente</h2>
-                                <div class="s_hr pt8 pb24" data-snippet="s_hr" data-name="Separator">
-                                    <hr class="w-25 mx-auto"/>
-                                </div>
-                                <p class="lead o_default_snippet_text">Contar una historia es muy importante, <br/>ya que llama la atención de los clientes.</p>
-                                <p><a href="/" class="btn btn-primary o_default_snippet_text">Empiece su travesía</a></p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="carousel-item o_cc o_cc5 o_colored_level oe_img_bg o_bg_img_center o_bg_img_origin_border_box pb184 pt160" style="background-image: url(&quot;/web/image/website.s_carousel_default_image_3&quot;) !important;" data-name="Slide">
-                    <div class="container oe_unremovable">
-                        <div class="row">
-                            <div class="carousel-content col-lg-6 offset-lg-6 pb24 pt24 o_colored_level">
-                                <h3 class="o_default_snippet_text">Edite este título</h3>
-                                <h6 class="o_default_snippet_text">Escribir un buen texto es sencillo, pero no fácil.</h6>
-                                <p><br/></p>
-                                <p class="lead o_default_snippet_text">Para escribir un buen texto debe entender cómo su producto o servicio ayuda a sus clientes. Las palabras simples dicen mucho más que un lenguaje pomposo y rimbombante.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <button class="carousel-control-prev o_not_editable o_we_no_overlay" aria-label="Anterior" title="Anterior" data-bs-target="#myCarousel1792775019335" data-bs-slide="prev">
-                <span class="carousel-control-prev-icon" aria-hidden="true"/>
-                <span class="visually-hidden o_default_snippet_text">Anterior</span>
-            </button>
-            <button class="carousel-control-next o_not_editable o_we_no_overlay" aria-label="Siguiente" title="Siguiente" data-bs-target="#myCarousel1792775019335" data-bs-slide="next">
-                <span class="carousel-control-next-icon" aria-hidden="true"/>
-                <span class="visually-hidden o_default_snippet_text">Siguiente</span>
-            </button>
-            
-            <div class="carousel-indicators o_not_editable o_we_no_overlay">
-                <button type="button" aria-label="Indicador de carrusel" data-bs-target="#myCarousel1792775019335" class="active" data-bs-slide-to="0" aria-current="true"/>
-                <button type="button" aria-label="Indicador de carrusel" data-bs-target="#myCarousel1792775019335" data-bs-slide-to="1"/>
-                <button type="button" aria-label="Indicador de carrusel" data-bs-target="#myCarousel1792775019335" data-bs-slide-to="2"/>
-            </div>
         </div>
     </section><section class="s_moto_types o_cc o_cc1 o_colored_level pb256 pt40" data-snippet="s_moto_types" data-name="Tipos de moto">
             <div class="container">
@@ -94,6 +30,15 @@
         <field name="view_id" ref="motos_page_template"/>
         <field name="is_published" eval="True"/>
         <field name="website_indexed" eval="True"/>
+    </record>
+
+    <!-- [Tipos de moto] Menú «Motocicletas» del encabezado. Al instalar, Odoo lo copia en cada sitio. -->
+    <record id="menu_motos" model="website.menu">
+        <field name="name">Motocicletas</field>
+        <field name="url">/motos</field>
+        <field name="page_id" ref="motos_page"/>
+        <field name="parent_id" ref="website.main_menu"/>
+        <field name="sequence">30</field>
     </record>
 
 </odoo>

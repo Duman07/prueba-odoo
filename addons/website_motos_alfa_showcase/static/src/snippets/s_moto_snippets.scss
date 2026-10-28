@@ -126,6 +126,15 @@ body.editor_enable .s_moto_360_sequence {
     min-height: 44px;
 }
 
+// (28-10-2026) En la cuadrícula del «Visor 360°» las filas toman el alto de su contenido, no 50 px fijos
+// (web_editor.frontend.scss): el visor es 16:9 y su alto cambia con el ancho de la pantalla, así que con filas fijas
+// sobraba espacio debajo o se montaba sobre la sección siguiente. En el editor se dejan las filas de Odoo.
+@include media-breakpoint-up(lg) {
+    body:not(.editor_enable) .s_moto_360 .s_moto_360_row.o_grid_mode {
+        grid-auto-rows: auto;
+    }
+}
+
 .s_moto_360_controls {
     display: flex;
     flex-wrap: wrap;

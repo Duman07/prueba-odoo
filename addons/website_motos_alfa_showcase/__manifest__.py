@@ -16,9 +16,9 @@
         # [Páginas de motos] «Plantilla de motos»: diseño de todas las páginas /moto/<moto> (controllers/motos.py);
         # sus imágenes están en static/src/img/plantilla/
         "views/moto_template.xml",
-        # [Tipos de moto] Página «Motocicletas» (/motos) con el bloque «Tipos de moto»; /motos/<tipo> usa su diseño
+        # [Tipos de moto] Página «Motocicletas» (/motos) con el bloque «Tipos de moto» y su menú; /motos/<tipo> usa su diseño
         "views/motos_page.xml",
-        # [Páginas de motos] Mega menú «Modelos»
+        # [Páginas de motos] Mega menú «Modelos» (el menú y su contenido)
         "views/moto_mega_menu.xml",
         # [Páginas de motos] Campo «Fotos 360°» en la variante (color) y en la moto (models/product.py)
         "views/product_moto_360_views.xml",
@@ -36,6 +36,7 @@
             # [Formulario] ... y a la casilla de autorización (_fill_form) y al botón ENVIAR
             # [Bloques] frame_sequence.js: giro con fotos y puntos destacados ubicados en una foto
             # (puntos destacados ocultos por ahora con una regla de s_moto_snippets.scss, 27-10-2026)
+            # [Páginas de motos] ... y hace que las filas del «Visor 360°» tomen el alto de su contenido (28-10-2026)
             "website_motos_alfa_showcase/static/src/snippets/s_moto_snippets.scss",
             "website_motos_alfa_showcase/static/src/js/model_viewer_loader.js",
             "website_motos_alfa_showcase/static/src/js/frame_sequence.js",

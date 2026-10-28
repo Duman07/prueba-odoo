@@ -47,10 +47,7 @@
         <div class="container">
             <div class="row o_grid_mode" data-row-count="9">
                 <div class="o_grid_item g-height-9 g-col-lg-8 col-lg-8 o_colored_level" style="--grid-item-padding-y: 32px; grid-area: 1 / 1 / 10 / 9; z-index: 1;">
-                    <h1 class="display-3 o_default_snippet_text">Un análisis profundo de la innovación y la excelencia</h1>
-                </div>
-                <div class="o_grid_item g-height-3 g-col-lg-7 col-lg-7 o_colored_level" style="--grid-item-padding-y: 24px; grid-area: 7 / 6 / 10 / 13; z-index: 2;">
-                    <p class="lead o_default_snippet_text" style="text-align: end;">Transforme sus espacios con nuestra nueva colección que combina elegancia y funcionalidad. Nuestras piezas fusionan a la perfección un gran estilo con comodidad.</p>
+                    <h1 class="display-3"><span>HUNK 160R 4V</span></h1>
                 </div>
             </div>
         </div>
@@ -94,7 +91,7 @@
             <div class="container">
                 
                 
-                <div class="row g-4 s_moto_360_row o_grid_mode" data-row-count="16"><div class="o_grid_item g-col-lg-12 g-height-3 col-lg-12" style="grid-area: 1 / 1 / 4 / 13; z-index: 1;"><p><span class="o_small-fs"><strong><font style="color: rgb(224, 0, 0);" class="o_default_snippet_text">VISTA INTERACTIVA</font></strong></span></p><h2><strong class="o_default_snippet_text">Explórala en 360°</strong></h2></div>
+                <div class="row g-4 s_moto_360_row o_grid_mode" data-row-count="11"><div class="o_grid_item g-col-lg-12 g-height-3 col-lg-12" style="grid-area: 1 / 1 / 4 / 13; z-index: 1;"><p><span class="o_small-fs"><strong><font style="color: rgb(224, 0, 0);" class="o_default_snippet_text">VISTA INTERACTIVA</font></strong></span></p><h2><strong class="o_default_snippet_text">Explórala en 360°</strong></h2></div>
                     
                     
                     <div class="o_colored_level o_grid_item g-col-lg-1 g-height-1 col-lg-1" style="grid-area: 1 / 1 / 2 / 2; z-index: 3;">
@@ -116,31 +113,14 @@
                             </div>
                         </div>
                     </div>
-                <div class="o_colored_level o_grid_item g-col-lg-10 g-height-14 col-lg-10" style="z-index: 2; grid-area: 3 / 2 / 17 / 12;">
+                <div class="o_colored_level o_grid_item g-col-lg-10 g-height-9 col-lg-10" style="z-index: 2; grid-area: 3 / 2 / 12 / 12;">
                         <div class="s_moto_360_viewer o_not_editable">
                             <div class="s_moto_empty">
                                 <span class="s_moto_empty_title o_default_snippet_text">Visor 360°</span>
                                 <span class="s_moto_empty_hint o_default_snippet_text">Sube un modelo .glb, las fotos del giro 360° o una imagen desde las opciones del bloque.</span>
                             </div>
                         </div>
-                        <div class="s_moto_360_controls o_not_editable" role="toolbar" aria-label="Controles de la vista 360°">
-                            <button type="button" class="btn btn-outline-secondary s_moto_360_autorotate o_default_snippet_text" aria-pressed="true">
-                                <i class="fa fa-refresh me-1" role="presentation"/>Giro automático
-                            </button>
-                            <button type="button" class="btn btn-outline-secondary s_moto_360_zoom_in" aria-label="Acercar" title="Acercar">
-                                <i class="fa fa-search-plus" role="presentation"/>
-                            </button>
-                            <button type="button" class="btn btn-outline-secondary s_moto_360_zoom_out" aria-label="Alejar" title="Alejar">
-                                <i class="fa fa-search-minus" role="presentation"/>
-                            </button>
-                            <button type="button" class="btn btn-outline-secondary s_moto_360_reset" aria-label="Restablecer vista" title="Restablecer vista">
-                                <i class="fa fa-undo" role="presentation"/>
-                            </button>
-                            <button type="button" class="btn btn-outline-secondary s_moto_360_fullscreen" aria-label="Pantalla completa" title="Pantalla completa">
-                                <i class="fa fa-expand" role="presentation"/>
-                            </button>
-                        </div>
-                        <p class="s_moto_360_hint o_default_snippet_text">Arrastra para girar la moto. Usa la rueda, pellizca o los botones para acercar.</p>
+                        <p class="s_moto_360_hint o_default_snippet_text">Arrastra para girar la moto. Usa la rueda o pellizca para acercar.</p>
                     </div></div>
             </div>
         </section><section class="s_product_list pt64 pb64 o_colored_level" data-vcss="001" data-snippet="s_product_list" data-name="Elementos">

@@ -56,13 +56,15 @@ Los archivos del manifiesto llevan la etiqueta de su grupo (`[Bloques]`, `[Pági
 - Motos sin publicar (27-10-2026): `_moto_domain` (`models/product.py`) pide `is_published`, así que no salen en el mega
   menú, «Tipos de moto» ni el formulario; `_get_moto` (`controllers/motos.py`) da 404 a su página y fotos, salvo a los
   editores del sitio. `MENU_FIELDS` incluye `is_published`/`website_published` para refrescar el menú al publicar.
-- `views/moto_mega_menu.xml` + `models/website_menu.py`: mega menú con las motos por subcategoría.
+- `views/moto_mega_menu.xml` + `models/website_menu.py`: el menú «Modelos» del encabezado (28-10-2026, antes se
+  creaba a mano) y su mega menú con las motos por subcategoría.
 - Pruebas: `tests/test_moto_pages.py` (reutiliza `FAKE_GLB` de `tests/test_model_upload.py`; `test_moto_template_from_module` dibuja la plantilla real).
 
 **[Tipos de moto] Bloque «Tipos de moto» en `/motos` y páginas `/motos/<tipo>`**
 - `views/snippets/s_moto_snippets.xml`: plantillas `s_moto_types` (el bloque, solo con su aviso) y `s_moto_types_content` (las tarjetas).
 - `static/src/snippets/s_moto_types/000.js`: pide las tarjetas a `controllers/motos.py` (`/website_motos_alfa_showcase/moto_types[/<tipo>]`) y las pone en el bloque.
-- `views/motos_page.xml` (28-10-2026): la página «Motocicletas» (`/motos`) con su diseño (título, carrusel y el bloque).
+- `views/motos_page.xml` (28-10-2026): la página «Motocicletas» (`/motos`) con su diseño (título y el bloque) y el menú
+  «Motocicletas» del encabezado (Odoo lo copia en cada sitio al instalar).
 - `controllers/motos.py`: `moto_types_content` (tarjetas) y `moto_type_page` (`/motos/<tipo>`, muestra la página
   `MOTOS_PAGE`).
 - `models/product.py`: `_moto_types`, `_moto_is_type`, `_moto_type_motos` y `_moto_type_url` de la categoría.

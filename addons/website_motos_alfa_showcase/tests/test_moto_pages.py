@@ -387,3 +387,6 @@ class TestMotoPages(HttpCase):
         self.assertIn('href="#vista-360"', wrap)
         self.assertIn('id="vista-360"', wrap)
         self.assertIn(">Antioquia</option>", wrap)
+        # Sin descripción, el título de la sección con fondo es el nombre de la moto.
+        self.assertIn('<h2 class="display-3 h1"><span>Moto Prueba 160</span></h2>', wrap)
+        self.assertNotIn("Transforme sus espacios", wrap)
