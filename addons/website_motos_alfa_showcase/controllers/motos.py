@@ -29,7 +29,7 @@ def sitemap_motos(env, rule, qs):
 
 
 class MotoPages(http.Controller):
-    """Página de cada moto del inventario (categoría MOTOS) con el diseño de la página maestra del editor."""
+    """Página de cada moto del inventario (categoría MOTOS) con la «Plantilla de motos» (views/moto_template.xml)."""
 
     def _get_moto(self, moto_id):
         moto = request.env["product.template"].sudo().browse(moto_id).exists()

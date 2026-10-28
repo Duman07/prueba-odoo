@@ -1,15 +1,14 @@
-"""Llena la página maestra (diseñada en el editor del sitio) con los datos de una moto.
+"""Llena la «Plantilla de motos» (views/moto_template.xml) con los datos de una moto.
 
 Los datos se colocan en los bloques que ya usa el diseño, sin marcas especiales:
 - «Moto 3D» (.s_moto_3d): foto, nombre en el <h1> y categoría en el texto que lo precede.
 - Cualquier texto igual al título original del diseño: nombre de la moto.
 - «Visor 360°» (.s_moto_360): modelo .glb o fotos 360° del primer color y una muestra por color, copiando la
   primera muestra del diseño. Elegir un color solo cambia la imagen principal («Moto 3D», data-main-src).
-- Tarjetas de especificaciones (.s_card): una por especificación, copiando la primera tarjeta del diseño.
+- «Especificaciones técnicas» (.s_moto_specs): un grupo del acordeón por especificación, copiando el primero.
 - Secciones con imagen de fondo y videos del diseño: fotos y videos de «Medios adicionales» del primer color
   (o del producto), en orden; el título de la primera sección con fondo lleva la descripción del producto.
 - Campo «Modelo» del formulario: lista de motos, con la actual elegida.
-- Enlaces a la página maestra: pasan a la página de la moto.
 - antes del boton enviar del formulario: se agrega un campo de consentimiento de datos personales para recibir información sobre productos y servicios de la marca.
 """
 import copy
@@ -72,8 +71,10 @@ def _fill_viewers(wrap, intro_src, viewer_src, moto):
 
 
 PRICE_TEXT = re.compile(r"^\$\s*0[.,]?$")
-#Estatuto del consumidor 
+# Estatuto del consumidor
 PRICE_NOTE = "Precio con IVA incluido, sujeto a cambios. No incluye matrícula ni SOAT."
+
+
 def _fill_price(wrap, price):
     """Precio en «Moto 3D»: el texto «$0» del diseño lleva el precio de la moto y la clase s_moto_price
     (el «Precio desde:» de encima, s_moto_price_label); el estilo está en s_moto_snippets.scss.
@@ -220,17 +221,20 @@ def _fill_specs(wrap, specs):
             body.append(_spec_rows(spec["values"]))
             accordion.append(item)
 
+
 CONSENT_FIELD = """
 <div class="s_website_form_field s_website_form_custom s_website_form_custom s_website_form_required s_moto_form_consent mb-3 col-12" data-type="boolean">
     <div class="form-check">
         <input type="checkbox" class="s_website_form_input form-check-input form-check-input" id="moto_consent"
           name="Autorización de datos" value="Sí" required="required"/>
-        <label class="form-check-label" for="moto_consent">Autorizo el tratamiento de mis datos personales para recibir información sobre productos de la marca. 
+        <label class="form-check-label" for="moto_consent">Autorizo el tratamiento de mis datos personales para recibir información sobre productos de la marca.
            <a href="https://motosalfa.com.co/politica-tratamiento" target="_blank" style="color: rgb(226, 0, 0)">Política de Tratamiento de Datos</a>
         </label>
     </div>
 </div>
 """
+
+
 def _fill_form(wrap, moto, motos):
     for select in wrap.xpath(".//select[@name='Modelo']"):
         for option in list(select):
@@ -257,6 +261,7 @@ def _drop_360(wrap):
                     link.drop_tree()
         block.getparent().remove(block)
 
+
 def fill_moto_page(page_html, moto, values, editor_notice=None):
     """Devuelve el HTML de la página con los datos de la moto en el contenido principal (<main>)."""
     start = page_html.find("<main>")
@@ -278,7 +283,7 @@ def fill_moto_page(page_html, moto, values, editor_notice=None):
     _fill_form(container, moto, values["motos"])
     _single_h1(container)
     if not values["has_360"]:
-        _drop_360(container)    
+        _drop_360(container)
     if editor_notice is not None:
         wrap = container.get_element_by_id("wrap", None)
         (wrap if wrap is not None else container).insert(0, editor_notice)
