@@ -63,7 +63,7 @@ Los archivos del manifiesto llevan la etiqueta de su grupo (`[Bloques]`, `[Pági
 **[Tipos de moto] Bloque «Tipos de moto» en `/motos` y páginas `/motos/<tipo>`**
 - `views/snippets/s_moto_snippets.xml`: plantillas `s_moto_types` (el bloque, solo con su aviso) y `s_moto_types_content` (las tarjetas).
 - `static/src/snippets/s_moto_types/000.js`: pide las tarjetas a `controllers/motos.py` (`/website_motos_alfa_showcase/moto_types[/<tipo>]`) y las pone en el bloque.
-- `views/motos_page.xml` (28-10-2026): la página «Motocicletas» (`/motos`) con su diseño (título y el bloque) y el menú
+- `views/motos_page.xml` (28-10-2026): la página «Motocicletas» (`/motos`) con su diseño (título, carrusel y el bloque) y el menú
   «Motocicletas» del encabezado (Odoo lo copia en cada sitio al instalar).
 - `controllers/motos.py`: `moto_types_content` (tarjetas) y `moto_type_page` (`/motos/<tipo>`, muestra la página
   `MOTOS_PAGE`).
@@ -72,7 +72,9 @@ Los archivos del manifiesto llevan la etiqueta de su grupo (`[Bloques]`, `[Pági
 - Estilo de la página (29-10-2026): lo que agrega el código usa `$moto-brand-red` (el rojo de la plantilla) y no el
   color del tema; `s_moto_heading` (títulos en negrilla) y `s_moto_back` (enlaces «Todos los tipos» / «Volver a <tipo>»
   en rojo) en `static/src/snippets/s_moto_snippets.scss`. Se usa `#wrap` porque `.o_cc1 a:not(.btn)` del tema los pintaba de morado.
-- Pruebas: `tests/test_moto_types.py` (reutiliza `PIXEL_PNG` de `tests/test_moto_pages.py`).
+- Carrusel (29-10-2026): el mismo que tenía `/motos`, solo ahí: `moto_type_page` pasa `moto_type` y el XML lo dibuja con
+  `t-if="not moto_type"`. Por ahora con fotos y textos de ejemplo de Odoo; las fotos reales irán en `static/src/img/carrusel/`.
+- Pruebas: `tests/test_moto_types.py` (reutiliza `PIXEL_PNG` de `tests/test_moto_pages.py`; `TestMotosPageCarousel` usa la página real).
 
 **[Formulario] Departamentos de Colombia, casilla de autorización y botón ENVIAR**
 - `static/src/js/colombia_form_states.js` (formularios `.s_website_form`) → `controllers/colombia.py` (`/website_motos_alfa_showcase/colombia_states`).

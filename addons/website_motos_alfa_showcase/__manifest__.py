@@ -26,7 +26,8 @@
         # («Especificaciones técnicas» es un acordeón .s_moto_specs que llena _fill_specs)
         # («Otras motos de tipo <tipo>» y «Volver a <tipo>» es la sección .s_moto_related que llena _fill_related)
         "views/moto_template.xml",
-        # [Tipos de moto] Página «Motocicletas» (/motos) con el bloque «Tipos de moto» y su menú; /motos/<tipo> usa su diseño
+        # [Tipos de moto] Página «Motocicletas» (/motos) con el carrusel (solo en /motos), el bloque «Tipos de moto» y su menú;
+        # /motos/<tipo> usa su diseño (sin el carrusel: moto_type, controllers/motos.py)
         "views/motos_page.xml",
         # [Páginas de motos] Mega menú «Modelos» (el menú y su contenido)
         "views/moto_mega_menu.xml",
@@ -49,7 +50,8 @@
             # [Páginas de motos] ... y hace que las filas del «Visor 360°» tomen el alto de su contenido (28-10-2026)
             # [Páginas de motos] ... y el acordeón «Especificaciones técnicas» (.s_moto_specs, variables $moto-specs-*, «+» / «−»)
             # [Páginas de motos] + [Tipos de moto] ... y el estilo de la página para lo que agrega el código: $moto-brand-red,
-            # títulos .s_moto_heading en negrilla y enlaces .s_moto_back en rojo («Volver a <tipo>», «Todos los tipos»)
+            # títulos .s_moto_heading en negrilla, enlaces .s_moto_back en rojo («Volver a <tipo>», «Todos los tipos»)
+            # y botones .s_moto_btn en rojo (carrusel de /motos)
             "website_motos_alfa_showcase/static/src/snippets/s_moto_snippets.scss",
             "website_motos_alfa_showcase/static/src/js/model_viewer_loader.js",
             "website_motos_alfa_showcase/static/src/js/frame_sequence.js",

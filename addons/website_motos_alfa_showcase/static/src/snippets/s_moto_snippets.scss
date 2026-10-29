@@ -551,3 +551,17 @@ $moto-heading-weight: 700;                   // títulos en negrilla
         text-decoration: underline;
     }
 }
+
+// Botones del código (carrusel de /motos, views/motos_page.xml): rojo de la página y no el morado de btn-primary.
+#wrap .s_moto_btn {
+    background-color: $moto-brand-red;
+    border-color: $moto-brand-red;
+    color: #ffffff;
+
+    &:hover,
+    &:focus {
+        background-color: $moto-brand-red-hover;
+        border-color: $moto-brand-red-hover;
+        color: #ffffff;
+    }
+}

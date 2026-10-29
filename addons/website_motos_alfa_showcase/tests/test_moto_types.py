@@ -88,3 +88,27 @@ class TestMotoTypes(HttpCase):
     def test_type_page_unpublished(self):
         self.page.is_published = False
         self.assertEqual(self.url_open(self.type._moto_type_url()).status_code, 404)
+
+
+@tagged("post_install", "-at_install")
+class TestMotosPageCarousel(HttpCase):
+    """Carrusel de la página «Motocicletas» real (views/motos_page.xml): solo en /motos, no en /motos/<tipo>."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.env.ref("website_motos_alfa_showcase.motos_page").is_published = True
+        Category = cls.env["product.category"]
+        root = Category._moto_root() or Category.create({"name": "MOTOS"})
+        cls.type = Category.create({"name": "Tipo Carrusel", "parent_id": root.id})
+        cls.env["product.template"].create({"name": "Moto Carrusel", "categ_id": cls.type.id, "is_published": True})
+
+    def test_carousel_only_on_motos_page(self):
+        response = self.url_open("/motos")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("s_carousel_wrapper", response.text)
+        self.assertIn('class="btn btn-primary s_moto_btn', response.text)
+        response = self.url_open(self.type._moto_type_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("s_carousel_wrapper", response.text)
+        self.assertIn("s_moto_types", response.text)

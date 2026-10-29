@@ -115,7 +115,7 @@ class MotoPages(http.Controller):
         if not (page.is_visible or request.env.user.has_group("website.group_website_restricted_editor")):
             raise NotFound()
         page_html = request.env["ir.ui.view"].with_context(inherit_branding=False)._render_template(
-            page.view_id.key, {"additional_title": moto_type.name},
+            page.view_id.key, {"additional_title": moto_type.name, "moto_type": moto_type},
         )
         return request.make_response(page_html, headers=[("Content-Type", "text/html; charset=utf-8")])
 
