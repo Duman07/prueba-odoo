@@ -82,7 +82,6 @@ class MotoPages(http.Controller):
         }
         base_url = request.httprequest.host_url.rstrip("/")
         values["structured_data"] = moto._moto_structured_data(base_url, request.website.currency_id)
-        moto_link = base_url + moto._moto_url()
         whatsapp_text = f"Hola Motos Alfa, estoy interesado en la moto {moto.name}"
         whatsapp_url = f"https://wa.me/{WHATSAPP_NUMBER}?text={quote(whatsapp_text)}"
         # Sin marcas del editor: así nadie puede guardar los datos de esta moto dentro del diseño maestro.

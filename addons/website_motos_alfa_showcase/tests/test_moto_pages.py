@@ -420,6 +420,54 @@ class TestMotoPages(HttpCase):
             wrap = self._wrap(self.url_open(self.moto._moto_url()))
         self.assertNotIn("s_moto_gallery", wrap)
 
+    def _related_section(self, moto):
+        """Sección «Otras motos» de la página de la moto con la plantilla real ("" si no está)."""
+        with patch.object(motos, "MOTO_TEMPLATE", "website_motos_alfa_showcase.moto_template"):
+            wrap = self._wrap(self.url_open(moto._moto_url()))
+        start = wrap.find('class="s_moto_related ')
+        return wrap[start:] if start >= 0 else ""
+
+    def test_related_motos_of_type(self):
+        """Punto 14 (plantilla real): «Otras motos de tipo <tipo>», «Volver a <tipo>» y las otras motos del tipo."""
+        # Moto Dos (Línea Dos) y Moto Tres (Línea Dos Sport, subcategoría del mismo tipo); una sin publicar no sale.
+        hidden = self.env["product.template"].create({"name": "Moto Oculta", "categ_id": self.line2.id})
+        self.moto3.image_1920 = PIXEL_PNG
+        section = self._related_section(self.moto2)
+        self.assertIn("Otras motos de tipo <span class=\"s_moto_related_type\">Línea Dos</span>", section)
+        self.assertIn("Volver a <span class=\"s_moto_related_type\">Línea Dos</span>", section)
+        self.assertIn(f'href="{self.line2._moto_type_url()}"', section)
+        self.assertNotIn("Motocicletas", section)
+        # Una tarjeta: Moto Tres, con su enlace y su foto; ni la moto actual ni la sin publicar.
+        self.assertEqual(section.count("s_moto_related_card"), 1)
+        self.assertIn(f'href="{self.moto3._moto_url()}"', section)
+        self.assertIn(self.moto3._moto_image_url(), section)
+        self.assertIn('alt="Moto Tres"', section)
+        self.assertNotIn(f'href="{self.moto2._moto_url()}"', section)
+        self.assertNotIn(hidden.name, section)
+        self.assertNotIn("Otra moto", section)
+
+    def test_related_motos_max_four(self):
+        """«Otras motos»: máximo 4 tarjetas, por nombre."""
+        self.env["product.template"].create([
+            {"name": f"Moto Extra {n}", "categ_id": self.line2.id, "is_published": True} for n in range(1, 6)
+        ])
+        section = self._related_section(self.moto2)
+        self.assertEqual(section.count("s_moto_related_card"), 4)
+        self.assertLess(section.index("Moto Extra 1"), section.index("Moto Extra 4"))
+        self.assertNotIn("Moto Tres", section)
+
+    def test_related_without_others_or_type(self):
+        """«Otras motos»: sola en su tipo, queda solo «Volver a <tipo>»; sin tipo no hay sección."""
+        # Moto Prueba 160 es la única de Línea Prueba.
+        section = self._related_section(self.moto)
+        self.assertIn(f'href="{self.line._moto_type_url()}"', section)
+        self.assertIn("Volver a", section)
+        self.assertNotIn("Otras motos de tipo", section)
+        self.assertNotIn("s_moto_related_card", section)
+        # Directo en MOTOS: no tiene tipo.
+        self.moto.categ_id = self.env["product.category"]._moto_root()
+        self.assertEqual(self._related_section(self.moto), "")
+
     def test_spec_sheet(self):
         """Punto 17 (plantilla real): botón «Descargar ficha técnica (PDF)» solo si la moto tiene su PDF; solo se sirve PDF."""
         with patch.object(motos, "MOTO_TEMPLATE", "website_motos_alfa_showcase.moto_template"):
