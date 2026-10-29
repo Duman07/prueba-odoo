@@ -28,7 +28,8 @@
         # («Otras motos de tipo <tipo>» y «Volver a <tipo>» es la sección .s_moto_related que llena _fill_related;
         # «Galería» es .s_moto_gallery, bloque s_image_gallery de Odoo, que llena _fill_gallery;
         # «Datos clave» es .s_moto_keyspecs, bloque «Números» de Odoo, que llena _fill_key_specs con KEY_SPECS;
-        # datos para Google: <script type="application/ld+json"> de _add_structured_data con _moto_structured_data)
+        # datos para Google: <script type="application/ld+json"> de _add_structured_data con _moto_structured_data;
+        # botón «Descargar ficha técnica (PDF)» .s_moto_spec_sheet que llena _fill_spec_sheet con moto_spec_sheet)
         "views/moto_template.xml",
         # [Tipos de moto] Página «Motocicletas» (/motos) con el carrusel (solo en /motos), el bloque «Tipos de moto» y su menú;
         # /motos/<tipo> usa su diseño (sin el carrusel: moto_type, controllers/motos.py)
@@ -36,6 +37,7 @@
         # [Páginas de motos] Mega menú «Modelos» (el menú y su contenido)
         "views/moto_mega_menu.xml",
         # [Páginas de motos] Campo «Fotos 360°» en la variante (color) y en la moto (models/product.py)
+        # y «Ficha técnica (PDF)» de la moto (moto_spec_sheet, ruta /moto/media/<moto>/ficha/... en controllers/motos.py)
         "views/product_moto_360_views.xml",
         # [Bloques] Plantillas de los bloques, grupo «Motos Alfa» y sus opciones
         # [Tipos de moto] Plantillas s_moto_types (bloque) y s_moto_types_content (tarjetas, controllers/motos.py)

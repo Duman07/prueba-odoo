@@ -97,6 +97,10 @@ class ProductTemplate(models.Model):
         string="Fotos 360°",
         help="Fotos tomadas alrededor de la moto (p. ej. 24, una cada 15°), para motos sin colores o "
              "colores sin fotos propias. Se ordenan por nombre: la primera es la vista de frente.")
+    moto_spec_sheet = fields.Binary(
+        "Ficha técnica (PDF)", attachment=True,
+        help="Ficha técnica de la moto en PDF: la página de la moto muestra el botón «Descargar ficha técnica (PDF)».")
+    moto_spec_sheet_name = fields.Char("Nombre de la ficha técnica")
 
     @api.model
     def _moto_domain(self):
@@ -171,6 +175,15 @@ class ProductTemplate(models.Model):
         self.ensure_one()
         model = self._moto_attachments().filtered(lambda a: a.name.lower().endswith((".glb", ".gltf")))[:1]
         return self._moto_attachment_url(model) if model else ""
+
+    def _moto_spec_sheet_url(self):
+        """Ficha técnica en PDF (campo «Ficha técnica (PDF)»); ?unique cambia al subir otra, para que no salga la vieja de la caché."""
+        self.ensure_one()
+        # bin_size: solo el tamaño del archivo, sin leerlo entero.
+        if not self.with_context(bin_size=True).moto_spec_sheet:
+            return ""
+        unique = int(self.write_date.timestamp()) if self.write_date else 0
+        return f"/moto/media/{self.id}/ficha/{quote(self.moto_spec_sheet_name or 'ficha-tecnica.pdf')}?unique={unique}"
 
     def _moto_specs(self):
         """Atributos que no crean variantes (p. ej. Motor = Cilindraje: 160 cc): un grupo de «Especificaciones técnicas»

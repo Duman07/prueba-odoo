@@ -1,3 +1,4 @@
+import base64
 import json
 import re
 
@@ -418,6 +419,43 @@ class TestMotoPages(HttpCase):
         with patch.object(motos, "MOTO_TEMPLATE", "website_motos_alfa_showcase.moto_template"):
             wrap = self._wrap(self.url_open(self.moto._moto_url()))
         self.assertNotIn("s_moto_gallery", wrap)
+
+    def test_spec_sheet(self):
+        """Punto 17 (plantilla real): botón «Descargar ficha técnica (PDF)» solo si la moto tiene su PDF; solo se sirve PDF."""
+        with patch.object(motos, "MOTO_TEMPLATE", "website_motos_alfa_showcase.moto_template"):
+            wrap = self._wrap(self.url_open(self.moto._moto_url()))
+        self.assertIn("s_moto_specs", wrap)
+        self.assertNotIn("Descargar ficha técnica", wrap)
+        self.assertEqual(self.moto._moto_spec_sheet_url(), "")
+        self.assertEqual(self.url_open(f"/moto/media/{self.moto.id}/ficha/ficha.pdf").status_code, 404)
+
+        pdf = b"%PDF-1.4\n1 0 obj << >> endobj\ntrailer << >>\n%%EOF\n"
+        self.moto.write({"moto_spec_sheet": base64.b64encode(pdf), "moto_spec_sheet_name": "Ficha Prueba 160.pdf"})
+        url = self.moto._moto_spec_sheet_url()
+        self.assertTrue(url.startswith(f"/moto/media/{self.moto.id}/ficha/Ficha%20Prueba%20160.pdf?unique="))
+        with patch.object(motos, "MOTO_TEMPLATE", "website_motos_alfa_showcase.moto_template"):
+            wrap = self._wrap(self.url_open(self.moto._moto_url()))
+        section = wrap[wrap.index("s_moto_specs"):wrap.index("s_moto_gallery") if "s_moto_gallery" in wrap else None]
+        self.assertIn("Descargar ficha técnica (PDF)", section)
+        self.assertIn(f'href="{url}"', section.replace("&amp;", "&"))
+        self.assertIn('download="Ficha Prueba 160.pdf"', section)
+        self.assertIn("accordion-item", section)
+        response = self.url_open(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers["Content-Type"], "application/pdf")
+        self.assertIn("public", response.headers["Cache-Control"])
+        self.assertEqual(response.content, pdf)
+
+        # Sin especificaciones pero con ficha: queda la sección con el botón y sin el acordeón.
+        self.moto.attribute_line_ids.filtered(lambda l: l.attribute_id.create_variant == "no_variant").unlink()
+        with patch.object(motos, "MOTO_TEMPLATE", "website_motos_alfa_showcase.moto_template"):
+            wrap = self._wrap(self.url_open(self.moto._moto_url()))
+        self.assertIn("Descargar ficha técnica (PDF)", wrap)
+        self.assertNotIn("accordion-item", wrap)
+
+        # Otro tipo de archivo en el campo: no se publica.
+        self.moto.write({"moto_spec_sheet": PIXEL_PNG, "moto_spec_sheet_name": "foto.png"})
+        self.assertEqual(self.url_open(self.moto._moto_spec_sheet_url()).status_code, 404)
 
     def test_key_specs(self):
         """«Datos clave» (plantilla real): las especificaciones de KEY_SPECS, en ese orden; sin ellas no hay franja."""

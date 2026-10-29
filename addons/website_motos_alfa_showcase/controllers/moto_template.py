@@ -251,14 +251,30 @@ def _fill_key_specs(wrap, specs):
             row.append(box)
 
 
+def _fill_spec_sheet(wrap, url, moto):
+    """Botón «Descargar ficha técnica (PDF)» (.s_moto_spec_sheet) con la ficha de la moto; sin ficha se quita."""
+    for block in _find(wrap, "s_moto_spec_sheet"):
+        link = next(block.iter("a"), None)
+        if not url or link is None:
+            block.getparent().remove(block)
+            continue
+        link.set("href", url)
+        link.set("download", moto.moto_spec_sheet_name or f"{moto.name} - ficha técnica.pdf")
+
+
 def _fill_specs(wrap, specs):
     """«Especificaciones técnicas» (.s_moto_specs): un grupo del acordeón por especificación, copiando el primero del
-    diseño; solo el primero abierto. Sin especificaciones se quita la sección."""
+    diseño; solo el primero abierto. Sin especificaciones se quita la sección, salvo que tenga el botón de la ficha
+    técnica (_fill_spec_sheet va antes): entonces se quita solo el acordeón."""
     for section in _find(wrap, "s_moto_specs"):
         accordion = next(iter(_find(section, "accordion")), None)
         items = _find(section, "accordion-item")
         if not specs or accordion is None or not items:
-            section.getparent().remove(section)
+            if _find(section, "s_moto_spec_sheet"):
+                for block in _find(section, "s_accordion"):
+                    block.getparent().remove(block)
+            else:
+                section.getparent().remove(section)
             continue
         prototype = items[0]
         for item in items:
@@ -385,6 +401,7 @@ def fill_moto_page(page_html, moto, values, editor_notice=None):
     _fill_viewers(container, values["intro_src"], values["viewer_src"], moto)
     _fill_colors(container, values["colors"])
     _fill_key_specs(container, values["specs"])
+    _fill_spec_sheet(container, values.get("spec_sheet_url"), moto)
     _fill_specs(container, values["specs"])
     _fill_related(container, values["related"])
     colors = values["colors"]

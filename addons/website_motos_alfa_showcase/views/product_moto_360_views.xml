@@ -29,9 +29,12 @@
                 <group colspan="2" name="moto_360_images" string="Página de la moto" invisible="not sale_ok">
                     <field name="moto_main_variant_id" options="{'no_create': True, 'no_open': True}"/>
                     <field name="moto_360_image_ids" widget="many2many_binary"/>
+                    <field name="moto_spec_sheet" filename="moto_spec_sheet_name" options="{'accepted_file_extensions': '.pdf'}"/>
+                    <field name="moto_spec_sheet_name" invisible="1"/>
                     <div colspan="2" class="text-muted">
                         Color principal: el color con el que se abre la página. Fotos 360°: para motos sin colores
                         o colores sin fotos propias (Variantes → Fotos 360°); se ordenan por nombre y la primera es la vista de frente.
+                        Ficha técnica: un PDF; si hay, la página muestra el botón «Descargar ficha técnica (PDF)».
                     </div>
                 </group>
             </group>

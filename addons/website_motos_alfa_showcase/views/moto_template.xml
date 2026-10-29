@@ -155,6 +155,9 @@
                     </div>
                 </div>
             </div>
+            <p class="mt-4 mb-0 s_moto_spec_sheet">
+                <a class="btn btn-primary s_moto_btn" href="#" download="ficha-tecnica.pdf"><i class="fa fa-file-pdf-o me-2" role="presentation"/>Descargar ficha técnica (PDF)</a>
+            </p>
         </div>
     </section>
         <section class="s_image_gallery s_moto_gallery o_grid o_spc-small o_cc o_cc1 pt48 pb48" data-vcss="002" data-columns="3" data-name="Galería">

@@ -55,6 +55,7 @@ class MotoPages(http.Controller):
             "motos": request.env["product.template"]._moto_search(),
             "colors": moto._moto_colors(),
             "specs": moto._moto_specs(),
+            "spec_sheet_url": moto._moto_spec_sheet_url(),
             "media": moto._moto_media(moto.product_template_image_ids),
             "description": moto._moto_description(),
             "model_url": model_url,
@@ -200,6 +201,17 @@ class MotoPages(http.Controller):
             raise NotFound()
         stream = request.env["ir.binary"]._get_stream_from(attachment)
         if not stream.mimetype.startswith("image/") or stream.mimetype == "image/svg+xml":
+            raise NotFound()
+        return self._media_response(moto, stream)
+
+    @http.route("/moto/media/<int:moto_id>/ficha/<string:filename>", type="http", auth="public", readonly=True)
+    def moto_spec_sheet(self, moto_id, filename, **kwargs):
+        moto = self._get_moto(moto_id)
+        if not moto.with_context(bin_size=True).moto_spec_sheet:
+            raise NotFound()
+        stream = request.env["ir.binary"]._get_stream_from(moto, "moto_spec_sheet", filename_field="moto_spec_sheet_name")
+        # Solo PDF: si alguien subió otro tipo de archivo en el campo, no se publica.
+        if stream.mimetype != "application/pdf":
             raise NotFound()
         return self._media_response(moto, stream)
 

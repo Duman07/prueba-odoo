@@ -62,6 +62,10 @@ Los archivos del manifiesto llevan la etiqueta de su grupo (`[Bloques]`, `[Pági
 - Datos para Google (29-10-2026): `_moto_structured_data` (`models/product.py`, marca `MOTO_BRAND`) arma la ficha
   schema.org `Product` (nombre, foto, descripción, tipo, precio en la moneda del sitio) y `_add_structured_data`
   (`controllers/moto_template.py`) la pone en un `<script type="application/ld+json">` de la página.
+- Ficha técnica (29-10-2026): campo «Ficha técnica (PDF)» del producto (`moto_spec_sheet`, `models/product.py`,
+  formulario en `views/product_moto_360_views.xml`), servido por `/moto/media/<moto>/ficha/...` solo si es PDF
+  (`controllers/motos.py`) y botón «Descargar ficha técnica (PDF)» debajo del acordeón (`_fill_spec_sheet`,
+  `controllers/moto_template.py`; sección `s_moto_spec_sheet` de `views/moto_template.xml`). Sin PDF no sale.
 - Caché de las fotos (29-10-2026): `_media_response` (`controllers/motos.py`) manda los `/moto/media/...` con
   `Cache-Control: public, max-age=86400` si la moto está publicada (Cloudflare o un proxy las pueden guardar) y
   `private` si no.
