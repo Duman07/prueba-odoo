@@ -115,8 +115,8 @@
     <!-- Tarjetas del bloque «Tipos de moto» (controllers/motos.py), con el estilo del bloque «Productos» -->
     <template id="s_moto_types_content" name="Tarjetas de tipos de moto">
         <div t-if="moto_type" class="d-flex flex-wrap justify-content-between align-items-baseline gap-2 mb-4">
-            <h2 class="h3 text-uppercase mb-0" t-out="moto_type.name"/>
-            <a t-att-href="motos_page_url"><i class="fa fa-long-arrow-left me-2" role="presentation"/>Todos los tipos</a>
+            <h2 class="h3 text-uppercase mb-0 s_moto_heading" t-out="moto_type.name"/>
+            <a class="s_moto_back" t-att-href="motos_page_url"><i class="fa fa-long-arrow-left me-2" role="presentation"/>Todos los tipos</a>
         </div>
         <div class="row g-4">
             <div t-foreach="cards" t-as="card" class="col-6 col-lg-3">

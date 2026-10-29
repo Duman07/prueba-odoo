@@ -45,6 +45,11 @@ class ProductCategory(models.Model):
     def _moto_root(self):
         return self.sudo().search([("name", "=ilike", MOTO_CATEGORY_NAME), ("parent_id", "=", False)], limit=1)
 
+    @api.model
+    def _moto_create_root(self):
+        """Crea MOTOS al instalar si la base no la tiene (data/product_category_motos.xml)."""
+        return self._moto_root() or self.sudo().create({"name": MOTO_CATEGORY_NAME})
+
     # Tipos de moto: subcategorías directas de MOTOS (Trabajadora, Urbana…), para el bloque «Tipos de moto».
 
     @api.model
@@ -120,6 +125,14 @@ class ProductTemplate(models.Model):
     def _moto_url(self):
         self.ensure_one()
         return f"/moto/{self.env['ir.http']._slug(self)}"
+
+    def _moto_type(self):
+        """Tipo de la moto (subcategoria directa de MOTOS: Urbana....); si no tiene queda vacio."""
+        self.ensure_one()
+        category = self.sudo().categ_id
+        while category and not category._moto_is_type():
+            category = category.parent_id
+        return category
 
     def _compute_website_url(self):
         """Las motos enlazan a su página con la plantilla de la Hunk 160R 4V en lugar de /shop:

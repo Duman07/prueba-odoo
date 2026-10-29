@@ -1,20 +1,30 @@
 {
     "name": "Motos Alfa - Ficha de producto Hunk 150 XT",
-    "version": "18.0.2.0.0",
+    "version": "18.0.2.1.0",
     "summary": "Estructura base de la página de la Hero Hunk 150 XT, preparada para modelo 3D, animación de entrada y vista 360°",
     "category": "Website/Website",
     "author": "Personalización local",
     "license": "LGPL-3",
-    "depends": ["website", "website_sale"],
+    # [Inventario de motos] Todo lo que usa una moto se instala con este módulo: tienda y variantes (website_sale),
+    # CRM y su formulario (website_crm), inventario (stock) y BIN/chasis del lote (motos_trazabilidad)
+    "depends": ["website", "website_sale", "website_crm", "stock", "motos_trazabilidad"],
     # Grupos de archivos relacionados (detalle en el README, «Relación entre archivos»):
     #   [Bloques] Bloques «Moto 3D» y «Visor 360°»
     #   [Páginas de motos] Páginas de cada moto (/moto/...) y mega menú «Modelos»
     #   [Formulario] Formulario: departamentos de Colombia, casilla de autorización de datos y botón ENVIAR
     #   [Tipos de moto] Bloque «Tipos de moto» en /motos y páginas /motos/<tipo>
     #   [whatsApp] Botón flotante de WhatsApp
+    #   [Inventario de motos] Ajustes y registros que una moto necesita en una base nueva (sin configurar nada a mano)
     "data": [
+        # [Inventario de motos] «Variantes» para todos los usuarios internos: colores, «Atributos», «Fotos 360°» por color
+        "data/product_variant_group.xml",
+        # [Inventario de motos] Categoría raíz MOTOS (solo al instalar y si no existe)
+        "data/product_category_motos.xml",
+        # [Formulario] País, Departamento y Ciudad del formulario de cotización van a sus campos de la oportunidad
+        "data/crm_lead_form_whitelist.xml",
         # [Páginas de motos] «Plantilla de motos»: diseño de todas las páginas /moto/<moto> (controllers/motos.py);
         # («Especificaciones técnicas» es un acordeón .s_moto_specs que llena _fill_specs)
+        # («Otras motos de tipo <tipo>» y «Volver a <tipo>» es la sección .s_moto_related que llena _fill_related)
         "views/moto_template.xml",
         # [Tipos de moto] Página «Motocicletas» (/motos) con el bloque «Tipos de moto» y su menú; /motos/<tipo> usa su diseño
         "views/motos_page.xml",
@@ -38,6 +48,8 @@
             # (puntos destacados ocultos por ahora con una regla de s_moto_snippets.scss, 27-10-2026)
             # [Páginas de motos] ... y hace que las filas del «Visor 360°» tomen el alto de su contenido (28-10-2026)
             # [Páginas de motos] ... y el acordeón «Especificaciones técnicas» (.s_moto_specs, variables $moto-specs-*, «+» / «−»)
+            # [Páginas de motos] + [Tipos de moto] ... y el estilo de la página para lo que agrega el código: $moto-brand-red,
+            # títulos .s_moto_heading en negrilla y enlaces .s_moto_back en rojo («Volver a <tipo>», «Todos los tipos»)
             "website_motos_alfa_showcase/static/src/snippets/s_moto_snippets.scss",
             "website_motos_alfa_showcase/static/src/js/model_viewer_loader.js",
             "website_motos_alfa_showcase/static/src/js/frame_sequence.js",

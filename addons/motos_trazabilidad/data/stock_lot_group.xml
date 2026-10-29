@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Activa «Lotes y números de serie» (Ajustes → Inventario): rastreo por número de serie de la moto, menú
+         «Lotes/números de serie» y la columna del lote en recepciones y existencias, donde van BIN y chasis.
+         Es <function> y no <record id="base.group_user"> porque ese registro es noupdate: con -u Odoo lo saltaría. -->
+    <function model="res.groups" name="write">
+        <value eval="[ref('base.group_user')]"/>
+        <value eval="{'implied_ids': [(4, ref('stock.group_production_lot'))]}"/>
+    </function>
+
+</odoo>

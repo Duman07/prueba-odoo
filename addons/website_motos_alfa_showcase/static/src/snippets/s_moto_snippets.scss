@@ -526,3 +526,28 @@ $moto-specs-row-padding: 0.25rem;            // espacio arriba y abajo de cada f
         color: $moto-specs-value-color;
     }
 }
+
+// [Páginas de motos] + [Tipos de moto] Estilo de la página para lo que agrega el código (29-10-2026).
+// La paleta del tema de Odoo sigue siendo la de fábrica (morado): el rojo de la página está escrito en la plantilla
+// (botón «Contáctanos», precio, «M» de «Motocicletas», títulos). Todo lo nuevo usa estas variables.
+$moto-brand-red: rgb(226, 0, 0);             // rojo de la página
+$moto-brand-red-hover: rgb(190, 0, 0);       // al pasar el mouse (el mismo del botón ENVIAR)
+$moto-heading-weight: 700;                   // títulos en negrilla
+
+// Títulos de las secciones del código: «Otras motos de tipo Urbana» (/moto/<moto>) y «Urbana» (/motos/<tipo>).
+#wrap .s_moto_heading {
+    font-weight: $moto-heading-weight;
+}
+
+// Enlaces para volver: «Volver a Urbana» (/moto/<moto>) y «Todos los tipos» (/motos/<tipo>), con su flecha.
+// Con #wrap le gana a la regla del tema `.o_cc1 a:not(.btn)`, que pinta de morado los enlaces de las secciones o_cc.
+#wrap a.s_moto_back {
+    color: $moto-brand-red;
+    text-decoration: none;
+
+    &:hover,
+    &:focus {
+        color: $moto-brand-red-hover;
+        text-decoration: underline;
+    }
+}

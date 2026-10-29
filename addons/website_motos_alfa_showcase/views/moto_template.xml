@@ -144,7 +144,30 @@
                 </div>
             </div>
         </div>
-    </section></div>
+    </section>
+        <section class="s_moto_related o_cc o_cc1 pt48 pb48" data-name="Otras motos">
+            <div class="container">
+                <div class="d-flex flex-wrap justify-content-between align-items-baseline gap-2 mb-4">
+                    <h2 class="h3 text-uppercase mb-0 s_moto_heading">Otras motos de tipo <span class="s_moto_related_type">Motocicletas</span></h2>
+                    <a class="s_moto_related_back s_moto_back" href="/motos"><i class="fa fa-long-arrow-left me-2" role="presentation"/>Volver a <span class="s_moto_related_type">Motocicletas</span></a>
+                </div>
+                <div class="row g-4">
+                    <div class="col-6 col-lg-3 s_moto_related_card">
+                        <div class="o_carousel_product_card bg-transparent w-100 card border-0">
+                            <a class="o_carousel_product_img_link stretched-link" href="/motos">
+                                <div class="overflow-hidden rounded">
+                                    <img class="card-img-top o_img_product_square o_img_product_cover h-auto" loading="lazy" src="/web/static/img/placeholder.png" alt="Otra moto"/>
+                                </div>
+                            </a>
+                            <div class="p-3">
+                                <div class="h6 card-title text-uppercase">Otra moto</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
     </t>
     </template>
 

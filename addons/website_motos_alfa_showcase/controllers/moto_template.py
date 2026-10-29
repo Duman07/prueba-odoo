@@ -222,6 +222,41 @@ def _fill_specs(wrap, specs):
             accordion.append(item)
 
 
+def _fill_related(wrap, related):
+    """«Otras motos» (.s_moto_related): nombre y enlace del tipo, y una tarjeta por cada otra moto del tipo,
+    copiando la primera del diseño. Sin tipo se quita la sección; sin otras motos queda solo «Volver a <tipo>»."""
+    for section in _find(wrap, "s_moto_related"):
+        if not related["type_name"]:
+            section.getparent().remove(section)
+            continue
+        for name in _find(section, "s_moto_related_type"):
+            _set_text(name, related["type_name"])
+        for link in _find(section, "s_moto_related_back"):
+            link.set("href", related["type_url"])
+        cards = _find(section, "s_moto_related_card")
+        if not cards:
+            continue
+        row = cards[0].getparent()
+        prototype = cards[0]
+        for card in cards:
+            row.remove(card)
+        for data in related["cards"]:
+            card = copy.deepcopy(prototype)
+            for link in card.iter("a"):
+                link.set("href", data["url"])
+            for image in card.iter("img"):
+                image.set("alt", data["name"])
+                if data["image_url"]:
+                    image.set("src", data["image_url"])
+            for title in _find(card, "card-title"):
+                _set_text(title, data["name"])
+            row.append(card)
+        if not related["cards"]:
+            for title in section.iter("h2"):
+                title.getparent().remove(title)
+            row.getparent().remove(row)
+
+
 CONSENT_FIELD = """
 <div class="s_website_form_field s_website_form_custom s_website_form_custom s_website_form_required s_moto_form_consent mb-3 col-12" data-type="boolean">
     <div class="form-check">
@@ -275,6 +310,7 @@ def fill_moto_page(page_html, moto, values, editor_notice=None):
     _fill_viewers(container, values["intro_src"], values["viewer_src"], moto)
     _fill_colors(container, values["colors"])
     _fill_specs(container, values["specs"])
+    _fill_related(container, values["related"])
     colors = values["colors"]
     page_media = (
         {"images": colors[0]["media_images"], "videos": colors[0]["media_videos"]} if colors else values["media"]

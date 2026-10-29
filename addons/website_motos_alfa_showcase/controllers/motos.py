@@ -71,6 +71,14 @@ class MotoPages(http.Controller):
         values["intro_src"] = first_color_image or (frames[:1] or [image_url or model_url])[0]
         values["viewer_src"] = model_url or sequence or (frames[:1] or [first_color_image or image_url])[0]
         values["has_360"] = bool(model_url or sequence)
+        # «Otras motos» al final de la moto
+        moto_type = moto._moto_type()
+        others = (moto_type._moto_type_motos() - moto)[:4] if moto_type else moto.browse()
+        values["related"] = {
+            "type_name": moto_type.name or "",
+            "type_url": moto_type._moto_type_url() if moto_type else MOTOS_PAGE_URL,
+            "cards": [self._moto_card(other.name, other._moto_url(), other) for other in others],
+        }
         moto_link = request.httprequest.host_url.rstrip("/") + moto._moto_url()
         whatsapp_text = f"Hola Motos Alfa, estoy interesado en la moto {moto.name}"
         whatsapp_url = f"https://wa.me/{WHATSAPP_NUMBER}?text={quote(whatsapp_text)}"

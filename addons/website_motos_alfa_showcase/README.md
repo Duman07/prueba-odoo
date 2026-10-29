@@ -3,7 +3,7 @@
 Integrado en el sitio existente mediante `website.layout` (usa el encabezado, el menú y el pie de página del sitio).
 
 ## Relación entre archivos
-Los archivos del manifiesto llevan la etiqueta de su grupo (`[Bloques]`, `[Páginas de motos]`, `[Formulario]`, `[Tipos de moto]`, `[whatsApp]`).
+Los archivos del manifiesto llevan la etiqueta de su grupo (`[Bloques]`, `[Páginas de motos]`, `[Formulario]`, `[Tipos de moto]`, `[whatsApp]`, `[Inventario de motos]`).
 
 **[Bloques] «Moto 3D» y «Visor 360°»**
 - `views/snippets/s_moto_snippets.xml`: plantillas `s_moto_3d` y `s_moto_360`, grupo «Motos Alfa» del panel (miniaturas en `static/src/img/snippets_thumbs/`) y opciones del panel Personalizar.
@@ -69,13 +69,31 @@ Los archivos del manifiesto llevan la etiqueta de su grupo (`[Bloques]`, `[Pági
   `MOTOS_PAGE`).
 - `models/product.py`: `_moto_types`, `_moto_is_type`, `_moto_type_motos` y `_moto_type_url` de la categoría.
 - `static/src/snippets/s_moto_snippets.scss`: recuadro del aviso (oculto para los visitantes).
+- Estilo de la página (29-10-2026): lo que agrega el código usa `$moto-brand-red` (el rojo de la plantilla) y no el
+  color del tema; `s_moto_heading` (títulos en negrilla) y `s_moto_back` (enlaces «Todos los tipos» / «Volver a <tipo>»
+  en rojo) en `static/src/snippets/s_moto_snippets.scss`. Se usa `#wrap` porque `.o_cc1 a:not(.btn)` del tema los pintaba de morado.
 - Pruebas: `tests/test_moto_types.py` (reutiliza `PIXEL_PNG` de `tests/test_moto_pages.py`).
 
 **[Formulario] Departamentos de Colombia, casilla de autorización y botón ENVIAR**
 - `static/src/js/colombia_form_states.js` (formularios `.s_website_form`) → `controllers/colombia.py` (`/website_motos_alfa_showcase/colombia_states`).
 - Casilla de autorización de datos: `controllers/moto_template.py` (`CONSENT_FIELD`, `_fill_form`) la pone antes de ENVIAR en
   `/moto/<moto>`; su estilo y el del botón ENVIAR están en `static/src/snippets/s_moto_snippets.scss`.
-- Pruebas: `tests/test_colombia_states.py` y `test_consent_before_submit` en `tests/test_moto_pages.py`.
+- `data/crm_lead_form_whitelist.xml` (29-10-2026): permite que el formulario de cotización (de `crm.lead`) guarde
+  `country_id`, `state_id` y `city` en sus campos; sin esto `website_crm` los bloquea y llegan como texto en «Otra información».
+- Pruebas: `tests/test_colombia_states.py`, `test_consent_before_submit` en `tests/test_moto_pages.py` y
+  `test_quote_form_fills_location_fields` en `tests/test_install_config.py`.
+**[Inventario de motos] Lo que una moto necesita en una base nueva (29-10-2026)**
+- `__manifest__.py` → `depends`: `website_sale` (tienda, variantes), `website_crm` (CRM y su formulario), `stock`
+  (inventario) y `motos_trazabilidad` (BIN, chasis e historial del número de serie, `addons/motos_trazabilidad`).
+  Con un solo `-i website_motos_alfa_showcase` se instala todo.
+- `data/product_variant_group.xml`: activa «Variantes» (`product.group_product_variant` implicado en
+  `base.group_user`): colores, menú «Atributos», «Atributos y variantes», «Fotos 360°» de cada color. Es `<function>`
+  porque `base.group_user` es `noupdate` y un `<record>` se saltaría con `-u`. «Lotes y números de serie» lo activa
+  `motos_trazabilidad` (`data/stock_lot_group.xml`).
+- `data/product_category_motos.xml` + `_moto_create_root` (`models/product.py`): crea la categoría raíz MOTOS solo al
+  instalar (`noupdate`) y solo si no existe, para no tener dos.
+- Pruebas: `tests/test_install_config.py`.
+
 **[whatsApp] Botón flotante**
 - `views/whatsapp_button.xml`: el botón en las páginas del sitio; `static/src/scss/whatsapp.scss`: su estilo (computador y celular).
   En celular, `#wrapwrap` deja 4.5rem abajo para que el botón no tape el pie (28-10-2026, D7), menos en el editor.
@@ -155,16 +173,19 @@ Los ajustes finos de la animación están al inicio de `static/src/snippets/s_mo
 El 3D usa `<model-viewer>` 4.0.0 (Google, Apache-2.0) en `static/lib/model-viewer/`, cargado solo en páginas con estos bloques.
 
 ## Instalar
+Copiar `addons/website_motos_alfa_showcase` y `addons/motos_trazabilidad` a la carpeta de módulos y, en una base nueva:
 ```bash
-docker exec odoo-one-odoo18-1 sh -c 'odoo -c /etc/odoo/odoo.conf -d Db-demo --db_host=db --db_user=odoo --db_password="$PASSWORD" -i website_motos_alfa_showcase --stop-after-init --no-http'
+docker exec odoo-one-odoo18-1 sh -c 'odoo -c /etc/odoo/odoo.conf -d <base> --db_host=db --db_user=odoo --db_password="$PASSWORD" -i website_motos_alfa_showcase --without-demo=all --load-language=es_CO --stop-after-init --no-http'
 ```
+Instala también Comercio electrónico, CRM, Inventario y `motos_trazabilidad`, activa variantes y lotes y series, y crea
+la categoría MOTOS. No hay que configurar nada a mano; solo cargar los datos (motos, atributos, números de serie).
 O desde Aplicaciones → Actualizar lista → instalar «Motos Alfa - Ficha de producto Hunk 150 XT».
 
 Tras cambiar SCSS/JS, actualiza con `-u website_motos_alfa_showcase` para regenerar los assets.
 Si se agrega o quita un archivo en `assets` del manifiesto, además reinicia el contenedor (`docker restart odoo-one-odoo18-1`): el servidor en marcha conserva el manifiesto que leyó al arrancar y, si falta un módulo JS importado, los bloques no muestran nada.
 
 ## Probar
-Pruebas automáticas: `-u website_motos_alfa_showcase --test-tags /website_motos_alfa_showcase --http-port 8099` (con el servidor principal ya ocupando el 8069).
+Pruebas automáticas: `-u website_motos_alfa_showcase,motos_trazabilidad --test-tags /website_motos_alfa_showcase,/motos_trazabilidad --http-port 8099` (con el servidor principal ya ocupando el 8069).
 
 ## Revertir
 Desinstala el módulo desde Aplicaciones (elimina los bloques, las vistas y los assets) y borra esta carpeta.

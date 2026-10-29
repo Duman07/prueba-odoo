@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- [Formulario] El formulario «Solicita la cotización» (views/moto_template.xml) guarda País, Departamento y Ciudad
+         en sus campos de la oportunidad; sin esto website_crm los bloquea y llegan como texto en «Otra información». -->
+    <function model="ir.model.fields" name="formbuilder_whitelist">
+        <value>crm.lead</value>
+        <value eval="['country_id', 'state_id', 'city']"/>
+    </function>
+
+</odoo>
