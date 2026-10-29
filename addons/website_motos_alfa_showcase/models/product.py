@@ -10,6 +10,9 @@ from odoo.addons.web_editor.tools import get_video_url_data
 # Categoría raíz del inventario cuyas motos (y las de sus subcategorías) tienen página en el sitio.
 MOTO_CATEGORY_NAME = "MOTOS"
 
+# Marca de las motos en los datos para Google (_moto_structured_data): el producto de Odoo no tiene campo de marca.
+MOTO_BRAND = "Hero"
+
 # Color de la muestra cuando el valor del atributo no tiene un color HTML configurado.
 FALLBACK_COLORS = {
     "negro": "#1a1b1e",
@@ -219,6 +222,34 @@ class ProductTemplate(models.Model):
             return ""
         return " ".join(html.fragment_fromstring(self.description_ecommerce, create_parent="div").text_content().split())
 
+
+    def _moto_structured_data(self, base_url, currency):
+        """Datos de la moto para Google (schema.org Product, JSON-LD): nombre, dirección, foto, descripción, tipo,
+        marca y precio. Sin foto, descripción, tipo o precio, ese dato no va."""
+        self.ensure_one()
+        data = {
+            "@context": "https://schema.org",
+            "@type": "Product",
+            "name": self.name,
+            "url": base_url + self._moto_url(),
+            "brand": {"@type": "Brand", "name": MOTO_BRAND},
+        }
+        if self.image_1920:
+            data["image"] = base_url + self._moto_image_url()
+        description = self._moto_description()
+        if description:
+            data["description"] = description
+        moto_type = self._moto_type()
+        if moto_type:
+            data["category"] = moto_type.name
+        if self.list_price:
+            data["offers"] = {
+                "@type": "Offer",
+                "url": data["url"],
+                "price": f"{self.list_price:.0f}",
+                "priceCurrency": currency.name,
+            }
+        return data
 
     def _default_website_meta(self):
         """Motos sin «Descripción de venta»: la descripción para buscadores y al compartir es su frase

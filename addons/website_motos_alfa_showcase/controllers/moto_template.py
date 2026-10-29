@@ -12,6 +12,7 @@ Los datos se colocan en los bloques que ya usa el diseño, sin marcas especiales
 - antes del boton enviar del formulario: se agrega un campo de consentimiento de datos personales para recibir información sobre productos y servicios de la marca.
 """
 import copy
+import json
 import re
 from urllib.parse import unquote
 from lxml import html
@@ -363,6 +364,14 @@ def _drop_360(wrap):
         block.getparent().remove(block)
 
 
+def _add_structured_data(wrap, data):
+    """Datos de la moto para Google (_moto_structured_data de models/product.py) en un <script type="application/ld+json">
+    al final del contenido. «</» se escribe «<\\/» para que un texto de la moto no pueda cerrar el <script>."""
+    script = html.Element("script", {"type": "application/ld+json"})
+    script.text = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
+    wrap.append(script)
+
+
 def fill_moto_page(page_html, moto, values, editor_notice=None):
     """Devuelve el HTML de la página con los datos de la moto en el contenido principal (<main>)."""
     start = page_html.find("<main>")
@@ -388,6 +397,8 @@ def fill_moto_page(page_html, moto, values, editor_notice=None):
     _single_h1(container)
     if not values["has_360"]:
         _drop_360(container)
+    if values.get("structured_data"):
+        _add_structured_data(container, values["structured_data"])
     if editor_notice is not None:
         wrap = container.get_element_by_id("wrap", None)
         (wrap if wrap is not None else container).insert(0, editor_notice)

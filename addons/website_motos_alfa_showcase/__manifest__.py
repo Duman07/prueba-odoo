@@ -26,7 +26,8 @@
         # («Especificaciones técnicas» es un acordeón .s_moto_specs que llena _fill_specs)
         # («Otras motos de tipo <tipo>» y «Volver a <tipo>» es la sección .s_moto_related que llena _fill_related;
         # «Galería» es .s_moto_gallery, bloque s_image_gallery de Odoo, que llena _fill_gallery;
-        # «Datos clave» es .s_moto_keyspecs, bloque «Números» de Odoo, que llena _fill_key_specs con KEY_SPECS)
+        # «Datos clave» es .s_moto_keyspecs, bloque «Números» de Odoo, que llena _fill_key_specs con KEY_SPECS;
+        # datos para Google: <script type="application/ld+json"> de _add_structured_data con _moto_structured_data)
         "views/moto_template.xml",
         # [Tipos de moto] Página «Motocicletas» (/motos) con el carrusel (solo en /motos), el bloque «Tipos de moto» y su menú;
         # /motos/<tipo> usa su diseño (sin el carrusel: moto_type, controllers/motos.py)

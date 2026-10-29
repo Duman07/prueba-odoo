@@ -79,7 +79,9 @@ class MotoPages(http.Controller):
             "type_url": moto_type._moto_type_url() if moto_type else MOTOS_PAGE_URL,
             "cards": [self._moto_card(other.name, other._moto_url(), other) for other in others],
         }
-        moto_link = request.httprequest.host_url.rstrip("/") + moto._moto_url()
+        base_url = request.httprequest.host_url.rstrip("/")
+        values["structured_data"] = moto._moto_structured_data(base_url, request.website.currency_id)
+        moto_link = base_url + moto._moto_url()
         whatsapp_text = f"Hola Motos Alfa, estoy interesado en la moto {moto.name}"
         whatsapp_url = f"https://wa.me/{WHATSAPP_NUMBER}?text={quote(whatsapp_text)}"
         # Sin marcas del editor: así nadie puede guardar los datos de esta moto dentro del diseño maestro.
@@ -148,13 +150,19 @@ class MotoPages(http.Controller):
     def _moto_card(self, name, url, moto):
         return {"name": name, "url": url, "image_url": moto._moto_image_url() if moto else ""}
 
+    def _media_response(self, moto, stream):
+        """Archivo de /moto/media/... guardado un día. De una moto publicada lo puede guardar también un proxy o
+        Cloudflare (Cache-Control: public); de una sin publicar (solo la ven los editores), solo el navegador."""
+        stream.public = moto.is_published
+        return stream.get_response(max_age=MEDIA_MAX_AGE)
+
     @http.route("/moto/media/<int:moto_id>/foto/<string:filename>", type="http", auth="public", readonly=True)
     def moto_image(self, moto_id, filename, **kwargs):
         moto = self._get_moto(moto_id)
         if not moto.image_1920:
             raise NotFound()
         stream = request.env["ir.binary"]._get_image_stream_from(moto, "image_1920")
-        return stream.get_response(max_age=MEDIA_MAX_AGE)
+        return self._media_response(moto, stream)
 
     @http.route("/moto/media/<int:moto_id>/variante/<int:variant_id>/<string:filename>", type="http", auth="public", readonly=True)
     def moto_variant_image(self, moto_id, variant_id, filename, **kwargs):
@@ -163,7 +171,7 @@ class MotoPages(http.Controller):
         if not variant or not variant.image_variant_1920:
             raise NotFound()
         stream = request.env["ir.binary"]._get_image_stream_from(variant, "image_variant_1920")
-        return stream.get_response(max_age=MEDIA_MAX_AGE)
+        return self._media_response(moto, stream)
 
     @http.route("/moto/media/<int:moto_id>/medio/<int:media_id>/<string:filename>", type="http", auth="public", readonly=True)
     def moto_extra_media(self, moto_id, media_id, filename, **kwargs):
@@ -172,7 +180,7 @@ class MotoPages(http.Controller):
         if not media or not media.image_1920:
             raise NotFound()
         stream = request.env["ir.binary"]._get_image_stream_from(media, "image_1920")
-        return stream.get_response(max_age=MEDIA_MAX_AGE)
+        return self._media_response(moto, stream)
 
     @http.route("/moto/media/<int:moto_id>/giro/<int:attachment_id>/<string:filename>", type="http", auth="public", readonly=True)
     def moto_360_image(self, moto_id, attachment_id, filename, **kwargs):
@@ -183,7 +191,7 @@ class MotoPages(http.Controller):
         stream = request.env["ir.binary"]._get_stream_from(attachment)
         if not stream.mimetype.startswith("image/") or stream.mimetype == "image/svg+xml":
             raise NotFound()
-        return stream.get_response(max_age=MEDIA_MAX_AGE)
+        return self._media_response(moto, stream)
 
     @http.route("/moto/media/<int:moto_id>/adjunto/<int:attachment_id>/<string:filename>", type="http", auth="public", readonly=True)
     def moto_attachment(self, moto_id, attachment_id, filename, **kwargs):
@@ -199,7 +207,7 @@ class MotoPages(http.Controller):
         elif not stream.mimetype.startswith("image/") or stream.mimetype == "image/svg+xml":
             # Solo fotos y modelos: el resto de adjuntos del producto (facturas, manuales…) no se publica.
             raise NotFound()
-        return stream.get_response(max_age=MEDIA_MAX_AGE)
+        return self._media_response(moto, stream)
 
 
 class WebsiteSaleMoto(WebsiteSale):

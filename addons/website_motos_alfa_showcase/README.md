@@ -59,6 +59,12 @@ Los archivos del manifiesto llevan la etiqueta de su grupo (`[Bloques]`, `[Pági
 - SEO y vista previa al compartir (27-10-2026): `controllers/motos.py` pasa la moto como `main_object` y
   `_default_website_meta` (`models/product.py`) usa su «Descripción para comercio electrónico» como meta descripción;
   la imagen al compartir (`og:image`) es la foto del producto.
+- Datos para Google (29-10-2026): `_moto_structured_data` (`models/product.py`, marca `MOTO_BRAND`) arma la ficha
+  schema.org `Product` (nombre, foto, descripción, tipo, precio en la moneda del sitio) y `_add_structured_data`
+  (`controllers/moto_template.py`) la pone en un `<script type="application/ld+json">` de la página.
+- Caché de las fotos (29-10-2026): `_media_response` (`controllers/motos.py`) manda los `/moto/media/...` con
+  `Cache-Control: public, max-age=86400` si la moto está publicada (Cloudflare o un proxy las pueden guardar) y
+  `private` si no.
 - Motos sin publicar (27-10-2026): `_moto_domain` (`models/product.py`) pide `is_published`, así que no salen en el mega
   menú, «Tipos de moto» ni el formulario; `_get_moto` (`controllers/motos.py`) da 404 a su página y fotos, salvo a los
   editores del sitio. `MENU_FIELDS` incluye `is_published`/`website_published` para refrescar el menú al publicar.

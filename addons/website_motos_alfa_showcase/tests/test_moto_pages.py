@@ -1,3 +1,4 @@
+import json
 import re
 
 from unittest.mock import patch
@@ -449,3 +450,43 @@ class TestMotoPages(HttpCase):
             [label for label, _detail in moto_template._key_specs(specs)],
             ["Cilindraje", "Torque", "Frenos", "Consumo"],
         )
+
+    def test_media_cache_public_only_when_published(self):
+        """R4: las fotos de una moto publicada las puede guardar un proxy (public); las de una sin publicar, no."""
+        image = self.url_open(self.moto._moto_image_url())
+        self.assertEqual(image.status_code, 200)
+        self.assertIn("public", image.headers["Cache-Control"])
+        self.assertIn("max-age=86400", image.headers["Cache-Control"])
+        self.moto.is_published = False
+        new_test_user(self.env, login="moto_cache_editor", password="moto_cache_editor",
+                      groups="base.group_user,website.group_website_designer")
+        self.authenticate("moto_cache_editor", "moto_cache_editor")
+        image = self.url_open(self.moto._moto_image_url())
+        self.assertEqual(image.status_code, 200)
+        self.assertIn("private", image.headers["Cache-Control"])
+        self.assertNotIn("public", image.headers["Cache-Control"])
+
+    def test_structured_data_for_google(self):
+        """Punto 18: datos schema.org Product (JSON-LD) en la página de la moto."""
+        self.moto.write({"list_price": 9990000, "description_ecommerce": "<p>La moto de prueba</p>"})
+        text = self.url_open(self.moto._moto_url()).text
+        scripts = re.findall(r'<script type="application/ld\+json">(.*?)</script>', text, re.S)
+        self.assertEqual(len(scripts), 1)
+        data = json.loads(scripts[0])
+        self.assertEqual(data["@type"], "Product")
+        self.assertEqual(data["name"], "Moto Prueba 160")
+        self.assertTrue(data["url"].endswith(self.moto._moto_url()))
+        self.assertTrue(data["image"].endswith(self.moto._moto_image_url()))
+        self.assertEqual(data["description"], "La moto de prueba")
+        self.assertEqual(data["brand"], {"@type": "Brand", "name": "Hero"})
+        self.assertEqual(data["offers"]["price"], "9990000")
+        self.assertEqual(data["offers"]["priceCurrency"], self.env["website"].get_current_website().currency_id.name)
+
+        # Sin precio no hay oferta; un «</script>» en el nombre no cierra el script.
+        self.moto.write({"list_price": 0, "name": "Moto </script> Prueba"})
+        data = self.moto._moto_structured_data("https://ejemplo.com", self.env.company.currency_id)
+        self.assertNotIn("offers", data)
+        text = self.url_open(self.moto._moto_url()).text
+        script = re.search(r'<script type="application/ld\+json">(.*?)</script>', text, re.S).group(1)
+        self.assertIn("Moto <\\/script> Prueba", script)
+        self.assertEqual(json.loads(script)["name"], "Moto </script> Prueba")
