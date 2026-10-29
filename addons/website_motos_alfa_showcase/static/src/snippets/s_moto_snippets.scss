@@ -113,8 +113,9 @@ body.editor_enable .s_moto_360_sequence {
     display: none;
 }
 
-// «Tipos de moto»: el aviso ocupa un recuadro mientras no hay tarjetas.
-.s_moto_types:not(.s_moto_has_content) .s_moto_types_content {
+// «Tipos de moto» y «Última moto vista»: el aviso ocupa un recuadro mientras no hay contenido.
+.s_moto_types:not(.s_moto_has_content) .s_moto_types_content,
+.s_moto_last:not(.s_moto_has_content) .s_moto_last_content {
     position: relative;
     min-height: 10rem;
 }
@@ -370,6 +371,11 @@ html:not(.o_add_snippets_preview) body:not(.editor_enable) {
     .s_moto_types:not(.s_moto_has_content) .s_moto_empty {
         display: none !important;
     }
+
+    // «Última moto vista»: si el visitante no ha visto ninguna moto (o falla la carga), no se ve el bloque entero.
+    .s_moto_last:not(.s_moto_has_content) {
+        display: none !important;
+    }
 }
 
 
@@ -604,4 +610,14 @@ $moto-keyspecs-divider: 1px solid rgba(127, 127, 127, 0.25);   // línea entre c
             border-left: $moto-keyspecs-divider;
         }
     }
+}
+
+
+// [Bloque Motos] «Última moto vista» (29-10-2026): la foto de la moto en grande, sin pasar de este alto.
+$moto-last-image-height: 32rem;
+
+#wrap .s_moto_last_image {
+    max-height: $moto-last-image-height;
+    width: auto;
+    object-fit: contain;
 }

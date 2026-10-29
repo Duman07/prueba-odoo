@@ -112,6 +112,29 @@
         </section>
     </template>
 
+    <!-- Bloque «Última moto vista» (para el inicio): la moto que el visitante abrió en las últimas 24 horas, con su
+         foto en grande y su nombre. Si no ha visto ninguna, el bloque no se ve. Lo llena static/src/snippets/s_moto_last/000.js -->
+    <template id="s_moto_last" name="Última moto vista">
+        <section class="s_moto_last o_cc o_cc1 pt48 pb48">
+            <div class="container">
+                <div class="s_moto_last_content o_not_editable">
+                    <div class="s_moto_empty">
+                        <span class="s_moto_empty_title">Última moto vista</span>
+                        <span class="s_moto_empty_hint">Se llena solo: la moto que el visitante abrió en las últimas 24 horas, con su foto en grande y su nombre. Si no ha visto ninguna, este bloque no se ve.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </template>
+
+    <!-- Contenido del bloque «Última moto vista» (controllers/motos.py): foto en grande y nombre, con enlace a la moto -->
+    <template id="s_moto_last_content" name="Última moto vista: contenido">
+        <a class="d-block text-center text-reset text-decoration-none" t-att-href="card['url']">
+            <img t-if="card['image_url']" class="img-fluid s_moto_last_image" t-att-src="card['image_url']" t-att-alt="card['name']"/>
+            <h2 class="h1 text-uppercase mt-3 mb-0 s_moto_heading" t-out="card['name']"/>
+        </a>
+    </template>
+
     <!-- Tarjetas del bloque «Tipos de moto» (controllers/motos.py), con el estilo del bloque «Productos» -->
     <template id="s_moto_types_content" name="Tarjetas de tipos de moto">
         <div t-if="moto_type" class="d-flex flex-wrap justify-content-between align-items-baseline gap-2 mb-4">
@@ -153,6 +176,10 @@
             <t t-snippet="website_motos_alfa_showcase.s_moto_types" string="Tipos de moto" group="motos_alfa"
                 t-thumbnail="/website_motos_alfa_showcase/static/src/img/snippets_thumbs/s_moto_group.svg">
                 <keywords>moto, motocicleta, tipos, categorías, trabajadora, urbana, doble propósito, scooter, catálogo</keywords>
+            </t>
+            <t t-snippet="website_motos_alfa_showcase.s_moto_last" string="Última moto vista" group="motos_alfa"
+                t-thumbnail="/website_motos_alfa_showcase/static/src/img/snippets_thumbs/s_moto_group.svg">
+                <keywords>moto, motocicleta, última, vista, reciente, visitada, inicio, foto</keywords>
             </t>
         </xpath>
     </template>

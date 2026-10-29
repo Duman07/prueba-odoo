@@ -3,7 +3,7 @@
 Integrado en el sitio existente mediante `website.layout` (usa el encabezado, el menú y el pie de página del sitio).
 
 ## Relación entre archivos
-Los archivos del manifiesto llevan la etiqueta de su grupo (`[Bloques]`, `[Páginas de motos]`, `[Formulario]`, `[Tipos de moto]`, `[whatsApp]`, `[Inventario de motos]`).
+Los archivos del manifiesto llevan la etiqueta de su grupo (`[Bloques]`, `[Páginas de motos]`, `[Formulario]`, `[Tipos de moto]`, `[Bloque Motos]`, `[whatsApp]`, `[Inventario de motos]`).
 
 **[Bloques] «Moto 3D» y «Visor 360°»**
 - `views/snippets/s_moto_snippets.xml`: plantillas `s_moto_3d` y `s_moto_360`, grupo «Motos Alfa» del panel (miniaturas en `static/src/img/snippets_thumbs/`) y opciones del panel Personalizar.
@@ -71,6 +71,16 @@ Los archivos del manifiesto llevan la etiqueta de su grupo (`[Bloques]`, `[Pági
 - `views/moto_mega_menu.xml` + `models/website_menu.py`: el menú «Modelos» del encabezado (28-10-2026, antes se
   creaba a mano) y su mega menú con las motos por subcategoría.
 - Pruebas: `tests/test_moto_pages.py` (reutiliza `FAKE_GLB` de `tests/test_model_upload.py`; `test_moto_template_from_module` dibuja la plantilla real).
+
+**[Bloque Motos] Bloque «Última moto vista» (para la página de inicio, 29-10-2026)**
+- `views/snippets/s_moto_snippets.xml`: plantillas `s_moto_last` (el bloque, solo con su aviso; se arrastra desde el
+  editor, grupo «Motos Alfa») y `s_moto_last_content` (foto en grande y nombre, con enlace a la moto).
+- `controllers/motos.py`: `last_moto_content` (`/website_motos_alfa_showcase/last_moto/<id>`), 404 si no es una moto publicada.
+- `static/src/snippets/s_moto_last/000.js`: en `/moto/<moto>` guarda en el navegador (`localStorage`, no va al
+  servidor) la moto vista y la hora; en el bloque muestra esa moto si fue hace menos de 24 horas.
+- `static/src/snippets/s_moto_snippets.scss`: aviso en el editor, bloque oculto si el visitante no ha visto ninguna
+  moto, alto de la foto (`$moto-last-image-height`).
+- Pruebas: `test_last_moto_content` en `tests/test_moto_types.py`.
 
 **[Tipos de moto] Bloque «Tipos de moto» en `/motos` y páginas `/motos/<tipo>`**
 - `views/snippets/s_moto_snippets.xml`: plantillas `s_moto_types` (el bloque, solo con su aviso) y `s_moto_types_content` (las tarjetas).

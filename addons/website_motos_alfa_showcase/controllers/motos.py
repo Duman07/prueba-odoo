@@ -147,6 +147,16 @@ class MotoPages(http.Controller):
             "motos_page_url": MOTOS_PAGE_URL,
         })
 
+    @http.route("/website_motos_alfa_showcase/last_moto/<int:moto_id>", type="http", auth="public", website=True,
+                methods=["GET"], readonly=True, sitemap=False)
+    def last_moto_content(self, moto_id, **kwargs):
+        """Contenido del bloque «Última moto vista»: la foto en grande y el nombre de la moto que el visitante
+        vio (el id lo guarda s_moto_last/000.js en su navegador)."""
+        moto = self._get_moto(moto_id)
+        return request.render("website_motos_alfa_showcase.s_moto_last_content", {
+            "card": self._moto_card(moto.name, moto._moto_url(), moto),
+        })
+
     def _moto_card(self, name, url, moto):
         return {"name": name, "url": url, "image_url": moto._moto_image_url() if moto else ""}
 

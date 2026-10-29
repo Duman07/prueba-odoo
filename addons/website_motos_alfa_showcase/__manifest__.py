@@ -13,6 +13,7 @@
     #   [Páginas de motos] Páginas de cada moto (/moto/...) y mega menú «Modelos»
     #   [Formulario] Formulario: departamentos de Colombia, casilla de autorización de datos y botón ENVIAR
     #   [Tipos de moto] Bloque «Tipos de moto» en /motos y páginas /motos/<tipo>
+    #   [Bloque Motos] Bloque «Última moto vista» (para el inicio): foto en grande y nombre de la moto que vio el visitante
     #   [whatsApp] Botón flotante de WhatsApp
     #   [Inventario de motos] Ajustes y registros que una moto necesita en una base nueva (sin configurar nada a mano)
     "data": [
@@ -38,6 +39,7 @@
         "views/product_moto_360_views.xml",
         # [Bloques] Plantillas de los bloques, grupo «Motos Alfa» y sus opciones
         # [Tipos de moto] Plantillas s_moto_types (bloque) y s_moto_types_content (tarjetas, controllers/motos.py)
+        # [Bloque Motos] Plantillas s_moto_last (bloque) y s_moto_last_content (foto y nombre, controllers/motos.py)
         "views/snippets/s_moto_snippets.xml",
         # [whatsApp] boton flotante 
         "views/whatsapp_button.xml",
@@ -55,6 +57,7 @@
             # [Páginas de motos] + [Tipos de moto] ... y el estilo de la página para lo que agrega el código: $moto-brand-red,
             # títulos .s_moto_heading en negrilla, enlaces .s_moto_back en rojo («Volver a <tipo>», «Todos los tipos»)
             # y botones .s_moto_btn en rojo (carrusel de /motos)
+            # [Bloque Motos] ... y el bloque «Última moto vista»: aviso en el editor, oculto sin moto, foto ($moto-last-image-height)
             # [Páginas de motos] ... y las fotos de la «Galería» del mismo tamaño (.s_moto_gallery, $moto-gallery-ratio)
             # y los «Datos clave» con el valor en rojo (.s_moto_keyspecs, $moto-keyspecs-*)
             "website_motos_alfa_showcase/static/src/snippets/s_moto_snippets.scss",
@@ -66,6 +69,9 @@
             "website_motos_alfa_showcase/static/src/snippets/s_moto_360/000.js",
             # [Tipos de moto] Pide las tarjetas del bloque a controllers/motos.py
             "website_motos_alfa_showcase/static/src/snippets/s_moto_types/000.js",
+            # [Bloque Motos] En /moto/<moto> guarda en el navegador la moto vista y la hora; en el bloque
+            # «Última moto vista» pide su foto y nombre a controllers/motos.py si fue hace menos de 24 horas
+            "website_motos_alfa_showcase/static/src/snippets/s_moto_last/000.js",
             # [Formulario] Departamentos de Colombia en los formularios del sitio
             "website_motos_alfa_showcase/static/src/js/colombia_form_states.js",
             # [whatsApp] boton flotante

@@ -72,6 +72,23 @@ class TestMotoTypes(HttpCase):
         self.assertEqual(self.url_open(f"{CONTENT_URL}/{self.line.id}").status_code, 404)
         self.assertEqual(self.url_open(f"{CONTENT_URL}/{self.env.ref('product.product_category_all').id}").status_code, 404)
 
+    def test_last_moto_content(self):
+        """Bloque «Última moto vista»: foto y nombre de la moto, con enlace a su página; solo motos publicadas."""
+        response = self.url_open(f"/website_motos_alfa_showcase/last_moto/{self.moto.id}")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(f'href="{self.moto._moto_url()}"', response.text)
+        self.assertIn(self.moto._moto_image_url(), response.text)
+        self.assertIn("B Moto Tipo", response.text)
+        # Sin foto: solo el nombre.
+        response = self.url_open(f"/website_motos_alfa_showcase/last_moto/{self.moto_no_image.id}")
+        self.assertIn("A Moto Sin Foto", response.text)
+        self.assertNotIn("<img", response.text)
+        # Un producto que no es moto, una moto sin publicar o un id que no existe: 404 (el bloque no se ve).
+        self.assertEqual(self.url_open(f"/website_motos_alfa_showcase/last_moto/{self.other.id}").status_code, 404)
+        self.moto2.is_published = False
+        self.assertEqual(self.url_open(f"/website_motos_alfa_showcase/last_moto/{self.moto2.id}").status_code, 404)
+        self.assertEqual(self.url_open("/website_motos_alfa_showcase/last_moto/999999999").status_code, 404)
+
     def test_type_page_uses_motos_page(self):
         response = self.url_open(self.type._moto_type_url())
         self.assertEqual(response.status_code, 200)
