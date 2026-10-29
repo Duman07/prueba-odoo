@@ -130,10 +130,12 @@
 
 @include media-breakpoint-down(lg){
     #wrapwrap {
-        padding-bottom: 0rem;
+        padding-bottom: 4.5rem;
     }
 }
-
+body.editor_enable #wrapwrap{
+    padding-bottom: 0;
+}
 body.editor_enable .o_moto_whatsapp {
     display: none;
 }

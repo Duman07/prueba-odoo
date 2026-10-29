@@ -10,6 +10,9 @@ from odoo.addons.web_editor.tools import get_video_url_data
 # Categoría raíz del inventario cuyas motos (y las de sus subcategorías) tienen página en el sitio.
 MOTO_CATEGORY_NAME = "MOTOS"
 
+# Marca de las motos en los datos para Google (_moto_structured_data): el producto de Odoo no tiene campo de marca.
+MOTO_BRAND = "Hero"
+
 # Color de la muestra cuando el valor del atributo no tiene un color HTML configurado.
 FALLBACK_COLORS = {
     "negro": "#1a1b1e",
@@ -41,24 +44,14 @@ def _clear_menu_cache(env):
 class ProductCategory(models.Model):
     _inherit = "product.category"
 
-    moto_master_page_id = fields.Many2one(
-        "website.page", string="Página maestra (diseño web)", ondelete="set null",
-        help="Página del editor cuyo diseño usan las motos de esta categoría. "
-             "Si está vacío se usa la de la categoría padre.")
-
-    def _moto_master_page(self):
-        """Página maestra de la categoría o, si no tiene, de la más cercana hacia arriba."""
-        self.ensure_one()
-        category = self.sudo()
-        while category:
-            if category.moto_master_page_id:
-                return category.moto_master_page_id
-            category = category.parent_id
-        return self.env["website.page"]
-
     @api.model
     def _moto_root(self):
         return self.sudo().search([("name", "=ilike", MOTO_CATEGORY_NAME), ("parent_id", "=", False)], limit=1)
+
+    @api.model
+    def _moto_create_root(self):
+        """Crea MOTOS al instalar si la base no la tiene (data/product_category_motos.xml)."""
+        return self._moto_root() or self.sudo().create({"name": MOTO_CATEGORY_NAME})
 
     # Tipos de moto: subcategorías directas de MOTOS (Trabajadora, Urbana…), para el bloque «Tipos de moto».
 
@@ -104,6 +97,10 @@ class ProductTemplate(models.Model):
         string="Fotos 360°",
         help="Fotos tomadas alrededor de la moto (p. ej. 24, una cada 15°), para motos sin colores o "
              "colores sin fotos propias. Se ordenan por nombre: la primera es la vista de frente.")
+    moto_spec_sheet = fields.Binary(
+        "Ficha técnica (PDF)", attachment=True,
+        help="Ficha técnica de la moto en PDF: la página de la moto muestra el botón «Descargar ficha técnica (PDF)».")
+    moto_spec_sheet_name = fields.Char("Nombre de la ficha técnica")
 
     @api.model
     def _moto_domain(self):
@@ -135,6 +132,14 @@ class ProductTemplate(models.Model):
     def _moto_url(self):
         self.ensure_one()
         return f"/moto/{self.env['ir.http']._slug(self)}"
+
+    def _moto_type(self):
+        """Tipo de la moto (subcategoria directa de MOTOS: Urbana....); si no tiene queda vacio."""
+        self.ensure_one()
+        category = self.sudo().categ_id
+        while category and not category._moto_is_type():
+            category = category.parent_id
+        return category
 
     def _compute_website_url(self):
         """Las motos enlazan a su página con la plantilla de la Hunk 160R 4V en lugar de /shop:
@@ -171,25 +176,23 @@ class ProductTemplate(models.Model):
         model = self._moto_attachments().filtered(lambda a: a.name.lower().endswith((".glb", ".gltf")))[:1]
         return self._moto_attachment_url(model) if model else ""
 
-    def _moto_specs(self):
-        """Atributos que no crean variantes (p. ej. Motor = 160 cc 4V). Si hay un adjunto con el
-        nombre del atributo (Motor.jpg), se usa como foto de la tarjeta."""
+    def _moto_spec_sheet_url(self):
+        """Ficha técnica en PDF (campo «Ficha técnica (PDF)»); ?unique cambia al subir otra, para que no salga la vieja de la caché."""
         self.ensure_one()
-        images = {
-            attachment.name.rsplit(".", 1)[0].strip().lower(): attachment
-            for attachment in self._moto_attachments()
-            if (attachment.mimetype or "").startswith("image/")
-        }
-        specs = []
-        for line in self.attribute_line_ids.filtered(lambda l: l.attribute_id.create_variant == "no_variant"):
-            image = images.get(line.attribute_id.name.strip().lower())
-            specs.append({
-                "name": line.attribute_id.name,
-                "value": ", ".join(line.value_ids.mapped("name")),
-                "values": line.value_ids.mapped("name"),
-                "image_url": self._moto_attachment_url(image) if image else "",
-            })
-        return specs
+        # bin_size: solo el tamaño del archivo, sin leerlo entero.
+        if not self.with_context(bin_size=True).moto_spec_sheet:
+            return ""
+        unique = int(self.write_date.timestamp()) if self.write_date else 0
+        return f"/moto/media/{self.id}/ficha/{quote(self.moto_spec_sheet_name or 'ficha-tecnica.pdf')}?unique={unique}"
+
+    def _moto_specs(self):
+        """Atributos que no crean variantes (p. ej. Motor = Cilindraje: 160 cc): un grupo de «Especificaciones técnicas»
+        cada uno, con un valor por fila."""
+        self.ensure_one()
+        return [
+            {"name": line.attribute_id.name, "values": line.value_ids.mapped("name")}
+            for line in self.attribute_line_ids.filtered(lambda l: l.attribute_id.create_variant == "no_variant")
+        ]
 
     def _moto_360_attachments(self):
         """Fotos 360° de la moto y de sus colores."""
@@ -232,6 +235,34 @@ class ProductTemplate(models.Model):
             return ""
         return " ".join(html.fragment_fromstring(self.description_ecommerce, create_parent="div").text_content().split())
 
+
+    def _moto_structured_data(self, base_url, currency):
+        """Datos de la moto para Google (schema.org Product, JSON-LD): nombre, dirección, foto, descripción, tipo,
+        marca y precio. Sin foto, descripción, tipo o precio, ese dato no va."""
+        self.ensure_one()
+        data = {
+            "@context": "https://schema.org",
+            "@type": "Product",
+            "name": self.name,
+            "url": base_url + self._moto_url(),
+            "brand": {"@type": "Brand", "name": MOTO_BRAND},
+        }
+        if self.image_1920:
+            data["image"] = base_url + self._moto_image_url()
+        description = self._moto_description()
+        if description:
+            data["description"] = description
+        moto_type = self._moto_type()
+        if moto_type:
+            data["category"] = moto_type.name
+        if self.list_price:
+            data["offers"] = {
+                "@type": "Offer",
+                "url": data["url"],
+                "price": f"{self.list_price:.0f}",
+                "priceCurrency": currency.name,
+            }
+        return data
 
     def _default_website_meta(self):
         """Motos sin «Descripción de venta»: la descripción para buscadores y al compartir es su frase

@@ -23,14 +23,8 @@ class TestMotoTypes(HttpCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        website = cls.env["website"].get_current_website()
-        # Se usa la página /motos del sitio si existe (los cambios se deshacen al terminar) o se crea una.
-        cls.page = cls.env["website.page"].search([("url", "=", "/motos")] + website.website_domain(), limit=1)
-        if not cls.page:
-            view = cls.env["ir.ui.view"].create({
-                "name": "Motos prueba", "type": "qweb", "key": "website.test-motos", "arch": "<t/>", "website_id": website.id,
-            })
-            cls.page = cls.env["website.page"].create({"view_id": view.id, "url": "/motos", "website_id": website.id})
+        # La página «Motocicletas» del módulo (views/motos_page.xml); los cambios se deshacen al terminar.
+        cls.page = cls.env.ref("website_motos_alfa_showcase.motos_page")
         cls.page.view_id.arch = MOTOS_ARCH.format(key=cls.page.view_id.key)
         cls.page.is_published = True
 
@@ -78,6 +72,23 @@ class TestMotoTypes(HttpCase):
         self.assertEqual(self.url_open(f"{CONTENT_URL}/{self.line.id}").status_code, 404)
         self.assertEqual(self.url_open(f"{CONTENT_URL}/{self.env.ref('product.product_category_all').id}").status_code, 404)
 
+    def test_last_moto_content(self):
+        """Bloque «Última moto vista»: foto y nombre de la moto, con enlace a su página; solo motos publicadas."""
+        response = self.url_open(f"/website_motos_alfa_showcase/last_moto/{self.moto.id}")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(f'href="{self.moto._moto_url()}"', response.text)
+        self.assertIn(self.moto._moto_image_url(), response.text)
+        self.assertIn("B Moto Tipo", response.text)
+        # Sin foto: solo el nombre.
+        response = self.url_open(f"/website_motos_alfa_showcase/last_moto/{self.moto_no_image.id}")
+        self.assertIn("A Moto Sin Foto", response.text)
+        self.assertNotIn("<img", response.text)
+        # Un producto que no es moto, una moto sin publicar o un id que no existe: 404 (el bloque no se ve).
+        self.assertEqual(self.url_open(f"/website_motos_alfa_showcase/last_moto/{self.other.id}").status_code, 404)
+        self.moto2.is_published = False
+        self.assertEqual(self.url_open(f"/website_motos_alfa_showcase/last_moto/{self.moto2.id}").status_code, 404)
+        self.assertEqual(self.url_open("/website_motos_alfa_showcase/last_moto/999999999").status_code, 404)
+
     def test_type_page_uses_motos_page(self):
         response = self.url_open(self.type._moto_type_url())
         self.assertEqual(response.status_code, 200)
@@ -94,3 +105,27 @@ class TestMotoTypes(HttpCase):
     def test_type_page_unpublished(self):
         self.page.is_published = False
         self.assertEqual(self.url_open(self.type._moto_type_url()).status_code, 404)
+
+
+@tagged("post_install", "-at_install")
+class TestMotosPageCarousel(HttpCase):
+    """Carrusel de la página «Motocicletas» real (views/motos_page.xml): solo en /motos, no en /motos/<tipo>."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.env.ref("website_motos_alfa_showcase.motos_page").is_published = True
+        Category = cls.env["product.category"]
+        root = Category._moto_root() or Category.create({"name": "MOTOS"})
+        cls.type = Category.create({"name": "Tipo Carrusel", "parent_id": root.id})
+        cls.env["product.template"].create({"name": "Moto Carrusel", "categ_id": cls.type.id, "is_published": True})
+
+    def test_carousel_only_on_motos_page(self):
+        response = self.url_open("/motos")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("s_carousel_wrapper", response.text)
+        self.assertIn('class="btn btn-primary s_moto_btn', response.text)
+        response = self.url_open(self.type._moto_type_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("s_carousel_wrapper", response.text)
+        self.assertIn("s_moto_types", response.text)

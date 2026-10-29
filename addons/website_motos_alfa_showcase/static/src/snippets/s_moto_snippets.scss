@@ -113,8 +113,9 @@ body.editor_enable .s_moto_360_sequence {
     display: none;
 }
 
-// «Tipos de moto»: el aviso ocupa un recuadro mientras no hay tarjetas.
-.s_moto_types:not(.s_moto_has_content) .s_moto_types_content {
+// «Tipos de moto» y «Última moto vista»: el aviso ocupa un recuadro mientras no hay contenido.
+.s_moto_types:not(.s_moto_has_content) .s_moto_types_content,
+.s_moto_last:not(.s_moto_has_content) .s_moto_last_content {
     position: relative;
     min-height: 10rem;
 }
@@ -124,6 +125,15 @@ body.editor_enable .s_moto_360_sequence {
     right: 1rem;
     bottom: 1rem;
     min-height: 44px;
+}
+
+// (28-10-2026) En la cuadrícula del «Visor 360°» las filas toman el alto de su contenido, no 50 px fijos
+// (web_editor.frontend.scss): el visor es 16:9 y su alto cambia con el ancho de la pantalla, así que con filas fijas
+// sobraba espacio debajo o se montaba sobre la sección siguiente. En el editor se dejan las filas de Odoo.
+@include media-breakpoint-up(lg) {
+    body:not(.editor_enable) .s_moto_360 .s_moto_360_row.o_grid_mode {
+        grid-auto-rows: auto;
+    }
 }
 
 .s_moto_360_controls {
@@ -361,6 +371,11 @@ html:not(.o_add_snippets_preview) body:not(.editor_enable) {
     .s_moto_types:not(.s_moto_has_content) .s_moto_empty {
         display: none !important;
     }
+
+    // «Última moto vista»: si el visitante no ha visto ninguna moto (o falla la carga), no se ve el bloque entero.
+    .s_moto_last:not(.s_moto_has_content) {
+        display: none !important;
+    }
 }
 
 
@@ -430,4 +445,179 @@ html:not(.o_add_snippets_preview) body:not(.editor_enable) {
     background-color: rgb(190, 0, 0);
     border-color: rgb(190, 0, 0);
     color: #ffffff;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// [Páginas de motos] «Especificaciones técnicas» (acordeón .s_moto_specs de views/moto_template.xml, 28-10-2026).
+// Para cambiar su aspecto, cambia estos valores y actualiza el módulo (-u).
+// ---------------------------------------------------------------------------------------------------------------
+$moto-specs-line-color: #dee2e6;             // línea de abajo de cada grupo (no hay caja ni bordes a los lados)
+$moto-specs-line-width: 3px;
+$moto-specs-heading-line: none; // línea roja debajo de «Especificaciones técnicas»
+$moto-specs-bg: transparent;                 // fondo de los grupos
+$moto-specs-title-color: inherit;            // nombre del grupo («Motor») cerrado
+$moto-specs-title-size: 1rem;
+$moto-specs-title-weight: 700;
+$moto-specs-title-padding: 1rem 0;           // sin espacio a los lados: el texto alinea con el título
+$moto-specs-active-color: inherit;           // nombre del grupo abierto
+$moto-specs-active-bg: transparent;          // fondo del encabezado del grupo abierto
+$moto-specs-icon-color: #e00000;             // flecha de abrir/cerrar
+$moto-specs-icon-closed: "+";
+$moto-specs-icon-open: "−";
+$moto-specs-icon-size: 1.5rem;
+$moto-specs-label-color: inherit;            // «Cilindraje»
+$moto-specs-label-weight: 700;
+$moto-specs-value-color: inherit;            // «160 cc»
+$moto-specs-row-padding: 0.25rem;            // espacio arriba y abajo de cada fila
+
+.s_moto_specs {
+    .s_moto_specs_title {
+        display: inline-block;
+        padding-bottom: 0.5rem;
+        border-bottom: $moto-specs-heading-line;
+    }
+
+    .accordion {
+        --bs-accordion-bg: #{$moto-specs-bg};
+        --bs-accordion-border-radius: 0;
+        --bs-accordion-inner-border-radius: 0;
+        --bs-accordion-body-padding-x: 0;
+        --bs-accordion-btn-icon-transform: none;
+    }
+
+    .accordion-item {
+        border-width: 0 0 $moto-specs-line-width;
+        border-style: solid;
+        border-color: $moto-specs-line-color;
+        
+    }
+
+    .accordion-button {
+        padding: $moto-specs-title-padding;
+        font-size: $moto-specs-title-size;
+        font-weight: $moto-specs-title-weight;
+        color: $moto-specs-title-color !important;
+
+        &::after {
+            color: $moto-specs-icon-color;
+            font-family: inherit !important;
+            font-size: $moto-specs-icon-size;
+            line-height: 1;
+            content: $moto-specs-icon-closed !important;
+        }
+
+        &:not(.collapsed) {
+            color: $moto-specs-active-color !important;
+            background-color: $moto-specs-active-bg !important;
+
+            &::after {
+            content: $moto-specs-icon-open !important;
+           }
+        }
+    }
+
+    dt,
+    dd {
+        margin: 0;
+        padding-top: $moto-specs-row-padding;
+        padding-bottom: $moto-specs-row-padding;
+    }
+
+    dt {
+        color: $moto-specs-label-color;
+        font-weight: $moto-specs-label-weight;
+    }
+
+    dd {
+        color: $moto-specs-value-color;
+    }
+}
+
+// [Páginas de motos] + [Tipos de moto] Estilo de la página para lo que agrega el código (29-10-2026).
+// La paleta del tema de Odoo sigue siendo la de fábrica (morado): el rojo de la página está escrito en la plantilla
+// (botón «Contáctanos», precio, «M» de «Motocicletas», títulos). Todo lo nuevo usa estas variables.
+$moto-brand-red: rgb(226, 0, 0);             // rojo de la página
+$moto-brand-red-hover: rgb(190, 0, 0);       // al pasar el mouse (el mismo del botón ENVIAR)
+$moto-heading-weight: 700;                   // títulos en negrilla
+
+// Títulos de las secciones del código: «Otras motos de tipo Urbana» (/moto/<moto>) y «Urbana» (/motos/<tipo>).
+#wrap .s_moto_heading {
+    font-weight: $moto-heading-weight;
+}
+
+// Enlaces para volver: «Volver a Urbana» (/moto/<moto>) y «Todos los tipos» (/motos/<tipo>), con su flecha.
+// Con #wrap le gana a la regla del tema `.o_cc1 a:not(.btn)`, que pinta de morado los enlaces de las secciones o_cc.
+#wrap a.s_moto_back {
+    color: $moto-brand-red;
+    text-decoration: none;
+
+    &:hover,
+    &:focus {
+        color: $moto-brand-red-hover;
+        text-decoration: underline;
+    }
+}
+
+// Botones del código (carrusel de /motos, views/motos_page.xml): rojo de la página y no el morado de btn-primary.
+#wrap .s_moto_btn {
+    background-color: $moto-brand-red;
+    border-color: $moto-brand-red;
+    color: #ffffff;
+
+    &:hover,
+    &:focus {
+        background-color: $moto-brand-red-hover;
+        border-color: $moto-brand-red-hover;
+        color: #ffffff;
+    }
+}
+
+// [Páginas de motos] «Galería» (.s_moto_gallery de views/moto_template.xml, la llena _fill_gallery de
+// controllers/moto_template.py, 29-10-2026): fotos del mismo tamaño, recortadas al centro. Al hacer clic Odoo las abre
+// en grande (bloque s_image_gallery); esa vista ampliada no usa estas reglas y muestra la foto completa.
+$moto-gallery-ratio: 4 / 3;                  // proporción de cada foto (ancho / alto)
+
+#wrap .s_moto_gallery img {
+    width: 100%;
+    aspect-ratio: $moto-gallery-ratio;
+    object-fit: cover;
+    cursor: zoom-in;
+}
+
+// [Páginas de motos] «Datos clave» (.s_moto_keyspecs de views/moto_template.xml, bloque «Números» de Odoo; la llena
+// _fill_key_specs de controllers/moto_template.py, 29-10-2026): el valor grande en el rojo de la página y la etiqueta debajo.
+$moto-keyspecs-value-color: $moto-brand-red;
+$moto-keyspecs-value-weight: 700;
+$moto-keyspecs-label-color: rgb(138, 144, 151);   // el gris de los textos pequeños de la plantilla
+$moto-keyspecs-label-size: 0.875rem;
+$moto-keyspecs-divider: 1px solid rgba(127, 127, 127, 0.25);   // línea entre casillas (en pantallas grandes)
+
+#wrap .s_moto_keyspecs {
+    .s_moto_keyspec_value {
+        color: $moto-keyspecs-value-color;
+        font-weight: $moto-keyspecs-value-weight;
+    }
+
+    .s_moto_keyspec_label {
+        color: $moto-keyspecs-label-color;
+        font-size: $moto-keyspecs-label-size;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    @include media-breakpoint-up(lg) {
+        .s_moto_keyspec + .s_moto_keyspec {
+            border-left: $moto-keyspecs-divider;
+        }
+    }
+}
+
+
+// [Bloque Motos] «Última moto vista» (29-10-2026): la foto de la moto en grande, sin pasar de este alto.
+$moto-last-image-height: 32rem;
+
+#wrap .s_moto_last_image {
+    max-height: $moto-last-image-height;
+    width: auto;
+    object-fit: contain;
 }

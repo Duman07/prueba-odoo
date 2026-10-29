@@ -1,5 +1,9 @@
+import base64
+import json
 import re
 
+from unittest.mock import patch
+from odoo.addons.website_motos_alfa_showcase.controllers import moto_template, motos
 from odoo.tests import HttpCase, new_test_user, tagged
 
 from .test_model_upload import FAKE_GLB
@@ -18,11 +22,9 @@ MASTER_ARCH = """
                     <h1><span class="display-1-fs"><strong>DISEÑO 150</strong></span></h1>
                     <p>Precio Desde: </p>
                     <p>$0.</p>
-                    <a class="btn" href="/test-moto-master#cotizar">Contáctanos</a>
+                    <a class="btn" href="#cotizar">Contáctanos</a>
+                    <a class="btn" href="#vista-360">Ver en 360°</a>
                 </div>
-                <div class="s_moto_3d_stage"/>
-            </section>
-            <section class="s_moto_360" data-model-src="/web/content/2/diseno.glb">
                 <div class="s_moto_360_panel">
                     <div class="s_moto_360_swatches">
                         <div class="s_moto_360_swatch o_diseno" style="background-color: red;" data-color-name="Color 1" data-model-src="/x.glb"/>
@@ -30,20 +32,25 @@ MASTER_ARCH = """
                     </div>
                     <p class="s_moto_360_color_name">Color 1</p>
                 </div>
+                <div class="s_moto_3d_stage"/>
             </section>
+            <section id="vista-360" class="s_moto_360" data-model-src="/web/content/2/diseno.glb"/>
             <section class="s_image_title oe_img_bg" style="background-position: 50% 70%; background-image: url(&quot;/web/image/9/fondo-plantilla.webp&quot;);">
                 <div class="container"><h1 class="display-3">Frase de la plantilla</h1></div>
             </section>
             <section class="s_text_block"><div class="media_iframe_video" data-oe-expression="//www.youtube.com/embed/AAAAAAAAAAA"/></section>
-            <section class="s_product_list">
-                <div class="row">
-                    <div class="col-lg-12"><h2>Especificaciones técnicas</h2></div>
-                    <div class="col-lg-2 o_diseno_col"><div class="s_card card">
-                        <figure><a href="#"><img src="/web/image/1/diseno.webp" data-original-id="1"/></a></figure>
-                        <strong>Motor </strong><strong><font style="color: red;">150 cc</font></strong>
-                    </div></div>
-                    <div class="col-lg-2"><div class="s_card card"><div class="card-body"><h3 class="card-title"><a href="#">Sutil</a></h3></div></div></div>
-                </div>
+            <section class="s_moto_specs">
+                <h2>Especificaciones técnicas</h2>
+                <div class="s_accordion"><div id="moto_specs" class="accordion">
+                    <div class="accordion-item">
+                        <button class="accordion-button collapsed" data-bs-target="#x1" aria-expanded="false"><span class="flex-grow-1">Diseño motor</span></button>
+                        <div id="x1" class="accordion-collapse collapse"><div class="accordion-body"><p>150 cc</p></div></div>
+                    </div>
+                    <div class="accordion-item">
+                        <button class="accordion-button collapsed"><span class="flex-grow-1">Sutil</span></button>
+                        <div class="accordion-collapse collapse"><div class="accordion-body"/></div>
+                    </div>
+                </div></div>
             </section>
             <form><select name="Modelo" id="m"><option value="Opción 1">Opción 1</option></select>
                 <div class="s_website_form_submit"><a class="s_website_form_send btn">Enviar</a></div></form>
@@ -64,8 +71,7 @@ class TestMotoPages(HttpCase):
             "name": "Moto maestra prueba", "type": "qweb", "key": "website.test-moto-master",
             "arch": MASTER_ARCH, "website_id": website.id,
         })
-        cls.env["website.page"].create({"view_id": master.id, "url": "/test-moto-master", "website_id": website.id})
-        cls.env["ir.config_parameter"].set_param("website_motos_alfa_showcase.master_page_key", master.key)
+        cls.startClassPatcher(patch.object(motos, "MOTO_TEMPLATE", master.key))
 
         root = cls.env["product.category"]._moto_root() or cls.env["product.category"].create({"name": "MOTOS"})
         cls.line = cls.env["product.category"].create({"name": "Línea Prueba", "parent_id": root.id})
@@ -96,19 +102,8 @@ class TestMotoPages(HttpCase):
         ])
         cls.glb, cls.spec_image, cls.pdf = attachments
         cls.other = cls.env["product.template"].create({"name": "Casco Prueba", "image_1920": PIXEL_PNG})
-
-        # Otra línea con su propio diseño, y una subcategoría suya sin página maestra (hereda la de su padre).
-        line_master = cls.env["ir.ui.view"].create({
-            "name": "Moto maestra línea 2", "type": "qweb", "key": "website.test-moto-master-2",
-            "arch": MASTER_ARCH.replace("website.test-moto-master", "website.test-moto-master-2")
-                               .replace('class="oe_structure"', 'class="oe_structure o_diseno_linea_2"'),
-            "website_id": website.id,
-        })
-        cls.line_page = cls.env["website.page"].create({
-            "view_id": line_master.id, "url": "/test-moto-master-2", "website_id": website.id,
-        })
         cls.line2 = cls.env["product.category"].create({
-            "name": "Línea Dos", "parent_id": root.id, "moto_master_page_id": cls.line_page.id,
+            "name": "Línea Dos", "parent_id": root.id,
         })
         cls.line2_child = cls.env["product.category"].create({"name": "Línea Dos Sport", "parent_id": cls.line2.id})
         cls.moto2 = cls.env["product.template"].create({"name": "Moto Dos", "categ_id": cls.line2.id, "is_published": True,})
@@ -122,13 +117,13 @@ class TestMotoPages(HttpCase):
         })
         self.moto.attribute_line_ids = [(0, 0, {"attribute_id": suspension.id, "value_ids": [(6, 0, suspension.value_ids.ids)]})]
         wrap = self._wrap(self.url_open(self.moto._moto_url()))
-        # Una tarjeta más, con un valor por línea: la etiqueta en negrilla y el detalle con el color del diseño, sin negrilla.
-        self.assertEqual(wrap.count("o_diseno_col"), 2)
-        self.assertIn(
-            '<strong>Suspensión prueba </strong><br><strong>Delantera: </strong><span><font style="color: red;">Hidráulica</font></span>'
-            '<br><strong>Trasera: </strong><span><font style="color: red;">Monoshock</font></span>', wrap)
-        # La tarjeta con un solo valor queda como en el diseño.
-        self.assertIn('<strong>Motor prueba </strong><strong><font style="color: red;">160 cc 4V</font></strong>', wrap)
+        # Un grupo del acordeón por especificación; solo el primero abierto.
+        self.assertEqual(wrap.count('class="accordion-item"'), 2)
+        self.assertEqual(wrap.count('aria-expanded="true"'), 1)
+        self.assertIn('<span class="flex-grow-1">Suspensión prueba</span>', wrap)
+        # «Etiqueta: valor» → etiqueta y valor en dos columnas; sin etiqueta, una sola.
+        self.assertIn('<dt class="col-sm-5">Delantera</dt><dd class="col-sm-7">Hidráulica</dd>', wrap)
+        self.assertIn('<dd class="col-12">160 cc 4V</dd>', wrap)
 
     def _wrap(self, response):
         self.assertEqual(response.status_code, 200)
@@ -152,11 +147,11 @@ class TestMotoPages(HttpCase):
             wrap)
         self.assertNotIn("data-variant=", wrap)
         self.assertNotIn("/x.glb", wrap)
-        # Una tarjeta por especificación, con el formato de la tarjeta «Motor» del diseño.
-        self.assertEqual(wrap.count("o_diseno_col"), 1)
+         # Un grupo del acordeón por especificación, copiando el primero del diseño, abierto.
+        self.assertEqual(wrap.count('class="accordion-item"'), 1)
         self.assertNotIn("Sutil", wrap)
-        self.assertIn('<strong>Motor prueba </strong><strong><font style="color: red;">160 cc 4V</font></strong>', wrap)
-        self.assertIn(self.moto._moto_attachment_url(self.spec_image), wrap)
+        self.assertIn('<span class="flex-grow-1">Motor prueba</span>', wrap)
+        self.assertIn('class="accordion-collapse collapse show"', wrap)
         self.assertIn("Especificaciones técnicas", wrap)
         # Formulario y enlaces.
         self.assertRegex(wrap, re.compile(r'<option[^>]*value="Moto Prueba 160"[^>]*selected'))
@@ -169,7 +164,7 @@ class TestMotoPages(HttpCase):
         self.authenticate("moto_designer", "moto_designer")
         wrap = self._wrap(self.url_open(self.moto._moto_url()))
         self.assertNotIn("data-oe-model", wrap)
-        self.assertIn('href="/test-moto-master"', wrap)
+        self.assertIn("views/moto_template.xml", wrap)
 
     def test_mega_menu_lists_motos(self):
         html = self.url_open("/").text
@@ -233,7 +228,7 @@ class TestMotoPages(HttpCase):
         self.assertIn("Frase de la plantilla", self._wrap(self.url_open(self.moto._moto_url())))
         self.moto.description_ecommerce = "<p>La moto de <b>prueba</b></p>"
         wrap = self._wrap(self.url_open(self.moto._moto_url()))
-        self.assertIn('<h1 class="display-3">La moto de prueba</h1>', wrap)
+        self.assertIn('<h2 class="display-3 h1">La moto de prueba</h2>', wrap)
         self.assertNotIn("Frase de la plantilla", wrap)
         # Fondo y video: los del primer color, fijos (elegir otro color no los cambia).
         first = self.moto._moto_colors()[0]
@@ -314,16 +309,6 @@ class TestMotoPages(HttpCase):
         self.assertEqual(response.status_code, 301)
         self.assertTrue(response.headers["Location"].endswith(self.moto._moto_url()))
 
-    def test_each_category_uses_its_master_page(self):
-        # Sin página maestra en su categoría: la general.
-        self.assertNotIn("o_diseno_linea_2", self._wrap(self.url_open(self.moto._moto_url())))
-        # Con página maestra propia, y en una subcategoría que no tiene: la de la categoría padre.
-        for moto in (self.moto2, self.moto3):
-            with self.subTest(moto=moto.name):
-                wrap = self._wrap(self.url_open(moto._moto_url()))
-                self.assertIn("o_diseno_linea_2", wrap)
-                self.assertIn(moto.name.upper(), wrap)
-
     def test_colors_show_variant_photos_without_model(self):
         color = self.env["product.attribute"].create({
             "name": "Color fotos",
@@ -360,6 +345,20 @@ class TestMotoPages(HttpCase):
         self.assertNotIn("$0", wrap)
 
 
+    def test_360_section_only_with_model_or_photos(self):
+        # self.moto tiene modelo .glb: se ve la sección y el botón.
+        wrap = self._wrap(self.url_open(self.moto._moto_url()))
+        self.assertIn('id="vista-360"', wrap)
+        self.assertIn('href="#vista-360"', wrap)
+        # Sin modelo ni fotos 360°: ni la sección ni el botón.
+        moto = self.env["product.template"].create({
+            "name": "Moto Sin Giro", "categ_id": self.line.id, "image_1920": PIXEL_PNG, "is_published": True,
+        })
+        wrap = self._wrap(self.url_open(moto._moto_url()))
+        self.assertNotIn("vista-360", wrap)
+        self.assertNotIn("s_moto_360_viewer", wrap)
+
+
     def test_seo_meta_uses_moto(self):
         self.moto.description_ecommerce = "<p>La moto de prueba</p>"
         html = self.url_open(self.moto._moto_url()).text
@@ -383,4 +382,149 @@ class TestMotoPages(HttpCase):
         self.assertIn(self.moto._moto_url(), sitemap)
         self.assertNotIn(self.moto2._moto_url(), sitemap)
         # Las motos ya no van con su dirección de la tienda (redirige); los demás productos sí.
-        self.assertNotIn(f"/shop/{self.env['ir.http']._slug(self.moto)}", sitemap)   
+        self.assertNotIn(f"/shop/{self.env['ir.http']._slug(self.moto)}", sitemap)
+
+    def test_moto_template_from_module(self):
+        with patch.object(motos, "MOTO_TEMPLATE", "website_motos_alfa_showcase.moto_template"):
+            response = self.url_open(self.moto._moto_url())
+        self.assertEqual(response.status_code, 200)
+        wrap = self._wrap(response)
+        self.assertIn('href="#vista-360"', wrap)
+        self.assertIn('id="vista-360"', wrap)
+        self.assertIn(">Antioquia</option>", wrap)
+        # Sin descripción, el título de la sección con fondo es el nombre de la moto.
+        self.assertIn('<h2 class="display-3 h1"><span>Moto Prueba 160</span></h2>', wrap)
+        self.assertNotIn("Transforme sus espacios", wrap)
+
+    def test_gallery_with_unused_media(self):
+        """«Galería» (plantilla real): las fotos de «Medios adicionales» que no van de fondo; sin ellas no hay galería."""
+        Media = self.env["product.image"]
+        photos = Media.create([
+            {"name": f"Foto {n}.png", "image_1920": PIXEL_PNG, "product_tmpl_id": self.moto.id, "sequence": n}
+            for n in (1, 2, 3)
+        ])
+        with patch.object(motos, "MOTO_TEMPLATE", "website_motos_alfa_showcase.moto_template"):
+            wrap = self._wrap(self.url_open(self.moto._moto_url()))
+        background, *gallery = [self.moto._moto_media_url(photo) for photo in photos]
+        section = wrap[wrap.index("s_moto_gallery"):wrap.index("s_moto_related")]
+        # La primera foto es el fondo de «Título de la imagen»; las otras dos, la galería, en su orden.
+        self.assertIn(f'background-image: url("{background}")', wrap)
+        self.assertNotIn(background, section)
+        self.assertEqual(section.count("s_moto_gallery_item"), 2)
+        self.assertLess(section.index(gallery[0]), section.index(gallery[1]))
+        self.assertIn('alt="Moto Prueba 160 - foto 1"', section)
+        self.assertNotIn("placeholder.png", section)
+
+        photos[1:].unlink()
+        with patch.object(motos, "MOTO_TEMPLATE", "website_motos_alfa_showcase.moto_template"):
+            wrap = self._wrap(self.url_open(self.moto._moto_url()))
+        self.assertNotIn("s_moto_gallery", wrap)
+
+    def test_spec_sheet(self):
+        """Punto 17 (plantilla real): botón «Descargar ficha técnica (PDF)» solo si la moto tiene su PDF; solo se sirve PDF."""
+        with patch.object(motos, "MOTO_TEMPLATE", "website_motos_alfa_showcase.moto_template"):
+            wrap = self._wrap(self.url_open(self.moto._moto_url()))
+        self.assertIn("s_moto_specs", wrap)
+        self.assertNotIn("Descargar ficha técnica", wrap)
+        self.assertEqual(self.moto._moto_spec_sheet_url(), "")
+        self.assertEqual(self.url_open(f"/moto/media/{self.moto.id}/ficha/ficha.pdf").status_code, 404)
+
+        pdf = b"%PDF-1.4\n1 0 obj << >> endobj\ntrailer << >>\n%%EOF\n"
+        self.moto.write({"moto_spec_sheet": base64.b64encode(pdf), "moto_spec_sheet_name": "Ficha Prueba 160.pdf"})
+        url = self.moto._moto_spec_sheet_url()
+        self.assertTrue(url.startswith(f"/moto/media/{self.moto.id}/ficha/Ficha%20Prueba%20160.pdf?unique="))
+        with patch.object(motos, "MOTO_TEMPLATE", "website_motos_alfa_showcase.moto_template"):
+            wrap = self._wrap(self.url_open(self.moto._moto_url()))
+        section = wrap[wrap.index("s_moto_specs"):wrap.index("s_moto_gallery") if "s_moto_gallery" in wrap else None]
+        self.assertIn("Descargar ficha técnica (PDF)", section)
+        self.assertIn(f'href="{url}"', section.replace("&amp;", "&"))
+        self.assertIn('download="Ficha Prueba 160.pdf"', section)
+        self.assertIn("accordion-item", section)
+        response = self.url_open(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers["Content-Type"], "application/pdf")
+        self.assertIn("public", response.headers["Cache-Control"])
+        self.assertEqual(response.content, pdf)
+
+        # Sin especificaciones pero con ficha: queda la sección con el botón y sin el acordeón.
+        self.moto.attribute_line_ids.filtered(lambda l: l.attribute_id.create_variant == "no_variant").unlink()
+        with patch.object(motos, "MOTO_TEMPLATE", "website_motos_alfa_showcase.moto_template"):
+            wrap = self._wrap(self.url_open(self.moto._moto_url()))
+        self.assertIn("Descargar ficha técnica (PDF)", wrap)
+        self.assertNotIn("accordion-item", wrap)
+
+        # Otro tipo de archivo en el campo: no se publica.
+        self.moto.write({"moto_spec_sheet": PIXEL_PNG, "moto_spec_sheet_name": "foto.png"})
+        self.assertEqual(self.url_open(self.moto._moto_spec_sheet_url()).status_code, 404)
+
+    def test_key_specs(self):
+        """«Datos clave» (plantilla real): las especificaciones de KEY_SPECS, en ese orden; sin ellas no hay franja."""
+        with patch.object(motos, "MOTO_TEMPLATE", "website_motos_alfa_showcase.moto_template"):
+            wrap = self._wrap(self.url_open(self.moto._moto_url()))
+        # «160 cc 4V» no tiene etiqueta: no es un dato clave.
+        self.assertNotIn("s_moto_keyspecs", wrap)
+
+        engine = self.env["product.attribute"].create({
+            "name": "Motor clave",
+            "create_variant": "no_variant",
+            "value_ids": [(0, 0, {"name": "Tipo: Monocilíndrico"}), (0, 0, {"name": "Max. Potencia: 15 HP @ 8500 rpm."}),
+                          (0, 0, {"name": "Cilindraje: 160 cc"})],
+        })
+        self.moto.attribute_line_ids = [(0, 0, {"attribute_id": engine.id, "value_ids": [(6, 0, engine.value_ids.ids)]})]
+        with patch.object(motos, "MOTO_TEMPLATE", "website_motos_alfa_showcase.moto_template"):
+            wrap = self._wrap(self.url_open(self.moto._moto_url()))
+        section = wrap[wrap.index("s_moto_keyspecs"):wrap.index("s_image_title")]
+        self.assertEqual(section.count('s_moto_keyspec"'), 2)
+        # Orden de KEY_SPECS (cilindraje antes que potencia), no el del atributo; sin el punto final; «Tipo» no sale.
+        self.assertLess(section.index(">160 cc<"), section.index(">15 HP @ 8500 rpm<"))
+        self.assertIn(">Max. Potencia<", section)
+        self.assertNotIn("Monocilíndrico", section)
+
+    def test_key_specs_max_four(self):
+        specs = [{"name": "Ficha", "values": [
+            "Peso: 130 kg", "Tanque: 12 L", "Consumo: 45 km/l", "Frenos: disco", "Torque: 14 Nm", "Cilindraje: 160 cc",
+        ]}]
+        self.assertEqual(
+            [label for label, _detail in moto_template._key_specs(specs)],
+            ["Cilindraje", "Torque", "Frenos", "Consumo"],
+        )
+
+    def test_media_cache_public_only_when_published(self):
+        """R4: las fotos de una moto publicada las puede guardar un proxy (public); las de una sin publicar, no."""
+        image = self.url_open(self.moto._moto_image_url())
+        self.assertEqual(image.status_code, 200)
+        self.assertIn("public", image.headers["Cache-Control"])
+        self.assertIn("max-age=86400", image.headers["Cache-Control"])
+        self.moto.is_published = False
+        new_test_user(self.env, login="moto_cache_editor", password="moto_cache_editor",
+                      groups="base.group_user,website.group_website_designer")
+        self.authenticate("moto_cache_editor", "moto_cache_editor")
+        image = self.url_open(self.moto._moto_image_url())
+        self.assertEqual(image.status_code, 200)
+        self.assertIn("private", image.headers["Cache-Control"])
+        self.assertNotIn("public", image.headers["Cache-Control"])
+
+    def test_structured_data_for_google(self):
+        """Punto 18: datos schema.org Product (JSON-LD) en la página de la moto."""
+        self.moto.write({"list_price": 9990000, "description_ecommerce": "<p>La moto de prueba</p>"})
+        text = self.url_open(self.moto._moto_url()).text
+        scripts = re.findall(r'<script type="application/ld\+json">(.*?)</script>', text, re.S)
+        self.assertEqual(len(scripts), 1)
+        data = json.loads(scripts[0])
+        self.assertEqual(data["@type"], "Product")
+        self.assertEqual(data["name"], "Moto Prueba 160")
+        self.assertTrue(data["url"].endswith(self.moto._moto_url()))
+        self.assertTrue(data["image"].endswith(self.moto._moto_image_url()))
+        self.assertEqual(data["description"], "La moto de prueba")
+        self.assertEqual(data["brand"], {"@type": "Brand", "name": "Hero"})
+        self.assertEqual(data["offers"]["price"], "9990000")
+        self.assertEqual(data["offers"]["priceCurrency"], self.env["website"].get_current_website().currency_id.name)
+
+        # Sin precio no hay oferta; un «</script>» en el nombre no cierra el script.
+        self.moto.write({"list_price": 0, "name": "Moto </script> Prueba"})
+        data = self.moto._moto_structured_data("https://ejemplo.com", self.env.company.currency_id)
+        self.assertNotIn("offers", data)
+        text = self.url_open(self.moto._moto_url()).text
+        script = re.search(r'<script type="application/ld\+json">(.*?)</script>', text, re.S).group(1)
+        self.assertIn("Moto <\\/script> Prueba", script)
+        self.assertEqual(json.loads(script)["name"], "Moto </script> Prueba")

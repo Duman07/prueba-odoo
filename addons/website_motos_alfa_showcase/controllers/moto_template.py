@@ -1,20 +1,20 @@
-"""Llena la página maestra (diseñada en el editor del sitio) con los datos de una moto.
+"""Llena la «Plantilla de motos» (views/moto_template.xml) con los datos de una moto.
 
 Los datos se colocan en los bloques que ya usa el diseño, sin marcas especiales:
 - «Moto 3D» (.s_moto_3d): foto, nombre en el <h1> y categoría en el texto que lo precede.
 - Cualquier texto igual al título original del diseño: nombre de la moto.
 - «Visor 360°» (.s_moto_360): modelo .glb o fotos 360° del primer color y una muestra por color, copiando la
   primera muestra del diseño. Elegir un color solo cambia la imagen principal («Moto 3D», data-main-src).
-- Tarjetas de especificaciones (.s_card): una por especificación, copiando la primera tarjeta del diseño.
+- «Especificaciones técnicas» (.s_moto_specs): un grupo del acordeón por especificación, copiando el primero.
 - Secciones con imagen de fondo y videos del diseño: fotos y videos de «Medios adicionales» del primer color
   (o del producto), en orden; el título de la primera sección con fondo lleva la descripción del producto.
 - Campo «Modelo» del formulario: lista de motos, con la actual elegida.
-- Enlaces a la página maestra: pasan a la página de la moto.
 - antes del boton enviar del formulario: se agrega un campo de consentimiento de datos personales para recibir información sobre productos y servicios de la marca.
 """
 import copy
+import json
 import re
-
+from urllib.parse import unquote
 from lxml import html
 
 ZERO_WIDTH = re.compile("[​‌‍﻿]")
@@ -72,8 +72,10 @@ def _fill_viewers(wrap, intro_src, viewer_src, moto):
 
 
 PRICE_TEXT = re.compile(r"^\$\s*0[.,]?$")
-#Estatuto del consumidor 
+# Estatuto del consumidor
 PRICE_NOTE = "Precio con IVA incluido, sujeto a cambios. No incluye matrícula ni SOAT."
+
+
 def _fill_price(wrap, price):
     """Precio en «Moto 3D»: el texto «$0» del diseño lleva el precio de la moto y la clase s_moto_price
     (el «Precio desde:» de encima, s_moto_price_label); el estilo está en s_moto_snippets.scss.
@@ -154,6 +156,7 @@ def _fill_media(wrap, media, description):
     ]
     for section, image in zip(sections, media["images"]):
         section.set("style", BACKGROUND_IMAGE.sub(f'background-image: url("{image}")', section.get("style"), count=1))
+    used = min(len(sections), len(media["images"]))
     for video, src in zip(_find(wrap, "media_iframe_video"), media["videos"]):
         video.set("data-oe-expression", src)
         iframe = next(iter(video.iter("iframe")), None)
@@ -163,94 +166,178 @@ def _fill_media(wrap, media, description):
         title = next((el for el in sections[0].iter("h1", "h2", "h3", "h4", "h5", "h6")), None)
         if title is not None:
             _set_text(title, description)
+    return used
 
 
-def _spec_targets(card):
-    """En la tarjeta del diseño (<strong>Motor </strong><strong>160 cc 4V</strong>): nombre y valor."""
-    strongs = [s for s in card.iter("strong") if s.text_content().strip() and not s.xpath("ancestor::figure")]
-    if len(strongs) >= 2:
-        return strongs[0], strongs[-1]
-    titles = card.xpath(".//*[contains(@class, 'card-title')]")
-    return (titles[0], None) if titles else (None, None)
+def _fill_gallery(wrap, images, moto):
+    """«Galería» (.s_moto_gallery): una foto por cada imagen de «Medios adicionales» que no se usó de fondo, copiando la
+    primera del diseño; sin fotos se quita la sección. Al hacer clic Odoo la abre en grande (bloque s_image_gallery)."""
+    for section in _find(wrap, "s_moto_gallery"):
+        items = _find(section, "s_moto_gallery_item")
+        if not images or not items:
+            section.getparent().remove(section)
+            continue
+        row = items[0].getparent()
+        prototype = items[0]
+        for item in items:
+            row.remove(item)
+        for number, src in enumerate(images, start=1):
+            item = copy.deepcopy(prototype)
+            for image in item.iter("img"):
+                image.set("src", src)
+                image.set("alt", f"{moto.name} - foto {number}")
+            row.append(item)
 
 
-def _fill_spec_values(value_el, values):
-    """Un valor por línea con el formato del valor del diseño; en «Etiqueta: detalle» la etiqueta va en negrilla sin ese
-    formato y el detalle con el color del diseño, sin negrilla.
-    Un solo valor sin etiqueta queda como en el diseño («Motor 160 cc 4V»)."""
-    if len(values) == 1 and ":" not in values[0]:
-        _set_text(value_el, values[0])
-        return
-    parent = value_el.getparent()
-    position = parent.index(value_el)
-    tail = value_el.tail
-    parent.remove(value_el)
-    elements = []
+def _spec_rows(values):
+    """Filas de una especificación: «Etiqueta: valor» → etiqueta (<dt>) y valor (<dd>); sin etiqueta, solo <dd>."""
+    rows = html.Element("dl", {"class": "row mb-0"})
     for value in values:
         label, separator, detail = (part.strip() for part in value.partition(":"))
-        elements.append(html.Element("br"))
         if separator and detail:
-            label_el = html.Element("strong")
-            label_el.text = f"{label}: "
-            elements.append(label_el)
-        line = copy.deepcopy(value_el)
-        line.tail = None
-        if separator and detail and line.tag in ("strong", "b"):
-            # Con etiqueta, el detalle va sin negrilla (conserva el color del diseño) para distinguirlo de la etiqueta.
-            line.tag = "span"
-        _set_text(line, detail if separator and detail else value)
-        elements.append(line)
-    elements[-1].tail = tail
-    for offset, element in enumerate(elements):
-        parent.insert(position + offset, element)
+            term = html.Element("dt", {"class": "col-sm-5"})
+            term.text = label
+            rows.append(term)
+            row = html.Element("dd", {"class": "col-sm-7"})
+            row.text = detail
+        else:
+            row = html.Element("dd", {"class": "col-12"})
+            row.text = value
+        rows.append(row)
+    return rows
+
+
+# «Datos clave»: etiquetas de especificación que se muestran arriba, en este orden (la etiqueta debe contener la palabra:
+# «Max. Potencia» cuenta como «potencia»). Se muestran como máximo MAX_KEY_SPECS.
+KEY_SPECS = ("cilindraje", "potencia", "torque", "freno", "consumo", "tanque", "peso")
+MAX_KEY_SPECS = 4
+
+
+def _key_specs(specs):
+    """Datos clave de la moto: de sus filas «Etiqueta: valor», una por cada palabra de KEY_SPECS, en ese orden."""
+    rows = []
+    for spec in specs:
+        for value in spec["values"]:
+            label, separator, detail = (part.strip() for part in value.partition(":"))
+            if separator and detail:
+                rows.append((label, detail.rstrip(".")))
+    keys = []
+    for word in KEY_SPECS:
+        row = next((row for row in rows if word in _norm(row[0]) and row not in keys), None)
+        if row:
+            keys.append(row)
+    return keys[:MAX_KEY_SPECS]
+
+
+def _fill_key_specs(wrap, specs):
+    """«Datos clave» (.s_moto_keyspecs, bloque «Números» de Odoo): una casilla por dato, copiando la primera del diseño;
+    sin datos clave se quita la sección."""
+    keys = _key_specs(specs)
+    for section in _find(wrap, "s_moto_keyspecs"):
+        boxes = _find(section, "s_moto_keyspec")
+        if not keys or not boxes:
+            section.getparent().remove(section)
+            continue
+        row = boxes[0].getparent()
+        prototype = boxes[0]
+        for box in boxes:
+            row.remove(box)
+        for label, detail in keys:
+            box = copy.deepcopy(prototype)
+            for value in _find(box, "s_moto_keyspec_value"):
+                _set_text(value, detail)
+            for name in _find(box, "s_moto_keyspec_label"):
+                _set_text(name, label)
+            row.append(box)
+
+
+def _fill_spec_sheet(wrap, url, moto):
+    """Botón «Descargar ficha técnica (PDF)» (.s_moto_spec_sheet) con la ficha de la moto; sin ficha se quita."""
+    for block in _find(wrap, "s_moto_spec_sheet"):
+        link = next(block.iter("a"), None)
+        if not url or link is None:
+            block.getparent().remove(block)
+            continue
+        link.set("href", url)
+        link.set("download", moto.moto_spec_sheet_name or f"{moto.name} - ficha técnica.pdf")
 
 
 def _fill_specs(wrap, specs):
-    lists = _find(wrap, "s_product_list")
-    cards = [card for block in lists for card in _find(block, "s_card")] or _find(wrap, "s_card")
-    if not cards:
-        return
-
-    
-    # Tarjeta modelo: la primera con nombre y valor (en el diseño, «Motor 160 cc 4V»).
-    prototype_card = next((card for card in cards if _spec_targets(card)[1] is not None), cards[0])
-    column = prototype_card.getparent()
-    row = column.getparent()
-    section = next(iter(row.iterancestors("section")), None)
-    columns = [card.getparent() for card in cards if card.getparent().getparent() is row]
-    position = row.index(columns[0])
-    tail = columns[-1].tail
-    prototype = copy.deepcopy(column)
-    for old in columns:
-        row.remove(old)
-    if not specs:
-        if section is not None and section.getparent() is not None:
-            section.getparent().remove(section)
-        return
-    for offset, spec in enumerate(specs):
-        new_column = copy.deepcopy(prototype)
-        new_column.tail = tail
-        card = _find(new_column, "s_card")[0] if _find(new_column, "s_card") else new_column
-        figure = next(iter(card.iter("figure")), None)
-        if figure is not None:
-            image = next(iter(figure.iter("img")), None)
-            if spec["image_url"] and image is not None:
-                for attribute in list(image.attrib):
-                    if attribute.startswith("data-"):
-                        del image.attrib[attribute]
-                image.set("src", spec["image_url"])
-                image.set("alt", spec["name"])
-                for link in figure.iter("a"):
-                    link.attrib.pop("href", None)
+    """«Especificaciones técnicas» (.s_moto_specs): un grupo del acordeón por especificación, copiando el primero del
+    diseño; solo el primero abierto. Sin especificaciones se quita la sección, salvo que tenga el botón de la ficha
+    técnica (_fill_spec_sheet va antes): entonces se quita solo el acordeón."""
+    for section in _find(wrap, "s_moto_specs"):
+        accordion = next(iter(_find(section, "accordion")), None)
+        items = _find(section, "accordion-item")
+        if not specs or accordion is None or not items:
+            if _find(section, "s_moto_spec_sheet"):
+                for block in _find(section, "s_accordion"):
+                    block.getparent().remove(block)
             else:
-                figure.getparent().remove(figure)
-        name_el, value_el = _spec_targets(card)
-        if value_el is not None:
-            _set_text(name_el, f"{spec['name']} ")
-            _fill_spec_values(value_el, spec["values"])
-        elif name_el is not None:
-            _set_text(name_el, f"{spec['name']}: {spec['value']}")
-        row.insert(position + offset, new_column)
+                section.getparent().remove(section)
+            continue
+        prototype = items[0]
+        for item in items:
+            item.getparent().remove(item)
+        accordion_id = accordion.get("id") or "moto_specs"
+        accordion.set("id", accordion_id)
+        for index, spec in enumerate(specs, start=1):
+            item = copy.deepcopy(prototype)
+            button = _find(item, "accordion-button")[0]
+            panel = _find(item, "accordion-collapse")[0]
+            body = _find(item, "accordion-body")[0]
+            button_id, panel_id = f"{accordion_id}_btn_{index}", f"{accordion_id}_{index}"
+            button.set("id", button_id)
+            button.set("data-bs-target", f"#{panel_id}")
+            button.set("aria-controls", panel_id)
+            panel.set("id", panel_id)
+            panel.set("data-bs-parent", f"#{accordion_id}")
+            panel.set("aria-labelledby", button_id)
+            first = index == 1
+            button.set("aria-expanded", "true" if first else "false")
+            button.set("class", " ".join([c for c in _classes(button) if c != "collapsed"] + ([] if first else ["collapsed"])))
+            panel.set("class", " ".join([c for c in _classes(panel) if c != "show"] + (["show"] if first else [])))
+            _set_text(next(iter(button.iter("span")), button), spec["name"])
+            for child in list(body):
+                body.remove(child)
+            body.text = None
+            body.append(_spec_rows(spec["values"]))
+            accordion.append(item)
+
+
+def _fill_related(wrap, related):
+    """«Otras motos» (.s_moto_related): nombre y enlace del tipo, y una tarjeta por cada otra moto del tipo,
+    copiando la primera del diseño. Sin tipo se quita la sección; sin otras motos queda solo «Volver a <tipo>»."""
+    for section in _find(wrap, "s_moto_related"):
+        if not related["type_name"]:
+            section.getparent().remove(section)
+            continue
+        for name in _find(section, "s_moto_related_type"):
+            _set_text(name, related["type_name"])
+        for link in _find(section, "s_moto_related_back"):
+            link.set("href", related["type_url"])
+        cards = _find(section, "s_moto_related_card")
+        if not cards:
+            continue
+        row = cards[0].getparent()
+        prototype = cards[0]
+        for card in cards:
+            row.remove(card)
+        for data in related["cards"]:
+            card = copy.deepcopy(prototype)
+            for link in card.iter("a"):
+                link.set("href", data["url"])
+            for image in card.iter("img"):
+                image.set("alt", data["name"])
+                if data["image_url"]:
+                    image.set("src", data["image_url"])
+            for title in _find(card, "card-title"):
+                _set_text(title, data["name"])
+            row.append(card)
+        if not related["cards"]:
+            for title in section.iter("h2"):
+                title.getparent().remove(title)
+            row.getparent().remove(row)
 
 
 CONSENT_FIELD = """
@@ -258,12 +345,14 @@ CONSENT_FIELD = """
     <div class="form-check">
         <input type="checkbox" class="s_website_form_input form-check-input form-check-input" id="moto_consent"
           name="Autorización de datos" value="Sí" required="required"/>
-        <label class="form-check-label" for="moto_consent">Autorizo el tratamiento de mis datos personales para recibir información sobre productos de la marca. 
+        <label class="form-check-label" for="moto_consent">Autorizo el tratamiento de mis datos personales para recibir información sobre productos de la marca.
            <a href="https://motosalfa.com.co/politica-tratamiento" target="_blank" style="color: rgb(226, 0, 0)">Política de Tratamiento de Datos</a>
         </label>
     </div>
 </div>
 """
+
+
 def _fill_form(wrap, moto, motos):
     for select in wrap.xpath(".//select[@name='Modelo']"):
         for option in list(select):
@@ -280,17 +369,26 @@ def _fill_form(wrap, moto, motos):
         submit.addprevious(html.fragment_fromstring(CONSENT_FIELD))
 
 
-def _fill_links(wrap, master_url, moto_url):
-    """Los botones del diseño apuntan a /hunk-160r-4v#…: en cada moto, a su propia página."""
-    if not master_url:
-        return
-    for link in wrap.iter("a"):
-        href = link.get("href") or ""
-        path, _sep, fragment = href.partition("#")
-        if path.rstrip("/").lower() == master_url.rstrip("/").lower():
-            link.set("href", f"#{fragment}" if fragment else moto_url)
+def _drop_360(wrap):
+    """Sin modelo .glb ni fotos 360°: se quita «Explórala en 360°» y los botones que llevan a ella."""
+    for block in _find(wrap, "s_moto_360"):
+        anchor = block.get("id")
+        if anchor:
+            for link in list(wrap.iter("a")):
+                if unquote(link.get("href") or "") == f"#{anchor}":
+                    link.drop_tree()
+        block.getparent().remove(block)
 
-def fill_moto_page(page_html, moto, values, master_url, editor_notice=None):
+
+def _add_structured_data(wrap, data):
+    """Datos de la moto para Google (_moto_structured_data de models/product.py) en un <script type="application/ld+json">
+    al final del contenido. «</» se escribe «<\\/» para que un texto de la moto no pueda cerrar el <script>."""
+    script = html.Element("script", {"type": "application/ld+json"})
+    script.text = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
+    wrap.append(script)
+
+
+def fill_moto_page(page_html, moto, values, editor_notice=None):
     """Devuelve el HTML de la página con los datos de la moto en el contenido principal (<main>)."""
     start = page_html.find("<main>")
     end = page_html.rfind("</main>")
@@ -302,15 +400,22 @@ def fill_moto_page(page_html, moto, values, master_url, editor_notice=None):
     _fill_price(container, values["price"])
     _fill_viewers(container, values["intro_src"], values["viewer_src"], moto)
     _fill_colors(container, values["colors"])
+    _fill_key_specs(container, values["specs"])
+    _fill_spec_sheet(container, values.get("spec_sheet_url"), moto)
     _fill_specs(container, values["specs"])
+    _fill_related(container, values["related"])
     colors = values["colors"]
     page_media = (
         {"images": colors[0]["media_images"], "videos": colors[0]["media_videos"]} if colors else values["media"]
     )
-    _fill_media(container, page_media, values["description"])
+    used = _fill_media(container, page_media, values["description"])
+    _fill_gallery(container, page_media["images"][used:], moto)
     _fill_form(container, moto, values["motos"])
-    _fill_links(container, master_url, moto._moto_url())
     _single_h1(container)
+    if not values["has_360"]:
+        _drop_360(container)
+    if values.get("structured_data"):
+        _add_structured_data(container, values["structured_data"])
     if editor_notice is not None:
         wrap = container.get_element_by_id("wrap", None)
         (wrap if wrap is not None else container).insert(0, editor_notice)

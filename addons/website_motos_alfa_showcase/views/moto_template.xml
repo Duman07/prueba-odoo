@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!--
+        [Páginas de motos] «Plantilla de motos»: diseño de todas las páginas /moto/<moto>.
+        Sale de /plantilla-hunk (Db-demo, 28-10-2026); controllers/motos.py la llena con los datos de cada moto
+        (controllers/moto_template.py). El diseño se cambia aquí, no en el editor.
+        [Formulario] País y Departamento salen de Odoo (Colombia y sus departamentos), no de ids fijos.
+    -->
+    <template id="moto_template" name="Plantilla de motos">
+    <t t-call="website.layout">
+        <div id="wrap" class="oe_structure oe_empty"><section class="s_text_block o_colored_level pt24 pb0" data-snippet="s_text_block" data-name="Texto">
+        <div class="container s_allow_columns">
+            <p><span class="o_small-fs">​</span></p></div>
+    </section><section class="s_moto_3d o_cc o_cc1 o_colored_level pt0 pb40" data-model-src="" data-model-alt="Motocicleta" data-model-yaw="90" data-moto-intro="true" data-snippet="s_moto_3d" data-name="Moto 3D">
+            <div class="container">
+                <div class="row s_moto_3d_row o_grid_mode" data-row-count="18">
+                    
+                    
+                <div class="o_grid_item g-height-2 o_colored_level g-col-lg-2 col-lg-2 order-lg-0" style="z-index: 4; grid-area: 6 / 11 / 8 / 13; order: 3;"><p>Precio Desde:&amp;nbsp;</p><p>$0.</p></div><div class="o_colored_level o_grid_item g-col-lg-2 g-height-3 col-lg-2 order-lg-0" style="z-index: 5; grid-area: 2 / 11 / 5 / 13; order: 2;">
+                        <div class="s_moto_360_panel">
+                            <h3 class="h6 mb-3 o_default_snippet_text">Colores</h3>
+                            <div class="s_moto_360_swatches">
+                                <div class="s_moto_360_swatch" style="background-color: rgb(224, 0, 0);" data-color-name="Color 1"/>
+                                <div class="s_moto_360_swatch" style="background-color: rgb(26, 27, 30);" data-color-name="Color 2"/>
+                                <div class="s_moto_360_swatch" style="background-color: rgb(138, 144, 151);" data-color-name="Color 3"/>
+                            </div>
+                            <p class="s_moto_360_color_name mb-0">Color 1</p>
+                        </div>
+                    </div><div class="o_colored_level o_grid_item g-height-7 g-col-lg-5 col-lg-5 order-lg-0" style="z-index: 1; grid-area: 1 / 1 / 8 / 6; order: 0;">
+                        <p><span class="o_small-fs"><strong><font style="color: rgb(224, 0, 0);" class="o_default_snippet_text">HERO · HUNK</font></strong></span></p>
+                        <h1><span class="display-1-fs"><strong>HUNK 160R 4V</strong></span></h1><p>
+                            <a class="btn btn-custom btn-lg mb-2" href="#cotizar" style="border-width: 1px; border-style: solid; background-color: rgb(226, 0, 0);"><font class="text-o-color-3">Contáctanos</font></a><font class="text-o-color-3">​</font>
+                            <a class="btn btn-outline-custom btn-lg mb-2" href="#vista-360" style="border-width: 1px; border-style: solid; border-color: rgb(0, 0, 0);">Ver en 360°​​</a>
+                        </p>
+                    </div><div class="o_colored_level o_grid_item g-col-lg-8 g-height-11 col-lg-8 order-lg-0" style="z-index: 2; grid-area: 8 / 3 / 19 / 11; order: 1;">
+                        <div class="s_moto_3d_stage o_not_editable">
+                            <div class="s_moto_empty">
+                                <span class="s_moto_empty_title o_default_snippet_text">Moto 3D</span>
+                                <span class="s_moto_empty_hint o_default_snippet_text">Indica la URL del modelo .glb en las opciones del bloque.</span>
+                            </div>
+                        </div>
+                    </div></div>
+            </div>
+        </section>
+        <section class="s_numbers s_moto_keyspecs o_cc o_cc1 pt24 pb24" data-name="Datos clave">
+            <div class="container">
+                <div class="row s_nb_column_fixed justify-content-center">
+                    <div class="col-6 col-lg-3 pt16 pb16 text-center s_moto_keyspec" data-name="Number Box">
+                        <p class="mb-0">
+                            <span class="s_number s_moto_keyspec_value h3-fs">160 cc</span><br/>
+                            <span class="s_moto_keyspec_label">Cilindraje</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section><section class="s_image_title o_cc o_cc5 pt32 pb32 o_colored_level oe_img_bg o_bg_img_center o_bg_img_origin_border_box" style="background-position: 50% 70%; background-image: url(&quot;/web/image/website.s_image_title_default_image&quot;) !important;" data-snippet="s_image_title" data-name="Título de la imagen">
+        <div class="o_we_bg_filter bg-black-50"/>
+        <div class="container">
+            <div class="row o_grid_mode" data-row-count="9">
+                <div class="o_grid_item g-height-9 g-col-lg-8 col-lg-8 o_colored_level" style="--grid-item-padding-y: 32px; grid-area: 1 / 1 / 10 / 9; z-index: 1;">
+                    <h1 class="display-3"><span>HUNK 160R 4V</span></h1>
+                </div>
+            </div>
+        </div>
+    </section><section class="s_title_form o_cc o_cc2 o_colored_level pb0 pt16" data-snippet="s_title_form" data-name="Título - Formulario" id="cotizar" data-anchor="true">
+        <div class="o_container_small">
+            <h2 class="text-center"><strong>Solicita la cotización de </strong><font style="color: rgb(226, 0, 0);"><strong>tu moto</strong></font></h2>
+            <p class="text-center lead">Comparte tus datos y uno de nuestros asesores se comunicara contigo.</p>
+    <section class="s_website_form pt16 pb16" data-vcss="001" data-snippet="s_website_form" data-name="Formulario">
+        <div class="container-fluid">
+            <form action="/website/form/" method="post" enctype="multipart/form-data" data-mark="*" data-pre-fill="true" data-model_name="crm.lead" data-success-mode="redirect" data-success-page="/contactus-thank-you" class="o_mark_required">
+                <div class="s_website_form_rows row s_col_no_bgcolor">
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    <div data-name="Field" class="s_website_form_field mb-3 col-12 s_website_form_required" data-type="char" data-translated-name="Tu nombre"><div class="row s_col_no_resize s_col_no_bgcolor"><label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="okdzne5ouhkf"><span class="s_website_form_label_content">Nombre</span><span class="s_website_form_mark"> *</span></label><div class="col-sm"><input class="form-control s_website_form_input" type="text" name="contact_name" required="1" placeholder="" id="okdzne5ouhkf" data-fill-with="name"/></div></div></div>
+                    <div data-name="Field" class="s_website_form_field mb-3 col-12 s_website_form_custom s_website_form_required" data-type="char" data-translated-name="Apellido"><div class="row s_col_no_resize s_col_no_bgcolor"><label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="oamwox2vp2t"><span class="s_website_form_label_content">Apellido</span><span class="s_website_form_mark"> *</span></label><div class="col-sm"><input class="form-control s_website_form_input" type="text" name="Apellido" required="1" value="" placeholder="" id="oamwox2vp2t"/></div></div></div>
+                    <div data-name="Field" class="s_website_form_field mb-3 col-12 s_website_form_required" data-type="tel" data-translated-name="Número de teléfono"><div class="row s_col_no_resize s_col_no_bgcolor"><label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="opdrdqg0lyi"><span class="s_website_form_label_content">Número de teléfono</span><span class="s_website_form_mark"> *</span></label><div class="col-sm"><input class="form-control s_website_form_input" type="tel" name="phone" value="" placeholder="" id="opdrdqg0lyi" data-fill-with="phone" required=""/></div></div></div>
+                    <div data-name="Field" class="s_website_form_field mb-3 col-12 s_website_form_required" data-type="email" data-translated-name="Tu correo"><div class="row s_col_no_resize s_col_no_bgcolor"><label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="on9nu6744yff"><span class="s_website_form_label_content">Correo</span><span class="s_website_form_mark"> *</span></label><div class="col-sm"><input class="form-control s_website_form_input" type="email" name="email_from" required="1" data-fill-with="email" id="on9nu6744yff"/></div></div></div>
+                    <div data-name="Field" class="s_website_form_field mb-3 col-12 s_website_form_custom s_website_form_required" data-type="many2one" data-translated-name="Modelo"><div class="row s_col_no_resize s_col_no_bgcolor"><label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="oxni10mpuvn"><span class="s_website_form_label_content">Modelo</span><span class="s_website_form_mark"> *</span></label><div class="col-sm"><select class="form-select s_website_form_input" name="Modelo" required="1" id="oxni10mpuvn"><option id="oxni10mpuvn0" value="Opción 1" selected="selected">Opción 1</option><option id="oxni10mpuvn1" value="Opción 2">Opción 2</option><option id="oxni10mpuvn2" value="Opción 3">Opción 3</option></select></div></div></div>
+                    <div data-name="Field" class="s_website_form_field mb-3 col-12 s_website_form_field_hidden" data-type="many2one" data-translated-name="País"><div class="row s_col_no_resize s_col_no_bgcolor"><label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="ol65hakmqvk"><span class="s_website_form_label_content">País</span></label><div class="col-sm"><select class="form-select s_website_form_input" name="country_id" id="ol65hakmqvk"><t t-set="moto_country" t-value="request.env.ref('base.co').sudo()"/><option id="ol65hakmqvk0" t-att-value="moto_country.id" selected="selected" t-out="moto_country.name"/></select></div></div></div>
+                    <div data-name="Field" class="s_website_form_field mb-3 col-12 s_website_form_required" data-type="many2one" data-translated-name="Departamento"><div class="row s_col_no_resize s_col_no_bgcolor"><label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="o8hj6uu0gipd"><span class="s_website_form_label_content">Departamento</span><span class="s_website_form_mark"> *</span></label><div class="col-sm"><select class="form-select s_website_form_input" name="state_id" id="o8hj6uu0gipd" required=""><option id="o8hj6uu0gipd0" value="" selected="selected"/><t t-foreach="request.env.ref('base.co').sudo().state_ids" t-as="moto_state"><option t-attf-id="o8hj6uu0gipd#{moto_state_index + 1}" t-att-value="moto_state.id" t-out="moto_state.name"/></t></select></div></div></div>
+                    <div data-name="Field" class="s_website_form_field mb-3 col-12 s_website_form_required" data-type="char" data-translated-name="Ciudad"><div class="row s_col_no_resize s_col_no_bgcolor"><label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="oraootygpda"><span class="s_website_form_label_content">Ciudad</span><span class="s_website_form_mark"> *</span></label><div class="col-sm"><input class="form-control s_website_form_input" type="text" name="city" value="" placeholder="" id="oraootygpda" required=""/></div></div></div>
+                    <div data-name="Field" class="s_website_form_field mb-3 col-12 s_website_form_model_required s_website_form_field_hidden" data-type="char" data-translated-name="Apellido"><div class="row s_col_no_resize s_col_no_bgcolor"><label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="opx64tsfk2x"><span class="s_website_form_label_content">Asunto</span><span class="s_website_form_mark"> *</span></label><div class="col-sm"><input class="form-control s_website_form_input" type="text" name="name" required="" placeholder="" id="opx64tsfk2x" value="Cotización de moto"/></div></div></div><div class="mb-0 py-2 col-12 s_website_form_submit text-end s_website_form_no_submit_label" data-name="Submit Button">
+                        <div style="width: 200px;" class="s_website_form_label"/>
+                        <span id="s_website_form_result"/>
+                        <a href="#" role="button" class="s_website_form_send btn btn-custom" style="border-width: 1px; border-style: solid;">Envi​​​​a​​​​r​​​​</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+        </div>
+    </section><section class="s_text_block pt40 pb40 o_colored_level" data-snippet="s_text_block" data-name="Texto">
+        <div class="container s_allow_columns">
+            <p><br/></p><div class="media_iframe_video" data-oe-expression="//www.youtube.com/embed/nbso3NVz3p8?rel=0&amp;autoplay=0"/></div>
+    </section><section class="s_moto_360 o_cc o_cc1 pt48 pb48 o_colored_level" data-model-src="" data-model-alt="Motocicleta" data-model-yaw="90" data-auto-rotate="true" data-snippet="s_moto_360" data-name="Visor 360°" id="vista-360" data-anchor="true">
+            <div class="container">
+                
+                
+                <div class="row g-4 s_moto_360_row o_grid_mode" data-row-count="11"><div class="o_grid_item g-col-lg-12 g-height-3 col-lg-12" style="grid-area: 1 / 1 / 4 / 13; z-index: 1;"><p><span class="o_small-fs"><strong><font style="color: rgb(224, 0, 0);" class="o_default_snippet_text">VISTA INTERACTIVA</font></strong></span></p><h2><strong class="o_default_snippet_text">Explórala en 360°</strong></h2></div>
+                    
+                    
+                    <div class="o_colored_level o_grid_item g-col-lg-1 g-height-1 col-lg-1" style="grid-area: 1 / 1 / 2 / 2; z-index: 3;">
+                        <div class="s_moto_360_panel">
+                            <h3 class="h6 mb-3 o_default_snippet_text">Puntos destacados</h3>
+                            <div class="s_moto_360_hotspots">
+                                <div class="s_moto_360_hotspot">
+                                    <p class="mb-0"><strong class="o_default_snippet_text">Punto destacado 1</strong></p>
+                                    <p class="mb-0 o_default_snippet_text">Describe aquí este detalle de la moto.</p>
+                                </div>
+                                <div class="s_moto_360_hotspot">
+                                    <p class="mb-0"><strong class="o_default_snippet_text">Punto destacado 2</strong></p>
+                                    <p class="mb-0 o_default_snippet_text">Describe aquí este detalle de la moto.</p>
+                                </div>
+                                <div class="s_moto_360_hotspot">
+                                    <p class="mb-0"><strong class="o_default_snippet_text">Punto destacado 3</strong></p>
+                                    <p class="mb-0 o_default_snippet_text">Describe aquí este detalle de la moto.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <div class="o_colored_level o_grid_item g-col-lg-10 g-height-9 col-lg-10" style="z-index: 2; grid-area: 3 / 2 / 12 / 12;">
+                        <div class="s_moto_360_viewer o_not_editable">
+                            <div class="s_moto_empty">
+                                <span class="s_moto_empty_title o_default_snippet_text">Visor 360°</span>
+                                <span class="s_moto_empty_hint o_default_snippet_text">Sube un modelo .glb, las fotos del giro 360° o una imagen desde las opciones del bloque.</span>
+                            </div>
+                        </div>
+                        <p class="s_moto_360_hint o_default_snippet_text">Arrastra para girar la moto. Usa la rueda o pellizca para acercar.</p>
+                    </div></div>
+            </div>
+        </section>
+        <section class="s_moto_specs pt64 pb64 o_colored_level" data-name="Especificaciones técnicas">
+        <div class="container">
+            <p><span class="o_small-fs"><font style="color: rgb(226, 0, 0);"><strong>FICHA TÉCNICA</strong></font></span></p>
+            <h2 class="mb-4 s_moto_specs_title"><strong>Especificaciones técnicas</strong></h2>
+            <div class="s_accordion" data-name="Accordion">
+                <div id="moto_specs" class="accordion">
+                    <div class="accordion-item position-relative z-1" data-name="Accordion Item">
+                        <button type="button" id="moto_specs_btn_1" class="accordion-header accordion-button justify-content-between gap-2 bg-transparent h6-fs fw-bold text-decoration-none text-reset transition-none" data-bs-target="#moto_specs_1" aria-controls="moto_specs_1" data-bs-toggle="collapse" aria-expanded="true"><span class="flex-grow-1">Motor</span></button>
+                        <div id="moto_specs_1" class="accordion-collapse collapse show" data-bs-parent="#moto_specs" role="region" aria-labelledby="moto_specs_btn_1">
+                            <div class="accordion-body">
+                                <dl class="row mb-0">
+                                    <dt class="col-sm-5">Cilindraje</dt>
+                                    <dd class="col-sm-7">160 cc</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <p class="mt-4 mb-0 s_moto_spec_sheet">
+                <a class="btn btn-primary s_moto_btn" href="#" download="ficha-tecnica.pdf"><i class="fa fa-file-pdf-o me-2" role="presentation"/>Descargar ficha técnica (PDF)</a>
+            </p>
+        </div>
+    </section>
+        <section class="s_image_gallery s_moto_gallery o_grid o_spc-small o_cc o_cc1 pt48 pb48" data-vcss="002" data-columns="3" data-name="Galería">
+            <div class="container">
+                <p><span class="o_small-fs"><font style="color: rgb(226, 0, 0);"><strong>GALERÍA</strong></font></span></p>
+                <h2 class="mb-4 s_moto_heading">Fotos de la moto</h2>
+                <div class="row s_nb_column_fixed">
+                    <div class="col-6 col-lg-4 s_moto_gallery_item">
+                        <img class="img img-fluid d-block rounded" loading="lazy" src="/web/static/img/placeholder.png" alt="Foto de la moto"/>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section class="s_moto_related o_cc o_cc1 pt48 pb48" data-name="Otras motos">
+            <div class="container">
+                <div class="d-flex flex-wrap justify-content-between align-items-baseline gap-2 mb-4">
+                    <h2 class="h3 text-uppercase mb-0 s_moto_heading">Otras motos de tipo <span class="s_moto_related_type">Motocicletas</span></h2>
+                    <a class="s_moto_related_back s_moto_back" href="/motos"><i class="fa fa-long-arrow-left me-2" role="presentation"/>Volver a <span class="s_moto_related_type">Motocicletas</span></a>
+                </div>
+                <div class="row g-4">
+                    <div class="col-6 col-lg-3 s_moto_related_card">
+                        <div class="o_carousel_product_card bg-transparent w-100 card border-0">
+                            <a class="o_carousel_product_img_link stretched-link" href="/motos">
+                                <div class="overflow-hidden rounded">
+                                    <img class="card-img-top o_img_product_square o_img_product_cover h-auto" loading="lazy" src="/web/static/img/placeholder.png" alt="Otra moto"/>
+                                </div>
+                            </a>
+                            <div class="p-3">
+                                <div class="h6 card-title text-uppercase">Otra moto</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+    </t>
+    </template>
+
+</odoo>
