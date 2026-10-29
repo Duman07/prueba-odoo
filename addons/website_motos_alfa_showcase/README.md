@@ -46,6 +46,9 @@ Los archivos del manifiesto llevan la etiqueta de su grupo (`[Bloques]`, `[Pági
 - Sin giro, sin sección 360° (28-10-2026): `values["has_360"]` (`controllers/motos.py`) y `_drop_360`
   (`controllers/moto_template.py`) quitan «Explórala en 360°» y el botón «Ver en 360°» si la moto no tiene `.glb` ni
   fotos 360°.
+- Datos clave (29-10-2026): sección `s_moto_keyspecs` (bloque «Números» de Odoo) debajo de la imagen principal, con
+  hasta 4 especificaciones «Etiqueta: valor» de la moto según `KEY_SPECS` (cilindraje, potencia, torque, frenos,
+  consumo, tanque, peso) en `controllers/moto_template.py` (`_key_specs`, `_fill_key_specs`). Sin datos clave no sale.
 - Galería (29-10-2026): sección `s_moto_gallery` (bloque «Galería de imágenes» de Odoo en cuadrícula) con las fotos de
   «Medios adicionales» del primer color que no van de fondo (`_fill_gallery`; `_fill_media` dice cuántas usó). Clic →
   foto en grande (JS de Odoo). Sin fotos de sobra no sale. Tamaño: `$moto-gallery-ratio` en `s_moto_snippets.scss`.

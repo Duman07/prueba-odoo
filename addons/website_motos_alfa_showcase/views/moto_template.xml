@@ -42,6 +42,18 @@
                         </div>
                     </div></div>
             </div>
+        </section>
+        <section class="s_numbers s_moto_keyspecs o_cc o_cc1 pt24 pb24" data-name="Datos clave">
+            <div class="container">
+                <div class="row s_nb_column_fixed justify-content-center">
+                    <div class="col-6 col-lg-3 pt16 pb16 text-center s_moto_keyspec" data-name="Number Box">
+                        <p class="mb-0">
+                            <span class="s_number s_moto_keyspec_value h3-fs">160 cc</span><br/>
+                            <span class="s_moto_keyspec_label">Cilindraje</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
         </section><section class="s_image_title o_cc o_cc5 pt32 pb32 o_colored_level oe_img_bg o_bg_img_center o_bg_img_origin_border_box" style="background-position: 50% 70%; background-image: url(&quot;/web/image/website.s_image_title_default_image&quot;) !important;" data-snippet="s_image_title" data-name="Título de la imagen">
         <div class="o_we_bg_filter bg-black-50"/>
         <div class="container">

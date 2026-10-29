@@ -1,7 +1,7 @@
 import re
 
 from unittest.mock import patch
-from odoo.addons.website_motos_alfa_showcase.controllers import motos
+from odoo.addons.website_motos_alfa_showcase.controllers import moto_template, motos
 from odoo.tests import HttpCase, new_test_user, tagged
 
 from .test_model_upload import FAKE_GLB
@@ -417,3 +417,35 @@ class TestMotoPages(HttpCase):
         with patch.object(motos, "MOTO_TEMPLATE", "website_motos_alfa_showcase.moto_template"):
             wrap = self._wrap(self.url_open(self.moto._moto_url()))
         self.assertNotIn("s_moto_gallery", wrap)
+
+    def test_key_specs(self):
+        """«Datos clave» (plantilla real): las especificaciones de KEY_SPECS, en ese orden; sin ellas no hay franja."""
+        with patch.object(motos, "MOTO_TEMPLATE", "website_motos_alfa_showcase.moto_template"):
+            wrap = self._wrap(self.url_open(self.moto._moto_url()))
+        # «160 cc 4V» no tiene etiqueta: no es un dato clave.
+        self.assertNotIn("s_moto_keyspecs", wrap)
+
+        engine = self.env["product.attribute"].create({
+            "name": "Motor clave",
+            "create_variant": "no_variant",
+            "value_ids": [(0, 0, {"name": "Tipo: Monocilíndrico"}), (0, 0, {"name": "Max. Potencia: 15 HP @ 8500 rpm."}),
+                          (0, 0, {"name": "Cilindraje: 160 cc"})],
+        })
+        self.moto.attribute_line_ids = [(0, 0, {"attribute_id": engine.id, "value_ids": [(6, 0, engine.value_ids.ids)]})]
+        with patch.object(motos, "MOTO_TEMPLATE", "website_motos_alfa_showcase.moto_template"):
+            wrap = self._wrap(self.url_open(self.moto._moto_url()))
+        section = wrap[wrap.index("s_moto_keyspecs"):wrap.index("s_image_title")]
+        self.assertEqual(section.count('s_moto_keyspec"'), 2)
+        # Orden de KEY_SPECS (cilindraje antes que potencia), no el del atributo; sin el punto final; «Tipo» no sale.
+        self.assertLess(section.index(">160 cc<"), section.index(">15 HP @ 8500 rpm<"))
+        self.assertIn(">Max. Potencia<", section)
+        self.assertNotIn("Monocilíndrico", section)
+
+    def test_key_specs_max_four(self):
+        specs = [{"name": "Ficha", "values": [
+            "Peso: 130 kg", "Tanque: 12 L", "Consumo: 45 km/l", "Frenos: disco", "Torque: 14 Nm", "Cilindraje: 160 cc",
+        ]}]
+        self.assertEqual(
+            [label for label, _detail in moto_template._key_specs(specs)],
+            ["Cilindraje", "Torque", "Frenos", "Consumo"],
+        )

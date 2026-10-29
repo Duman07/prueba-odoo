@@ -577,3 +577,31 @@ $moto-gallery-ratio: 4 / 3;                  // proporción de cada foto (ancho 
     object-fit: cover;
     cursor: zoom-in;
 }
+
+// [Páginas de motos] «Datos clave» (.s_moto_keyspecs de views/moto_template.xml, bloque «Números» de Odoo; la llena
+// _fill_key_specs de controllers/moto_template.py, 29-10-2026): el valor grande en el rojo de la página y la etiqueta debajo.
+$moto-keyspecs-value-color: $moto-brand-red;
+$moto-keyspecs-value-weight: 700;
+$moto-keyspecs-label-color: rgb(138, 144, 151);   // el gris de los textos pequeños de la plantilla
+$moto-keyspecs-label-size: 0.875rem;
+$moto-keyspecs-divider: 1px solid rgba(127, 127, 127, 0.25);   // línea entre casillas (en pantallas grandes)
+
+#wrap .s_moto_keyspecs {
+    .s_moto_keyspec_value {
+        color: $moto-keyspecs-value-color;
+        font-weight: $moto-keyspecs-value-weight;
+    }
+
+    .s_moto_keyspec_label {
+        color: $moto-keyspecs-label-color;
+        font-size: $moto-keyspecs-label-size;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    @include media-breakpoint-up(lg) {
+        .s_moto_keyspec + .s_moto_keyspec {
+            border-left: $moto-keyspecs-divider;
+        }
+    }
+}

@@ -206,6 +206,50 @@ def _spec_rows(values):
     return rows
 
 
+# «Datos clave»: etiquetas de especificación que se muestran arriba, en este orden (la etiqueta debe contener la palabra:
+# «Max. Potencia» cuenta como «potencia»). Se muestran como máximo MAX_KEY_SPECS.
+KEY_SPECS = ("cilindraje", "potencia", "torque", "freno", "consumo", "tanque", "peso")
+MAX_KEY_SPECS = 4
+
+
+def _key_specs(specs):
+    """Datos clave de la moto: de sus filas «Etiqueta: valor», una por cada palabra de KEY_SPECS, en ese orden."""
+    rows = []
+    for spec in specs:
+        for value in spec["values"]:
+            label, separator, detail = (part.strip() for part in value.partition(":"))
+            if separator and detail:
+                rows.append((label, detail.rstrip(".")))
+    keys = []
+    for word in KEY_SPECS:
+        row = next((row for row in rows if word in _norm(row[0]) and row not in keys), None)
+        if row:
+            keys.append(row)
+    return keys[:MAX_KEY_SPECS]
+
+
+def _fill_key_specs(wrap, specs):
+    """«Datos clave» (.s_moto_keyspecs, bloque «Números» de Odoo): una casilla por dato, copiando la primera del diseño;
+    sin datos clave se quita la sección."""
+    keys = _key_specs(specs)
+    for section in _find(wrap, "s_moto_keyspecs"):
+        boxes = _find(section, "s_moto_keyspec")
+        if not keys or not boxes:
+            section.getparent().remove(section)
+            continue
+        row = boxes[0].getparent()
+        prototype = boxes[0]
+        for box in boxes:
+            row.remove(box)
+        for label, detail in keys:
+            box = copy.deepcopy(prototype)
+            for value in _find(box, "s_moto_keyspec_value"):
+                _set_text(value, detail)
+            for name in _find(box, "s_moto_keyspec_label"):
+                _set_text(name, label)
+            row.append(box)
+
+
 def _fill_specs(wrap, specs):
     """«Especificaciones técnicas» (.s_moto_specs): un grupo del acordeón por especificación, copiando el primero del
     diseño; solo el primero abierto. Sin especificaciones se quita la sección."""
@@ -331,6 +375,7 @@ def fill_moto_page(page_html, moto, values, editor_notice=None):
     _fill_price(container, values["price"])
     _fill_viewers(container, values["intro_src"], values["viewer_src"], moto)
     _fill_colors(container, values["colors"])
+    _fill_key_specs(container, values["specs"])
     _fill_specs(container, values["specs"])
     _fill_related(container, values["related"])
     colors = values["colors"]
