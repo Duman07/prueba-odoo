@@ -1,11 +1,17 @@
-# Prueba de migración desde el computador de la casa (guía paso a paso, 29-10-2026)
+# Prueba de migración desde el computador de la casa (guía paso a paso, 29-10-2026; puesta al día el 29-10-2026 en la tarde)
 
 Módulos: `addons/website_motos_alfa_showcase` y `addons/motos_trazabilidad`
 
 **Qué se prueba:** que en un Odoo 18 **vacío** basta con traer el código y ejecutar **una** instalación para que
 aparezca todo lo de la moto (sitio web, inventario, CRM), sin tocar Ajustes, Studio ni el editor del sitio. Es lo
-mismo que hará el jefe en el Odoo de la empresa. En el computador del trabajo ya pasó (29-10-2026: 33 pruebas,
-0 fallos); aquí se repite en un computador que nunca vio Db-demo.
+mismo que hará el jefe en el Odoo de la empresa. En el computador del trabajo ya pasó (29-10-2026, con el código
+hasta el commit `456c377`: instalación sin errores y 44 pruebas, 0 fallos); aquí se repite en un computador que nunca
+vio Db-demo.
+
+**Qué trae el código desde el primer intento** (todo se revisa en los pasos 6 a 9):
+carrusel de `/motos`, «Datos clave» debajo de la imagen principal, «Galería», botón «Descargar ficha técnica (PDF)»,
+«Otras motos de tipo…» con «Volver a…», datos para Google (JSON-LD), fotos con caché pública y el bloque
+«Última moto vista» para el inicio.
 
 - No se copia ninguna base de datos ni ningún archivo a mano: todo llega con `git pull`.
 - La base de prueba se llama `prueba_casa`. Si en la casa tienes otra base (la del primer intento), **no se usa**.
@@ -16,10 +22,12 @@ mismo que hará el jefe en el Odoo de la empresa. En el computador del trabajo y
 ---
 
 ## Paso 0. Antes de salir del trabajo
-- [ ] Hacer el commit de la instalación en base nueva (descripción lista, en la conversación del 29-10-2026) y
-      `git push`. Sin el push, la casa no recibe nada.
-- [ ] Comprobar en GitHub (rama `fix/pyjwt-requirement`) que está el commit y que existen
-      `addons/website_motos_alfa_showcase/data/` y `addons/motos_trazabilidad/data/`.
+- [ ] `git push` de la rama `fix/pyjwt-requirement`. `git status -sb` debe decir solo
+      `## fix/pyjwt-requirement...origin/fix/pyjwt-requirement`, sin «adelante». Sin el push, la casa no recibe nada.
+- [ ] Comprobar en GitHub (rama `fix/pyjwt-requirement`) que el último commit es `456c377` («pruebas de la seccion
+      otras motos de tipo…») o uno más nuevo, y que existen `addons/website_motos_alfa_showcase/data/` y
+      `addons/motos_trazabilidad/data/`.
+- [ ] Tener a mano para el paso 7: 3-4 fotos cualquiera (`.jpg` o `.webp`) y un PDF cualquiera (de ficha técnica).
 
 ---
 
@@ -36,6 +44,8 @@ git status
   fuera del proyecto (por ejemplo al Escritorio) o bórralo.
 - Si sale algún archivo como `M` (modificado) dentro de `addons/`, descarta el cambio:
   `git restore <archivo>` (o guárdalo aparte con `git stash` si quieres conservarlo).
+- `addons/website_motos_alfa_showcase/tests/__pycache__/__init__.cpython-312.pyc` puede salir como `M`: es un archivo
+  que Python vuelve a generar solo. Descártalo igual: `git restore addons/website_motos_alfa_showcase/tests/__pycache__/`.
 - Al final, `git status` no debe mostrar nada dentro de `addons/`.
 
 ### 1.2 Traer el código
@@ -45,7 +55,7 @@ git checkout fix/pyjwt-requirement
 git pull
 git log --oneline -1
 ```
-`git log` debe mostrar el commit de la instalación en base nueva (o uno más nuevo).
+`git log` debe mostrar `456c377 pruebas de la seccion otras motos de tipo…` (o uno más nuevo).
 
 ### 1.3 Comprobar que están las dos carpetas y los archivos nuevos
 ```bash
@@ -109,8 +119,8 @@ docker exec odoo-one-odoo18-1 sh -c 'grep -E " ERROR | CRITICAL " /etc/odoo/odoo
 docker exec odoo-one-odoo18-1 sh -c 'odoo -c /etc/odoo/odoo.conf -d prueba_casa --db_host=db --db_user=odoo --db_password="$PASSWORD" -u website_motos_alfa_showcase,motos_trazabilidad --test-tags /website_motos_alfa_showcase,/motos_trazabilidad --http-port 8099 --stop-after-init'
 docker exec odoo-one-odoo18-1 sh -c 'grep -E "FAIL:|ERROR: |tests when loading" /etc/odoo/odoo-server.log | grep -v Db-demo | tail -5'
 ```
-- [ ] La última línea dice `0 failed, 0 error(s) of 33 tests when loading database 'prueba_casa'`
-      (35 o más si ya incluye las pruebas de «Otras motos»).
+- [ ] La última línea dice `0 failed, 0 error(s) of 44 tests when loading database 'prueba_casa'`
+      (o más, si después se agregan pruebas).
 
 ---
 
@@ -135,14 +145,15 @@ docker exec odoo-one-odoo18-1 sh -c 'grep -E "FAIL:|ERROR: |tests when loading" 
 ### 6.2 Formulario del producto
 **Inventario → Productos → Nuevo**, escribe un nombre cualquiera (no guardes todavía):
 - [ ] Pestaña **Atributos y variantes** visible.
-- [ ] Pestaña **Ventas** → grupo **«Página de la moto»** con **«Color principal»** y **«Fotos 360°»**
-      (solo si «Se puede vender» está marcado).
+- [ ] Pestaña **Ventas** → grupo **«Página de la moto»** con **«Color principal»**, **«Fotos 360°»** y
+      **«Ficha técnica (PDF)»** (solo si «Se puede vender» está marcado).
 - [ ] Pestaña **Inventario** (o General): **«Rastrear inventario»** con la opción **«Por número de serie»**.
 Descarta el producto (botón de descartar, la flecha curva).
 
 ### 6.3 Página Motocicletas
 Abre `http://localhost:10018/motos`:
-- [ ] Título «Motocicletas» y el bloque «Tipos de moto» (sin motos puede salir vacío).
+- [ ] Título «Motocicletas», el **carrusel** (con las fotos y textos de ejemplo de Odoo, botones rojos) y el bloque
+      «Tipos de moto» (sin motos puede salir vacío).
 - [ ] En el encabezado, **«Modelos»** y **«Motocicletas»**, cada uno **una sola vez**.
 
 ---
@@ -172,20 +183,49 @@ Inventario → Productos → Nuevo:
 ### 7.4 Subir archivos (lo que no salía en el primer intento)
 - [ ] Botón **Variantes** (arriba en el producto) → abre **Rojo** → grupo **«Fotos 360°»** → sube 3 fotos a la vez
       (cualquier `.jpg`/`.webp` llamadas `moto-1`, `moto-2`, `moto-10`). Se ven las tres. Guarda.
+- [ ] En la variante **Rojo**, **«Medios adicionales»** (o en el producto, pestaña Ventas → «Medios adicionales para
+      el producto»): agrega 3 fotos. La primera será el fondo de la sección con la frase; las otras dos, la «Galería».
+- [ ] En el producto, pestaña **Ventas** → «Página de la moto» → **«Ficha técnica (PDF)»**: sube el PDF. Guarda.
 - [ ] (Opcional) En el producto, con el **clip** de adjuntos (arriba a la derecha, en el chat), sube un `.glb`.
+
+### 7.5 Una segunda moto del mismo tipo (para «Otras motos»)
+Inventario → Productos → Nuevo: nombre `Moto Prueba Dos`, **Se puede vender**, categoría `MOTOS / Urbana / Prueba`,
+una foto. Guarda y **publícala** (como en 7.3).
 
 ---
 
 ## Paso 8. Revisar la página de la moto
 Abre `http://localhost:10018/motos` → tarjeta **Urbana** → **Moto Prueba** (o desde el menú «Modelos»).
 - [ ] Nombre «Moto Prueba», precio `$ 9.990.000`, muestras **Rojo** y **Negro**; al tocar un color cambia la imagen.
+- [ ] **«Datos clave»** debajo de la imagen principal: «160 cc» y «15 HP» en rojo, con «Cilindraje» y «Potencia»
+      en gris debajo.
 - [ ] **«Especificaciones técnicas»**: acordeón con «Motor» abierto («−»), filas «Cilindraje / 160 cc» y
-      «Potencia / 15 HP».
+      «Potencia / 15 HP». Debajo, el botón rojo **«Descargar ficha técnica (PDF)»**: al dar clic descarga el PDF del 7.4.
+- [ ] **«Galería»** («Fotos de la moto»): las 2 fotos de «Medios adicionales» que no fueron de fondo. Al dar clic, la
+      foto se abre en grande.
+- [ ] Al final, **«Otras motos de tipo Urbana»** en negrilla con la tarjeta de «Moto Prueba Dos», y **«Volver a
+      Urbana»** en rojo (no en morado), que lleva a `/motos/urbana-…`.
 - [ ] Con las fotos del 7.4: aparece la sección «Explórala en 360°» y al arrastrar gira (moto-1 → moto-2 → moto-10).
       **Sin** fotos ni `.glb` esa sección no aparece (si quieres verlo, prueba antes del 7.4).
 - [ ] **Sin imágenes rotas**: `F12` → pestaña **Consola** (y **Red**, filtrando por «404»): ningún error 404.
 - [ ] En celular (`F12` → ícono de celular): se ve bien y el botón de WhatsApp no tapa el pie.
-- [ ] `/motos/urbana-…` muestra la tarjeta de «Moto Prueba».
+- [ ] `/motos/urbana-…` muestra las tarjetas de «Moto Prueba» y «Moto Prueba Dos», **sin** el carrusel.
+- [ ] **Datos para Google:** `Ctrl+U` (ver código fuente) → `Ctrl+F` «ld+json»: sale un bloque con `"Moto Prueba"`,
+      `"Hero"`, `"price": "9990000"` y `"priceCurrency": "COP"`.
+- [ ] **Caché de las fotos:** `F12` → **Red** → recarga → clic en una foto de `/moto/media/…` → **Encabezados de
+      respuesta**: `Cache-Control: public, max-age=86400`.
+
+### 8.1 Bloque «Última moto vista» en el inicio
+Esto sí se hace en el editor, porque es lo mismo que hará el jefe en el inicio de la empresa (paso 9 de «En
+producción» en `MIGRACION_A_OTRO_ESPACIO_DE_ODOO.md`):
+1. Abre el inicio (`http://localhost:10018/`) → **Editar** → panel de bloques, grupo **«Motos Alfa»** → arrastra
+   **«Última moto vista»** a la página → **Guardar**.
+2. Abre el inicio en una **ventana privada** (`Ctrl+Shift+N`):
+   - [ ] El bloque **no** aparece (todavía no has visto ninguna moto en esa ventana).
+3. En esa misma ventana abre «Moto Prueba» y vuelve al inicio:
+   - [ ] Sale la **foto en grande** y el **nombre** de «Moto Prueba»; clic → su página.
+4. Abre «Moto Prueba Dos» y vuelve al inicio:
+   - [ ] Ahora sale «Moto Prueba Dos» (se recuerda solo la última).
 
 ---
 
@@ -218,7 +258,9 @@ En la página de la moto, «Solicita la cotización de tu moto»:
 docker exec odoo-one-odoo18-1 sh -c 'odoo -c /etc/odoo/odoo.conf -d prueba_casa --db_host=db --db_user=odoo --db_password="$PASSWORD" -u website_motos_alfa_showcase,motos_trazabilidad --stop-after-init --no-http'
 ```
 Recarga Odoo y revisa:
-- [ ] La moto, sus fotos 360°, la serie con BIN y chasis y la oportunidad siguen ahí.
+- [ ] La moto, sus fotos 360°, sus «Medios adicionales», la ficha PDF, la serie con BIN y chasis y la oportunidad
+      siguen ahí.
+- [ ] El bloque «Última moto vista» sigue en el inicio.
 - [ ] Una sola categoría **MOTOS**; «Modelos» y «Motocicletas» una sola vez en el encabezado.
 - [ ] «Variantes» y «Lotes y números de serie» siguen marcados.
 
@@ -229,6 +271,9 @@ Recarga Odoo y revisa:
   `MIGRACION_A_OTRO_ESPACIO_DE_ODOO.md`.
 - **Algo falló:** anota el número del paso, qué esperabas y qué salió (una captura o las líneas del log). **No lo
   arregles en Ajustes, Studio ni el editor**: el arreglo va en el código, si no el jefe tendría el mismo problema.
+- **No guardes cambios en el editor sobre `/motos` ni las páginas de las motos** durante la prueba: crearían copias de
+  la página que tapan las del módulo (lo que pasó en el trabajo el 29-10-2026). El único guardado en el editor es el
+  del bloque en el inicio (8.1).
 
 ## Paso 13. Limpiar (opcional)
 `http://localhost:10018/web/database/manager` → **Delete** junto a `prueba_casa` (pide la contraseña maestra).
