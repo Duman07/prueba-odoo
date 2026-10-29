@@ -24,7 +24,8 @@
         "data/crm_lead_form_whitelist.xml",
         # [Páginas de motos] «Plantilla de motos»: diseño de todas las páginas /moto/<moto> (controllers/motos.py);
         # («Especificaciones técnicas» es un acordeón .s_moto_specs que llena _fill_specs)
-        # («Otras motos de tipo <tipo>» y «Volver a <tipo>» es la sección .s_moto_related que llena _fill_related)
+        # («Otras motos de tipo <tipo>» y «Volver a <tipo>» es la sección .s_moto_related que llena _fill_related;
+        # «Galería» es .s_moto_gallery, bloque s_image_gallery de Odoo, que llena _fill_gallery)
         "views/moto_template.xml",
         # [Tipos de moto] Página «Motocicletas» (/motos) con el carrusel (solo en /motos), el bloque «Tipos de moto» y su menú;
         # /motos/<tipo> usa su diseño (sin el carrusel: moto_type, controllers/motos.py)
@@ -52,6 +53,7 @@
             # [Páginas de motos] + [Tipos de moto] ... y el estilo de la página para lo que agrega el código: $moto-brand-red,
             # títulos .s_moto_heading en negrilla, enlaces .s_moto_back en rojo («Volver a <tipo>», «Todos los tipos»)
             # y botones .s_moto_btn en rojo (carrusel de /motos)
+            # [Páginas de motos] ... y las fotos de la «Galería» del mismo tamaño (.s_moto_gallery, $moto-gallery-ratio)
             "website_motos_alfa_showcase/static/src/snippets/s_moto_snippets.scss",
             "website_motos_alfa_showcase/static/src/js/model_viewer_loader.js",
             "website_motos_alfa_showcase/static/src/js/frame_sequence.js",

@@ -565,3 +565,15 @@ $moto-heading-weight: 700;                   // títulos en negrilla
         color: #ffffff;
     }
 }
+
+// [Páginas de motos] «Galería» (.s_moto_gallery de views/moto_template.xml, la llena _fill_gallery de
+// controllers/moto_template.py, 29-10-2026): fotos del mismo tamaño, recortadas al centro. Al hacer clic Odoo las abre
+// en grande (bloque s_image_gallery); esa vista ampliada no usa estas reglas y muestra la foto completa.
+$moto-gallery-ratio: 4 / 3;                  // proporción de cada foto (ancho / alto)
+
+#wrap .s_moto_gallery img {
+    width: 100%;
+    aspect-ratio: $moto-gallery-ratio;
+    object-fit: cover;
+    cursor: zoom-in;
+}

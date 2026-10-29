@@ -145,6 +145,17 @@
             </div>
         </div>
     </section>
+        <section class="s_image_gallery s_moto_gallery o_grid o_spc-small o_cc o_cc1 pt48 pb48" data-vcss="002" data-columns="3" data-name="Galería">
+            <div class="container">
+                <p><span class="o_small-fs"><font style="color: rgb(226, 0, 0);"><strong>GALERÍA</strong></font></span></p>
+                <h2 class="mb-4 s_moto_heading">Fotos de la moto</h2>
+                <div class="row s_nb_column_fixed">
+                    <div class="col-6 col-lg-4 s_moto_gallery_item">
+                        <img class="img img-fluid d-block rounded" loading="lazy" src="/web/static/img/placeholder.png" alt="Foto de la moto"/>
+                    </div>
+                </div>
+            </div>
+        </section>
         <section class="s_moto_related o_cc o_cc1 pt48 pb48" data-name="Otras motos">
             <div class="container">
                 <div class="d-flex flex-wrap justify-content-between align-items-baseline gap-2 mb-4">

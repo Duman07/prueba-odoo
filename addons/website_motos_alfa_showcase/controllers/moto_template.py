@@ -155,6 +155,7 @@ def _fill_media(wrap, media, description):
     ]
     for section, image in zip(sections, media["images"]):
         section.set("style", BACKGROUND_IMAGE.sub(f'background-image: url("{image}")', section.get("style"), count=1))
+    used = min(len(sections), len(media["images"]))
     for video, src in zip(_find(wrap, "media_iframe_video"), media["videos"]):
         video.set("data-oe-expression", src)
         iframe = next(iter(video.iter("iframe")), None)
@@ -164,6 +165,27 @@ def _fill_media(wrap, media, description):
         title = next((el for el in sections[0].iter("h1", "h2", "h3", "h4", "h5", "h6")), None)
         if title is not None:
             _set_text(title, description)
+    return used
+
+
+def _fill_gallery(wrap, images, moto):
+    """«Galería» (.s_moto_gallery): una foto por cada imagen de «Medios adicionales» que no se usó de fondo, copiando la
+    primera del diseño; sin fotos se quita la sección. Al hacer clic Odoo la abre en grande (bloque s_image_gallery)."""
+    for section in _find(wrap, "s_moto_gallery"):
+        items = _find(section, "s_moto_gallery_item")
+        if not images or not items:
+            section.getparent().remove(section)
+            continue
+        row = items[0].getparent()
+        prototype = items[0]
+        for item in items:
+            row.remove(item)
+        for number, src in enumerate(images, start=1):
+            item = copy.deepcopy(prototype)
+            for image in item.iter("img"):
+                image.set("src", src)
+                image.set("alt", f"{moto.name} - foto {number}")
+            row.append(item)
 
 
 def _spec_rows(values):
@@ -315,7 +337,8 @@ def fill_moto_page(page_html, moto, values, editor_notice=None):
     page_media = (
         {"images": colors[0]["media_images"], "videos": colors[0]["media_videos"]} if colors else values["media"]
     )
-    _fill_media(container, page_media, values["description"])
+    used = _fill_media(container, page_media, values["description"])
+    _fill_gallery(container, page_media["images"][used:], moto)
     _fill_form(container, moto, values["motos"])
     _single_h1(container)
     if not values["has_360"]:

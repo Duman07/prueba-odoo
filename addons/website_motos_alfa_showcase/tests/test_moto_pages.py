@@ -393,3 +393,27 @@ class TestMotoPages(HttpCase):
         # Sin descripción, el título de la sección con fondo es el nombre de la moto.
         self.assertIn('<h2 class="display-3 h1"><span>Moto Prueba 160</span></h2>', wrap)
         self.assertNotIn("Transforme sus espacios", wrap)
+
+    def test_gallery_with_unused_media(self):
+        """«Galería» (plantilla real): las fotos de «Medios adicionales» que no van de fondo; sin ellas no hay galería."""
+        Media = self.env["product.image"]
+        photos = Media.create([
+            {"name": f"Foto {n}.png", "image_1920": PIXEL_PNG, "product_tmpl_id": self.moto.id, "sequence": n}
+            for n in (1, 2, 3)
+        ])
+        with patch.object(motos, "MOTO_TEMPLATE", "website_motos_alfa_showcase.moto_template"):
+            wrap = self._wrap(self.url_open(self.moto._moto_url()))
+        background, *gallery = [self.moto._moto_media_url(photo) for photo in photos]
+        section = wrap[wrap.index("s_moto_gallery"):wrap.index("s_moto_related")]
+        # La primera foto es el fondo de «Título de la imagen»; las otras dos, la galería, en su orden.
+        self.assertIn(f'background-image: url("{background}")', wrap)
+        self.assertNotIn(background, section)
+        self.assertEqual(section.count("s_moto_gallery_item"), 2)
+        self.assertLess(section.index(gallery[0]), section.index(gallery[1]))
+        self.assertIn('alt="Moto Prueba 160 - foto 1"', section)
+        self.assertNotIn("placeholder.png", section)
+
+        photos[1:].unlink()
+        with patch.object(motos, "MOTO_TEMPLATE", "website_motos_alfa_showcase.moto_template"):
+            wrap = self._wrap(self.url_open(self.moto._moto_url()))
+        self.assertNotIn("s_moto_gallery", wrap)
