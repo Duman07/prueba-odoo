@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo noupdate="1">
 
-    <!-- [Inventario de motos] Categoría raíz MOTOS (MOTO_CATEGORY_NAME, models/product.py): solo al instalar
-         (noupdate) y solo si no existe ya una con ese nombre, para no tener dos «MOTOS». Los tipos (Urbana…) y las
-         líneas (Hunk…) se crean a mano dentro de ella. -->
-    <function model="product.category" name="_moto_create_root"/>
+    <!-- [Inventario de motos] Categoría raíz MOTOS del módulo (MOTO_ROOT_XMLID, models/product.py). Se crea al instalar
+         y se reconoce por este id, no por el nombre: si la base ya tenía una categoría «MOTOS», no se usa ni se modifica.
+         Los tipos (Urbana…) y las líneas (Hunk…) se crean a mano dentro de ella. noupdate: si se le cambia el nombre,
+         -u no lo devuelve. -->
+    <record id="category_motos" model="product.category">
+        <field name="name">MOTOS</field>
+    </record>
 
 </odoo>

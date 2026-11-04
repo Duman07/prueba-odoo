@@ -68,12 +68,14 @@
     </template>
 
     <!-- [Páginas de motos] Mega menú «Modelos»: su contenido lo arma moto_mega_menu_content
-         (models/website_menu.py lo reconoce por el nombre «Modelos»). Al instalar, Odoo lo copia en cada sitio. -->
+         (models/website_menu.py lo reconoce por moto_catalog, no por el nombre). Al instalar, Odoo lo copia en cada sitio
+         con moto_catalog incluido. -->
     <record id="menu_modelos" model="website.menu">
         <field name="name">Modelos</field>
         <field name="url">#</field>
         <field name="parent_id" ref="website.main_menu"/>
         <field name="is_mega_menu" eval="True"/>
+        <field name="moto_catalog" eval="True"/>
         <field name="sequence">25</field>
     </record>
 

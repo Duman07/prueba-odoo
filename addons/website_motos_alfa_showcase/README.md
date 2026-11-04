@@ -2,6 +2,20 @@
 
 Integrado en el sitio existente mediante `website.layout` (usa el encabezado, el menú y el pie de página del sitio).
 
+## Después de instalar (una sola vez, a mano)
+El módulo no cambia Ajustes de Odoo para todos los usuarios (04-11-2026). Si la base no los tiene activos, activarlos en
+**Ajustes**:
+- **Ventas → Productos → Variantes**: colores de la moto, menú «Atributos», pestaña «Atributos y variantes» y «Fotos 360°» de
+  cada color. Sin esto, la moto funciona con las «Fotos 360°» del producto, sin colores.
+- **Inventario → Trazabilidad → Lotes y números de serie**: necesario para BIN y chasis (`motos_trazabilidad`).
+
+El módulo tampoco usa nada que ya existiera en la base:
+- Crea su propia categoría **MOTOS** (`data/product_category_motos.xml`, id interno `category_motos`). Si la base ya tenía
+  una categoría «MOTOS», queda igual que antes (sus productos siguen en la tienda normal) y en la lista se verán dos
+  «MOTOS»: las motos van en la del módulo. Se puede renombrar la otra para distinguirlas.
+- Crea su propio menú **Modelos** (`views/moto_mega_menu.xml`, campo `moto_catalog`). Un menú «Modelos» que ya existiera
+  no se modifica.
+
 ## Relación entre archivos
 Los archivos del manifiesto llevan la etiqueta de su grupo (`[Bloques]`, `[Páginas de motos]`, `[Formulario]`, `[Tipos de moto]`, `[Bloque Motos]`, `[whatsApp]`, `[Inventario de motos]`).
 
@@ -11,17 +25,8 @@ Los archivos del manifiesto llevan la etiqueta de su grupo (`[Bloques]`, `[Pági
 - `static/src/snippets/s_moto_3d/000.js` y `static/src/snippets/s_moto_360/000.js`: widgets de los bloques; importan
   `static/src/js/model_viewer_loader.js` (carga `static/lib/model-viewer/model-viewer.min.js`) y `static/src/js/frame_sequence.js`.
 - `static/src/js/editor/model_upload_option.js`: subir archivos desde el editor → `controllers/main.py` (`/website_motos_alfa_showcase/upload_model`).
-- `static/src/snippets/s_moto_360/options.js`: ubicar los puntos destacados en una foto 360° («Foto n.º» + «Ubicar») o sobre
-  el modelo 3D. Para las fotos le pide el clic al widget (`s_moto_360/000.js`) con los eventos `moto-show-frame` y
-  `moto-pick-photo`; el widget usa `pickPoint()`/`pointToView()` de `static/src/js/frame_sequence.js` y dibuja el círculo
-  con la burbuja del texto (estilos en `s_moto_snippets.scss`).
-- **Puntos destacados ocultos por ahora (27-10-2026)**, se dejan para más adelante: una regla de
-  `s_moto_snippets.scss` esconde el panel y los marcadores, y el panel está comentado en `s_moto_snippets.xml`
-  (el bloque nuevo ya no lo trae). Las plantillas guardadas conservan sus puntos. Para volver a mostrarlos: borrar esa
-  regla y descomentar el panel. Pendiente: guardarlos por moto (en el producto) y no en la plantilla.
-- En `s_moto_360` cada panel («Colores», «Puntos destacados») va en su propia columna: en cuadrícula se mueven por separado.
-  Los puntos destacados deben quedar dentro de la sección «Visor 360°» (`s_moto_360/000.js` solo los busca ahí);
-  el panel «Colores» también puede ir en «Moto 3D» (lo atiende `s_moto_3d/000.js`).
+- En `s_moto_360` el panel «Colores» va en su propia columna (en cuadrícula se mueve por separado); también puede ir
+  en «Moto 3D» (lo atiende `s_moto_3d/000.js`).
 - Pruebas: `tests/test_model_upload.py`.
 
 **[Páginas de motos] `/moto/<moto>` y mega menú «Modelos»**
@@ -73,7 +78,8 @@ Los archivos del manifiesto llevan la etiqueta de su grupo (`[Bloques]`, `[Pági
   menú, «Tipos de moto» ni el formulario; `_get_moto` (`controllers/motos.py`) da 404 a su página y fotos, salvo a los
   editores del sitio. `MENU_FIELDS` incluye `is_published`/`website_published` para refrescar el menú al publicar.
 - `views/moto_mega_menu.xml` + `models/website_menu.py`: el menú «Modelos» del encabezado (28-10-2026, antes se
-  creaba a mano) y su mega menú con las motos por subcategoría.
+  creaba a mano) y su mega menú con las motos por subcategoría. Se reconoce por el campo `moto_catalog` (04-11-2026, antes
+  por el nombre), que Odoo copia con el menú en cada sitio web.
 - Pruebas: `tests/test_moto_pages.py` (reutiliza `FAKE_GLB` de `tests/test_model_upload.py`; `test_moto_template_from_module` dibuja la plantilla real).
 
 **[Bloque Motos] Bloque «Última moto vista» (para la página de inicio, 29-10-2026)**
@@ -103,7 +109,7 @@ Los archivos del manifiesto llevan la etiqueta de su grupo (`[Bloques]`, `[Pági
 - Pruebas: `tests/test_moto_types.py` (reutiliza `PIXEL_PNG` de `tests/test_moto_pages.py`; `TestMotosPageCarousel` usa la página real).
 
 **[Formulario] Departamentos de Colombia, casilla de autorización y botón ENVIAR**
-- `static/src/js/colombia_form_states.js` (formularios `.s_website_form`) → `controllers/colombia.py` (`/website_motos_alfa_showcase/colombia_states`).
+- `static/src/js/colombia_form_states.js` (solo el formulario de cotización de las motos, `.s_moto_quote_form`) → `controllers/colombia.py` (`/website_motos_alfa_showcase/colombia_states`).
 - Casilla de autorización de datos: `controllers/moto_template.py` (`CONSENT_FIELD`, `_fill_form`) la pone antes de ENVIAR en
   `/moto/<moto>`; su estilo y el del botón ENVIAR están en `static/src/snippets/s_moto_snippets.scss`.
 - `data/crm_lead_form_whitelist.xml` (29-10-2026): permite que el formulario de cotización (de `crm.lead`) guarde
@@ -114,12 +120,11 @@ Los archivos del manifiesto llevan la etiqueta de su grupo (`[Bloques]`, `[Pági
 - `__manifest__.py` → `depends`: `website_sale` (tienda, variantes), `website_crm` (CRM y su formulario), `stock`
   (inventario) y `motos_trazabilidad` (BIN, chasis e historial del número de serie, `addons/motos_trazabilidad`).
   Con un solo `-i website_motos_alfa_showcase` se instala todo.
-- `data/product_variant_group.xml`: activa «Variantes» (`product.group_product_variant` implicado en
-  `base.group_user`): colores, menú «Atributos», «Atributos y variantes», «Fotos 360°» de cada color. Es `<function>`
-  porque `base.group_user` es `noupdate` y un `<record>` se saltaría con `-u`. «Lotes y números de serie» lo activa
-  `motos_trazabilidad` (`data/stock_lot_group.xml`).
-- `data/product_category_motos.xml` + `_moto_create_root` (`models/product.py`): crea la categoría raíz MOTOS solo al
-  instalar (`noupdate`) y solo si no existe, para no tener dos.
+- «Variantes» y «Lotes y números de serie» ya no se activan solos (04-11-2026): ver «Después de instalar».
+- `data/product_category_motos.xml` + `_moto_root` (`models/product.py`): la categoría raíz MOTOS del módulo, reconocida
+  por su id interno (`MOTO_ROOT_XMLID`) y no por el nombre (04-11-2026).
+- `migrations/18.0.2.2.0/`: solo al actualizar desde una versión anterior (no al instalar). Asigna el id interno a la
+  «MOTOS» que ya usaba el módulo y marca `moto_catalog` en los menús «Modelos» que ya eran el catálogo.
 - Pruebas: `tests/test_install_config.py`.
 
 **[whatsApp] Botón flotante**
@@ -137,7 +142,7 @@ cada tipo van las líneas (ECO, Hunk, XPULSE, XOOM) con sus motos: `MOTOS / Urba
 - Si `/motos` no está publicada, `/motos/<tipo>` tampoco se ve (salvo para los editores). El diseño se cambia en `views/motos_page.xml`.
 
 ## Motos del inventario: páginas y mega menú automáticos
-Cada producto de la categoría **MOTOS** (o de sus subcategorías) que se pueda vender tiene su página en `/moto/<nombre>-<id>`.
+Cada producto de la categoría **MOTOS** del módulo (o de sus subcategorías) que se pueda vender tiene su página en `/moto/<nombre>-<id>`.
 Todas usan el **mismo diseño**: la «Plantilla de motos» (`views/moto_template.xml`, 28-10-2026). Antes cada categoría
 elegía una página maestra hecha en el editor; eso se quitó para que el diseño viaje con el código. El diseño se cambia
 en ese XML y se actualiza el módulo (`-u`).
@@ -173,16 +178,15 @@ El mega menú **Modelos** (`views/moto_mega_menu.xml`) lista las motos, una colu
 En el editor del sitio: Editar → panel Bloques → categoría «Motos Alfa».
 
 - «Moto 3D» (`s_moto_3d`): muestra un modelo GLB/glTF con animación de entrada (entrada, aceleración, giro a la derecha, frenada; 2,6 s). Se reproduce una vez al hacerse visible y tiene botón «Repetir animación». Con una foto (o fotos 360°, de las que usa la primera) muestra la foto fija, sin animación. Se omite si el visitante pidió reducir el movimiento o si la opción «Animación de entrada» está apagada.
-- «Visor 360°» (`s_moto_360`): rotación con arrastre, zoom, giro automático, restablecer vista y pantalla completa, con un panel lateral de Colores y Puntos destacados.
+- «Visor 360°» (`s_moto_360`): rotación con arrastre, zoom, giro automático, restablecer vista y pantalla completa, con un panel lateral de Colores.
   - Colores: cada círculo se mueve, duplica o borra desde el editor. Opciones: color, nombre, un `.glb` propio para ese color o una variante de material del modelo.
-  - Puntos destacados: el texto se edita directamente; cada punto se mueve, duplica o borra. Con la opción «Ubicación en el modelo → Ubicar» y un clic sobre la moto queda fijado su marcador numerado. En el editor, un número con borde punteado indica que el punto aún no está ubicado. Al pulsar un punto (en la lista o en el modelo), la cámara se acerca a ese detalle.
 
 Opciones (pestaña Personalizar, con el bloque seleccionado):
 - «Subir modelo o imagen»: sube el archivo desde el equipo (máx. 50 MB, solo usuarios que pueden editar el sitio) y rellena «Archivo (modelo o imagen)». También se puede pegar una URL.
   - Formatos: `.glb`, `.gltf` (solo con los datos incrustados; si usa archivos `.bin` o texturas aparte, exportar como `.glb`), `.png`, `.jpg`, `.webp`, `.gif` y `.avif`. Se comprueba el contenido real del archivo, no solo la extensión. SVG no se admite porque puede contener scripts.
-  - Con una imagen, «Moto 3D» muestra la foto fija y el «Visor 360°» la muestra estática: se ocultan el giro, el zoom y restablecer, y se mantiene la pantalla completa. Los puntos destacados solo se pueden ubicar sobre un modelo 3D.
+  - Con una imagen, «Moto 3D» muestra la foto fija y el «Visor 360°» la muestra estática: se ocultan el giro, el zoom y restablecer, y se mantiene la pantalla completa.
 - «Subir fotos 360°» (Visor 360° y cada color): selecciona a la vez todas las fotos tomadas alrededor de la moto (p. ej. 24, una cada 15°). Se ordenan por nombre con orden natural (`moto-2` va antes que `moto-10`), así que conviene numerarlas en el orden del giro. Formatos: `.png`, `.jpg`, `.webp` y `.avif`. Las URL quedan en «Archivo», separadas por espacios.
-  - El visitante gira la moto arrastrando (todo el ancho del visor = una vuelta) o con las flechas del teclado. Funcionan el giro automático, el zoom (botones, rueda y pellizco con dos dedos en el celular), restablecer y la pantalla completa. Los marcadores de los puntos destacados no se muestran, porque necesitan un modelo 3D.
+  - El visitante gira la moto arrastrando (todo el ancho del visor = una vuelta) o con las flechas del teclado. Funcionan el giro automático, el zoom (botones, rueda y pellizco con dos dedos en el celular), restablecer y la pantalla completa.
   - «Invertir sentido (fotos)»: úsalo si al arrastrar la moto gira al revés.
   - En «Moto 3D», una secuencia muestra solo la primera foto.
 - Texto alternativo, Orientación del modelo (0/90/180/270°) para corregir modelos exportados con otro eje frontal.
