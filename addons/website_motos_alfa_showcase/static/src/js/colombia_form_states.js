@@ -17,13 +17,14 @@ function loadColombiaStates() {
 }
 
 /**
- * Formularios del sitio con el campo Estado (state_id): solo se atiende en Colombia,
- * así que la lista se limita a sus departamentos. Si el formulario no tiene campo País,
+ * Formulario «Solicita la cotización» de las páginas de motos (.s_moto_quote_form, views/moto_template.xml)
+ * con el campo Estado (state_id): solo se atiende en Colombia, así que la lista se limita a sus departamentos.
+ * Los demás formularios del sitio no se tocan. Si el formulario no tiene campo País,
  * se envía Colombia en un campo oculto para que el registro quede con país.
  * En el editor no se aplica y destroy() deja el HTML como estaba, para no guardarlo filtrado.
  */
 publicWidget.registry.MotoColombiaFormStates = publicWidget.Widget.extend({
-    selector: ".s_website_form form, form.s_website_form",
+    selector: ".s_moto_quote_form form",
 
     async start() {
         await this._super(...arguments);

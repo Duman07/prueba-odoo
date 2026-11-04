@@ -341,9 +341,9 @@ def _fill_related(wrap, related):
 
 
 CONSENT_FIELD = """
-<div class="s_website_form_field s_website_form_custom s_website_form_custom s_website_form_required s_moto_form_consent mb-3 col-12" data-type="boolean">
+<div class="s_website_form_field s_website_form_custom s_website_form_required s_moto_form_consent mb-3 col-12" data-type="boolean">
     <div class="form-check">
-        <input type="checkbox" class="s_website_form_input form-check-input form-check-input" id="moto_consent"
+        <input type="checkbox" class="s_website_form_input form-check-input" id="moto_consent"
           name="Autorización de datos" value="Sí" required="required"/>
         <label class="form-check-label" for="moto_consent">Autorizo el tratamiento de mis datos personales para recibir información sobre productos de la marca.
            <a href="https://motosalfa.com.co/politica-tratamiento" target="_blank" style="color: rgb(226, 0, 0)">Política de Tratamiento de Datos</a>

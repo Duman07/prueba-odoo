@@ -1,6 +1,6 @@
 {
     "name": "Trazabilidad de Motos y Componentes",
-    "version": "18.0.1.1.0",
+    "version": "18.0.1.2.0",
     "summary": "Identificación por BIN y chasis e historial de componentes instalados",
     "category": "Inventory/Inventory",
     "author": "Personalización local",
@@ -8,10 +8,7 @@
     "depends": ["stock"],
     # Grupos de archivos relacionados (detalle en el README, «Relación entre archivos»):
     #   [Lotes de motos] BIN, chasis, «Es una moto» e historial de componentes en el lote/serie
-    #   [Ajustes] Ajustes de Odoo que el módulo activa solo (sin tocar Ajustes a mano)
     "data": [
-        # [Ajustes] «Lotes y números de serie» (stock.group_production_lot) para todos los usuarios internos
-        "data/stock_lot_group.xml",
         # [Lotes de motos] Permisos del historial de componentes (moto.component.assignment)
         "security/ir.model.access.csv",
         # [Lotes de motos] BIN, chasis, «Es una moto» y pestaña «Componentes e historial» en el lote/serie

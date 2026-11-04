@@ -2,6 +2,7 @@
 /postgresql/
 /etc/filestore/
 /etc/sessions/
+/etc/addons/
 
 # Configuración y secretos locales
 /etc/odoo.conf
@@ -19,9 +20,10 @@ __pycache__/
 .venv/
 venv/
 
+# Respaldos y paquetes generados (pesan mucho y tienen datos de la base)
+/backups/
+*.dump
+*.tar.gz
+
 # Archivos del sistema
-.DS_Storepostgresql/
-etc/odoo-server.log
-etc/addons/
-etc/sessions/
-etc/filestore/
+.DS_Store
