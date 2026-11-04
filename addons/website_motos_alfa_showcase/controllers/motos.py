@@ -1,6 +1,5 @@
 from lxml import html
 from werkzeug.exceptions import NotFound
-from urllib.parse import quote
 
 from odoo import http
 from odoo.http import request
@@ -19,7 +18,8 @@ MOTOS_PAGE = "website_motos_alfa_showcase.motos_page"
 
 # Página del editor con el bloque «Tipos de moto»; /motos/<tipo> la muestra con las motos de ese tipo.
 MOTOS_PAGE_URL = "/motos"
-WHATSAPP_NUMBER = "573223995269"
+
+
 def sitemap_motos(env, rule, qs):
     """Páginas de las motos publicadas en /sitemap.xml (antes no estaban: sitemap=False)."""
     for moto in env["product.template"]._moto_search():
@@ -83,8 +83,7 @@ class MotoPages(http.Controller):
         base_url = request.httprequest.host_url.rstrip("/")
         values["structured_data"] = moto._moto_structured_data(base_url, request.website.currency_id)
         moto_link = base_url + moto._moto_url()
-        whatsapp_text = f"Hola Motos Alfa, estoy interesado en la moto {moto.name}"
-        whatsapp_url = f"https://wa.me/{WHATSAPP_NUMBER}?text={quote(whatsapp_text)}"
+        whatsapp_url = request.website._moto_whatsapp_url(moto)
         # Sin marcas del editor: así nadie puede guardar los datos de esta moto dentro del diseño maestro.
         page_html = request.env["ir.ui.view"].with_context(inherit_branding=False)._render_template(
             MOTO_TEMPLATE, {"additional_title": moto.name, "whatsapp_url": whatsapp_url, "main_object": moto},

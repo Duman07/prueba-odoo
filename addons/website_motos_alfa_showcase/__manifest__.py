@@ -1,6 +1,6 @@
 {
     "name": "Motos Alfa - Ficha de producto Hunk 150 XT",
-    "version": "18.0.2.1.0",
+    "version": "18.0.2.2.0",
     "summary": "Estructura base de la página de la Hero Hunk 150 XT, preparada para modelo 3D, animación de entrada y vista 360°",
     "category": "Website/Website",
     "author": "Personalización local",
@@ -15,11 +15,9 @@
     #   [Tipos de moto] Bloque «Tipos de moto» en /motos y páginas /motos/<tipo>
     #   [Bloque Motos] Bloque «Última moto vista» (para el inicio): foto en grande y nombre de la moto que vio el visitante
     #   [whatsApp] Botón flotante de WhatsApp
-    #   [Inventario de motos] Ajustes y registros que una moto necesita en una base nueva (sin configurar nada a mano)
+    #   [Inventario de motos] Registros que una moto necesita en una base nueva (los Ajustes se activan a mano: README)
     "data": [
-        # [Inventario de motos] «Variantes» para todos los usuarios internos: colores, «Atributos», «Fotos 360°» por color
-        "data/product_variant_group.xml",
-        # [Inventario de motos] Categoría raíz MOTOS (solo al instalar y si no existe)
+        # [Inventario de motos] Categoría raíz MOTOS propia del módulo (no usa una «MOTOS» que ya existiera)
         "data/product_category_motos.xml",
         # [Formulario] País, Departamento y Ciudad del formulario de cotización van a sus campos de la oportunidad
         "data/crm_lead_form_whitelist.xml",
@@ -52,8 +50,7 @@
             # [Páginas de motos] s_moto_snippets.scss también da estilo al precio y a su tarjeta
             # (clases s_moto_price / s_moto_price_label que pone _fill_price en controllers/moto_template.py)
             # [Formulario] ... y a la casilla de autorización (_fill_form) y al botón ENVIAR
-            # [Bloques] frame_sequence.js: giro con fotos y puntos destacados ubicados en una foto
-            # (puntos destacados ocultos por ahora con una regla de s_moto_snippets.scss, 27-10-2026)
+            # [Bloques] frame_sequence.js: giro con fotos
             # [Páginas de motos] ... y hace que las filas del «Visor 360°» tomen el alto de su contenido (28-10-2026)
             # [Páginas de motos] ... y el acordeón «Especificaciones técnicas» (.s_moto_specs, variables $moto-specs-*, «+» / «−»)
             # [Páginas de motos] + [Tipos de moto] ... y el estilo de la página para lo que agrega el código: $moto-brand-red,
@@ -80,10 +77,8 @@
             "website_motos_alfa_showcase/static/src/scss/whatsapp.scss",
         ],
         "website.assets_wysiwyg": [
-            # [Bloques] Opciones de los bloques en el editor (subir archivo, ubicar puntos destacados en una foto 360°
-            # o en el modelo 3D; options.js le pide el clic al widget s_moto_360/000.js con eventos propios)
+            # [Bloques] Opciones de los bloques en el editor (subir un modelo, una imagen o las fotos 360°)
             "website_motos_alfa_showcase/static/src/js/editor/model_upload_option.js",
-            "website_motos_alfa_showcase/static/src/snippets/s_moto_360/options.js",
         ],
     },
     "installable": True,

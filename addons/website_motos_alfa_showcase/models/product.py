@@ -7,8 +7,10 @@ from odoo import api, fields, models
 
 from odoo.addons.web_editor.tools import get_video_url_data
 
-# Categoría raíz del inventario cuyas motos (y las de sus subcategorías) tienen página en el sitio.
-MOTO_CATEGORY_NAME = "MOTOS"
+# Categoría raíz del inventario cuyas motos (y las de sus subcategorías) tienen página en el sitio. Es la que crea el
+# módulo (data/product_category_motos.xml) y se reconoce por su id interno, no por el nombre: una categoría «MOTOS» que
+# ya existiera en la base no se toca.
+MOTO_ROOT_XMLID = "website_motos_alfa_showcase.category_motos"
 
 # Marca de las motos en los datos para Google (_moto_structured_data): el producto de Odoo no tiene campo de marca.
 MOTO_BRAND = "Hero"
@@ -41,17 +43,22 @@ def _clear_menu_cache(env):
     env.registry.clear_cache("templates")
 
 
+def _in_moto_tree(env, categories):
+    """¿Alguna de estas categorías es MOTOS o está dentro de ella? Para limpiar la caché solo cuando cambia algo
+    de las motos y no con cualquier producto (p. ej. al importar muchos productos de otras categorías)."""
+    root = env["product.category"]._moto_root()
+    return bool(root) and any(
+        (category.parent_path or "").startswith(root.parent_path) for category in categories.sudo()
+    )
+
+
 class ProductCategory(models.Model):
     _inherit = "product.category"
 
     @api.model
     def _moto_root(self):
-        return self.sudo().search([("name", "=ilike", MOTO_CATEGORY_NAME), ("parent_id", "=", False)], limit=1)
-
-    @api.model
-    def _moto_create_root(self):
-        """Crea MOTOS al instalar si la base no la tiene (data/product_category_motos.xml)."""
-        return self._moto_root() or self.sudo().create({"name": MOTO_CATEGORY_NAME})
+        root = self.env.ref(MOTO_ROOT_XMLID, raise_if_not_found=False)
+        return root.sudo() if root else self.sudo().browse()
 
     # Tipos de moto: subcategorías directas de MOTOS (Trabajadora, Urbana…), para el bloque «Tipos de moto».
 
@@ -79,8 +86,10 @@ class ProductCategory(models.Model):
         return f"/motos/{self.env['ir.http']._slug((self.id, self.name))}"
 
     def write(self, vals):
+        watched = bool(MENU_FIELDS & set(vals))
+        was_moto = watched and _in_moto_tree(self.env, self)
         res = super().write(vals)
-        if MENU_FIELDS & set(vals):
+        if watched and (was_moto or _in_moto_tree(self.env, self)):
             _clear_menu_cache(self.env)
         return res
 
@@ -98,7 +107,7 @@ class ProductTemplate(models.Model):
         help="Fotos tomadas alrededor de la moto (p. ej. 24, una cada 15°), para motos sin colores o "
              "colores sin fotos propias. Se ordenan por nombre: la primera es la vista de frente.")
     moto_spec_sheet = fields.Binary(
-        "Ficha técnica (PDF)", attachment=True,
+        "Ficha técnica (PDF)",
         help="Ficha técnica de la moto en PDF: la página de la moto muestra el botón «Descargar ficha técnica (PDF)».")
     moto_spec_sheet_name = fields.Char("Nombre de la ficha técnica")
 
@@ -318,18 +327,23 @@ class ProductTemplate(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         templates = super().create(vals_list)
-        _clear_menu_cache(self.env)
+        if _in_moto_tree(self.env, templates.categ_id):
+            _clear_menu_cache(self.env)
         return templates
 
     def write(self, vals):
+        watched = bool(MENU_FIELDS & set(vals))
+        was_moto = watched and _in_moto_tree(self.env, self.categ_id)
         res = super().write(vals)
-        if MENU_FIELDS & set(vals):
+        if watched and (was_moto or _in_moto_tree(self.env, self.categ_id)):
             _clear_menu_cache(self.env)
         return res
 
     def unlink(self):
+        was_moto = _in_moto_tree(self.env, self.categ_id)
         res = super().unlink()
-        _clear_menu_cache(self.env)
+        if was_moto:
+            _clear_menu_cache(self.env)
         return res
 
 

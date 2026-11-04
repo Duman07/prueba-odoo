@@ -4,16 +4,11 @@
 - Extiende `stock.lot` con `bin_code`, `chassis_code` e `is_motorcycle`.
 - Añade el modelo `moto.component.assignment` para registrar instalación y retiro de componentes identificados por lote/serie.
 - Agrega campos al formulario de lote/serie y un menú en Inventario.
-- Activa solo «Lotes y números de serie» (29-10-2026): no hay que activarlo en Ajustes.
+- No cambia Ajustes (04-11-2026): «Lotes y números de serie» se activa a mano en Ajustes → Inventario → Trazabilidad
+  (sin él no se ven los números de serie ni, por lo tanto, BIN y chasis).
 
 ## Relación entre archivos
-Los archivos del manifiesto llevan la etiqueta de su grupo (`[Lotes de motos]`, `[Ajustes]`).
-
-**[Ajustes] Ajustes de Odoo que el módulo activa solo**
-- `data/stock_lot_group.xml` (29-10-2026): `stock.group_production_lot` implicado en `base.group_user`. Sin él Odoo
-  esconde el rastreo por número de serie, el menú «Números de serie/lote» y por lo tanto BIN y chasis. Es
-  `<function model="res.groups" name="write">` porque `base.group_user` es `noupdate` (un `<record>` se saltaría con `-u`).
-- Pruebas: `tests/test_lot_group.py` → `test_lots_for_internal_users`.
+Los archivos del manifiesto llevan la etiqueta de su grupo (`[Lotes de motos]`).
 
 **[Lotes de motos] BIN, chasis, «Es una moto» e historial de componentes**
 - `models/stock_lot.py`: campos `bin_code`, `chassis_code`, `is_motorcycle`, `component_assignment_ids` (únicos y sin espacios).

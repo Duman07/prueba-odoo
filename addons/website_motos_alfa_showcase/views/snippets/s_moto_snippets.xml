@@ -27,7 +27,7 @@
         </section>
     </template>
 
-    <!-- Bloque «Visor 360°»: visor con controles + panel de colores (puntos destacados ocultos por ahora) -->
+    <!-- Bloque «Visor 360°»: visor con controles + panel de colores -->
     <template id="s_moto_360" name="Visor 360°">
         <section class="s_moto_360 o_cc o_cc1 pt48 pb48" data-model-src="" data-model-alt="Motocicleta" data-model-yaw="90" data-auto-rotate="true">
             <div class="container">
@@ -71,28 +71,6 @@
                             <p class="s_moto_360_color_name mb-0">Color 1</p>
                         </div>
                     </div>
-                    <!-- Panel «Puntos destacados»: oculto por ahora (27-10-2026), se deja para más adelante.
-                         Para volver a usarlo: descomentar y borrar la regla de s_moto_snippets.scss.
-                    <div class="col-lg-4">
-                        <div class="s_moto_360_panel">
-                            <h3 class="h6 mb-3">Puntos destacados</h3>
-                            <div class="s_moto_360_hotspots">
-                                <div class="s_moto_360_hotspot">
-                                    <p class="mb-0"><strong>Punto destacado 1</strong></p>
-                                    <p class="mb-0">Describe aquí este detalle de la moto.</p>
-                                </div>
-                                <div class="s_moto_360_hotspot">
-                                    <p class="mb-0"><strong>Punto destacado 2</strong></p>
-                                    <p class="mb-0">Describe aquí este detalle de la moto.</p>
-                                </div>
-                                <div class="s_moto_360_hotspot">
-                                    <p class="mb-0"><strong>Punto destacado 3</strong></p>
-                                    <p class="mb-0">Describe aquí este detalle de la moto.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    -->
                 </div>
             </div>
         </section>
@@ -218,18 +196,6 @@
                 <we-button class="o_we_bg_brand_primary" data-upload-frames="true" data-no-preview="true">Subir fotos 360° de este color</we-button>
                 <we-input class="o_we_large" string="Archivo de este color" data-select-data-attribute="" data-attribute-name="modelSrc" data-no-preview="true" placeholder="Opcional"/>
                 <we-input class="o_we_large" string="Variante del modelo" data-select-data-attribute="" data-attribute-name="variant" data-no-preview="true" placeholder="Opcional"/>
-            </div>
-            <!-- Cada punto destacado: se puede mover, duplicar, borrar y ubicar en una foto 360° o sobre el modelo -->
-            <div data-js="MotoHotspotPosition" data-selector=".s_moto_360_hotspot" data-drop-near=".s_moto_360_hotspot">
-                <we-input string="Foto n.º" data-select-data-attribute="" data-attribute-name="frame" data-no-preview="true" placeholder="1"/>
-                <we-row string="Ubicación en la foto">
-                    <we-button data-pick-photo-position="true" data-no-preview="true">Ubicar</we-button>
-                    <we-button data-clear-photo-position="true" data-no-preview="true">Quitar</we-button>
-                </we-row>
-                <we-row string="Ubicación en el modelo 3D">
-                    <we-button data-pick-position="true" data-no-preview="true">Ubicar</we-button>
-                    <we-button data-clear-position="true" data-no-preview="true">Quitar</we-button>
-                </we-row>
             </div>
         </xpath>
     </template>

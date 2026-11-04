@@ -3,15 +3,7 @@ from odoo.tests import TransactionCase, tagged
 
 @tagged("post_install", "-at_install")
 class TestLotGroup(TransactionCase):
-    """[Ajustes] y [Lotes de motos]: lo que el módulo deja listo en una base nueva."""
-
-    def test_lots_for_internal_users(self):
-        """data/stock_lot_group.xml: «Lotes y números de serie» para todos, también para los usuarios nuevos."""
-        group_user = self.env.ref("base.group_user")
-        self.assertIn(self.env.ref("stock.group_production_lot"), group_user.implied_ids)
-        self.assertTrue(self.env.ref("base.user_admin").has_group("stock.group_production_lot"))
-        user = self.env["res.users"].create({"name": "Bodega Motos", "login": "bodega_motos_prueba"})
-        self.assertTrue(user.has_group("stock.group_production_lot"))
+    """[Lotes de motos]: BIN y chasis en el número de serie y en las existencias."""
 
     def test_moto_lot_fields(self):
         """Un número de serie de moto guarda BIN y chasis, y las existencias los muestran."""
